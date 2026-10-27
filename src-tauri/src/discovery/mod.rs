@@ -7,7 +7,7 @@ pub mod system;
 use crate::adapters::AgentAdapter;
 use crate::core::{sha256_hex, Instant};
 use crate::domain::*;
-use crate::platform::fs::{read_bounded, is_executable_file, ReadFailure, MAX_CONFIG_BYTES};
+use crate::platform::fs::{is_executable_file, read_bounded, ReadFailure, MAX_CONFIG_BYTES};
 use crate::platform::process::{base_env, run, ProcessSpec};
 use crate::platform::{HostContext, Os};
 use std::path::{Path, PathBuf};
@@ -29,9 +29,20 @@ pub fn find_candidates(ctx: &HostContext, names: &[&str]) -> Vec<Candidate> {
     let mut rank = 0usize;
     for (dir, on_path) in ctx.search_dirs() {
         for name in names {
-            for suffix in ctx.os.exe_suffixes().iter().chain(if ctx.os == Os::Windows { [".cmd"].iter() } else { [].iter() }) {
+            for suffix in ctx
+                .os
+                .exe_suffixes()
+                .iter()
+                .chain(if ctx.os == Os::Windows {
+                    [".cmd"].iter()
+                } else {
+                    [].iter()
+                })
+            {
                 let path = dir.join(format!("{name}{suffix}"));
-                let Ok(meta) = std::fs::metadata(&path) else { continue };
+                let Ok(meta) = std::fs::metadata(&path) else {
+                    continue;
+                };
                 if !meta.is_file() {
                     continue;
                 }
@@ -39,7 +50,11 @@ pub fn find_candidates(ctx: &HostContext, names: &[&str]) -> Vec<Candidate> {
                 if out.iter().any(|c| c.resolved == resolved) {
                     continue;
                 }
-                out.push(Candidate { path, resolved, path_rank: if on_path { Some(rank) } else { None } });
+                out.push(Candidate {
+                    path,
+                    resolved,
+                    path_rank: if on_path { Some(rank) } else { None },
+                });
             }
         }
         if on_path {
@@ -53,7 +68,12 @@ pub fn classify_source(ctx: &HostContext, resolved: &Path) -> InstallSource {
     let s = resolved.to_string_lossy().replace('\\', "/");
     if s.contains("/Caskroom/") || s.contains("/Cellar/") {
         InstallSource::Homebrew
-    } else if s.contains("/.pnpm/") || s.contains("/pnpm/global/") || s.contains("/.bun/") || s.contains("/.yarn/") || s.contains("/yarn/global/") {
+    } else if s.contains("/.pnpm/")
+        || s.contains("/pnpm/global/")
+        || s.contains("/.bun/")
+        || s.contains("/.yarn/")
+        || s.contains("/yarn/global/")
+    {
         // Other Node package managers: Nexus has no vetted recipe, so never treat them as npm.
         InstallSource::Unknown
     } else if s.contains("/lib/node_modules/") || (cfg!(windows) && s.contains("/node_modules/")) {
@@ -72,7 +92,10 @@ pub fn classify_source(ctx: &HostContext, resolved: &Path) -> InstallSource {
 /// `resolved` is canonical; compare against both the literal and canonical home (macOS tempdirs
 /// and some managed homes are reached through symlinks such as /var → /private/var).
 fn under(ctx: &HostContext, resolved: &Path, rel: &str) -> bool {
-    resolved.starts_with(ctx.home.join(rel)) || std::fs::canonicalize(&ctx.home).map(|h| resolved.starts_with(h.join(rel))).unwrap_or(false)
+    resolved.starts_with(ctx.home.join(rel))
+        || std::fs::canonicalize(&ctx.home)
+            .map(|h| resolved.starts_with(h.join(rel)))
+            .unwrap_or(false)
 }
 
 /// Probe trust policy (Security §3 "Poisoned PATH / version probe"): only absolute regular
@@ -83,7 +106,11 @@ pub fn probe_policy(ctx: &HostContext, resolved: &Path) -> Result<(), &'static s
         return Err("probe.not_executable");
     }
     let s = resolved.to_string_lossy();
-    if s.starts_with("/tmp/") || s.starts_with("/private/tmp/") || s.starts_with("/var/folders/") || s.contains("/Temp/") {
+    if s.starts_with("/tmp/")
+        || s.starts_with("/private/tmp/")
+        || s.starts_with("/var/folders/")
+        || s.contains("/Temp/")
+    {
         return Err("probe.untrusted_location");
     }
     #[cfg(unix)]
@@ -107,15 +134,24 @@ pub fn probe_policy(ctx: &HostContext, resolved: &Path) -> Result<(), &'static s
 
 pub fn is_script(path: &Path) -> bool {
     use std::io::Read;
-    let Ok(mut f) = std::fs::File::open(path) else { return false };
+    let Ok(mut f) = std::fs::File::open(path) else {
+        return false;
+    };
     let mut head = [0u8; 2];
-    f.read_exact(&mut head).map(|_| &head == b"#!").unwrap_or(false)
+    f.read_exact(&mut head)
+        .map(|_| &head == b"#!")
+        .unwrap_or(false)
 }
 
 pub fn version_probe(ctx: &HostContext, resolved: &Path, now: Instant) -> Observed<String> {
     let location = Some(ctx.display_path(resolved));
     if let Err(_reason) = probe_policy(ctx, resolved) {
-        return Observed::missing(ObsStatus::Unsafe, EvidenceSource::VersionProbe, location, now);
+        return Observed::missing(
+            ObsStatus::Unsafe,
+            EvidenceSource::VersionProbe,
+            location,
+            now,
+        );
     }
     let dirs: Vec<PathBuf> = ["/usr/bin", "/bin"].iter().map(PathBuf::from).collect();
     let spec = ProcessSpec {
@@ -127,19 +163,46 @@ pub fn version_probe(ctx: &HostContext, resolved: &Path, now: Instant) -> Observ
         max_output: 4096,
     };
     match run(&spec) {
-        Ok(out) if out.exit == crate::platform::process::ExitKind::TimedOut => Observed::missing(ObsStatus::Timeout, EvidenceSource::VersionProbe, location, now),
-        Ok(out) if out.success() => match extract_version(&out.stdout).or_else(|| extract_version(&out.stderr)) {
-            Some(v) => Observed::ok(v, EvidenceSource::VersionProbe, location, now),
-            None => Observed::missing(ObsStatus::ParseFailed, EvidenceSource::VersionProbe, location, now),
-        },
-        Ok(_) => Observed::missing(ObsStatus::ParseFailed, EvidenceSource::VersionProbe, location, now),
-        Err(_) => Observed::missing(ObsStatus::AccessDenied, EvidenceSource::VersionProbe, location, now),
+        Ok(out) if out.exit == crate::platform::process::ExitKind::TimedOut => Observed::missing(
+            ObsStatus::Timeout,
+            EvidenceSource::VersionProbe,
+            location,
+            now,
+        ),
+        Ok(out) if out.success() => {
+            match extract_version(&out.stdout).or_else(|| extract_version(&out.stderr)) {
+                Some(v) => Observed::ok(v, EvidenceSource::VersionProbe, location, now),
+                None => Observed::missing(
+                    ObsStatus::ParseFailed,
+                    EvidenceSource::VersionProbe,
+                    location,
+                    now,
+                ),
+            }
+        }
+        Ok(_) => Observed::missing(
+            ObsStatus::ParseFailed,
+            EvidenceSource::VersionProbe,
+            location,
+            now,
+        ),
+        Err(_) => Observed::missing(
+            ObsStatus::AccessDenied,
+            EvidenceSource::VersionProbe,
+            location,
+            now,
+        ),
     }
 }
 
 /// Reads `version` from an npm package manifest, walking up from the resolved entry point to
 /// the package root whose `name` equals `package`.
-pub fn npm_package_version(ctx: &HostContext, resolved: &Path, package: &str, now: Instant) -> Option<Observed<String>> {
+pub fn npm_package_version(
+    ctx: &HostContext,
+    resolved: &Path,
+    package: &str,
+    now: Instant,
+) -> Option<Observed<String>> {
     let mut dir = resolved.parent();
     for _ in 0..6 {
         let d = dir?;
@@ -148,10 +211,23 @@ pub fn npm_package_version(ctx: &HostContext, resolved: &Path, package: &str, no
             if let Ok(v) = serde_json::from_slice::<serde_json::Value>(&read.bytes) {
                 if v.get("name").and_then(|n| n.as_str()) == Some(package) {
                     let location = Some(ctx.display_path(&manifest));
-                    return Some(match v.get("version").and_then(|n| n.as_str()).and_then(extract_version) {
-                        Some(ver) => Observed::ok(ver, EvidenceSource::PackageManifest, location, now),
-                        None => Observed::missing(ObsStatus::ParseFailed, EvidenceSource::PackageManifest, location, now),
-                    });
+                    return Some(
+                        match v
+                            .get("version")
+                            .and_then(|n| n.as_str())
+                            .and_then(extract_version)
+                        {
+                            Some(ver) => {
+                                Observed::ok(ver, EvidenceSource::PackageManifest, location, now)
+                            }
+                            None => Observed::missing(
+                                ObsStatus::ParseFailed,
+                                EvidenceSource::PackageManifest,
+                                location,
+                                now,
+                            ),
+                        },
+                    );
                 }
             }
         }
@@ -161,11 +237,27 @@ pub fn npm_package_version(ctx: &HostContext, resolved: &Path, package: &str, no
 }
 
 /// Version from a Homebrew keg path such as `/opt/homebrew/Caskroom/codex/0.164.0/codex`.
-pub fn homebrew_path_version(ctx: &HostContext, resolved: &Path, now: Instant) -> Option<Observed<String>> {
-    let parts: Vec<String> = resolved.components().map(|c| c.as_os_str().to_string_lossy().to_string()).collect();
-    let idx = parts.iter().position(|p| p == "Caskroom" || p == "Cellar")?;
+pub fn homebrew_path_version(
+    ctx: &HostContext,
+    resolved: &Path,
+    now: Instant,
+) -> Option<Observed<String>> {
+    let parts: Vec<String> = resolved
+        .components()
+        .map(|c| c.as_os_str().to_string_lossy().to_string())
+        .collect();
+    let idx = parts
+        .iter()
+        .position(|p| p == "Caskroom" || p == "Cellar")?;
     let version = parts.get(idx + 2)?;
-    extract_version(version).map(|v| Observed::ok(v, EvidenceSource::InstallLayout, Some(ctx.display_path(resolved)), now))
+    extract_version(version).map(|v| {
+        Observed::ok(
+            v,
+            EvidenceSource::InstallLayout,
+            Some(ctx.display_path(resolved)),
+            now,
+        )
+    })
 }
 
 pub struct ReadConfig {
@@ -173,9 +265,26 @@ pub struct ReadConfig {
     pub text: Option<String>,
 }
 
-pub fn read_config(ctx: &HostContext, id: &str, path: PathBuf, scope: ConfigScope, format: ConfigFormat, tolerant: bool) -> ReadConfig {
+pub fn read_config(
+    ctx: &HostContext,
+    id: &str,
+    path: PathBuf,
+    scope: ConfigScope,
+    format: ConfigFormat,
+    tolerant: bool,
+) -> ReadConfig {
     let location = ctx.display_path(&path);
-    let mut source = ConfigSource { id: id.to_string(), scope, format, location, status: ObsStatus::NotFound, fingerprint: None, via_symlink: false, tolerant, path: path.clone() };
+    let mut source = ConfigSource {
+        id: id.to_string(),
+        scope,
+        format,
+        location,
+        status: ObsStatus::NotFound,
+        fingerprint: None,
+        via_symlink: false,
+        tolerant,
+        path: path.clone(),
+    };
     match read_bounded(&path, MAX_CONFIG_BYTES) {
         Ok(read) => {
             source.fingerprint = Some(read.fingerprint);
@@ -184,11 +293,26 @@ pub fn read_config(ctx: &HostContext, id: &str, path: PathBuf, scope: ConfigScop
                 Ok(text) => {
                     let parsed = match format {
                         ConfigFormat::Toml => text.parse::<toml_edit::DocumentMut>().is_ok(),
-                        ConfigFormat::Json => crate::config::jsonc::Document::parse(&text, crate::config::jsonc::Dialect::Json).is_ok(),
-                        ConfigFormat::Jsonc => crate::config::jsonc::Document::parse(&text, crate::config::jsonc::Dialect::Jsonc).is_ok(),
+                        ConfigFormat::Json => crate::config::jsonc::Document::parse(
+                            &text,
+                            crate::config::jsonc::Dialect::Json,
+                        )
+                        .is_ok(),
+                        ConfigFormat::Jsonc => crate::config::jsonc::Document::parse(
+                            &text,
+                            crate::config::jsonc::Dialect::Jsonc,
+                        )
+                        .is_ok(),
                     };
-                    source.status = if parsed { ObsStatus::Observed } else { ObsStatus::ParseFailed };
-                    ReadConfig { source, text: Some(text) }
+                    source.status = if parsed {
+                        ObsStatus::Observed
+                    } else {
+                        ObsStatus::ParseFailed
+                    };
+                    ReadConfig {
+                        source,
+                        text: Some(text),
+                    }
                 }
                 Err(_) => {
                     source.status = ObsStatus::ParseFailed;
@@ -216,8 +340,16 @@ pub fn config_value(read: &ReadConfig) -> Option<serde_json::Value> {
     }
     match read.source.format {
         ConfigFormat::Toml => toml_to_json(text),
-        ConfigFormat::Json => crate::config::jsonc::Document::parse(text, crate::config::jsonc::Dialect::Json).ok().map(|d| d.value()),
-        ConfigFormat::Jsonc => crate::config::jsonc::Document::parse(text, crate::config::jsonc::Dialect::Jsonc).ok().map(|d| d.value()),
+        ConfigFormat::Json => {
+            crate::config::jsonc::Document::parse(text, crate::config::jsonc::Dialect::Json)
+                .ok()
+                .map(|d| d.value())
+        }
+        ConfigFormat::Jsonc => {
+            crate::config::jsonc::Document::parse(text, crate::config::jsonc::Dialect::Jsonc)
+                .ok()
+                .map(|d| d.value())
+        }
     }
 }
 
@@ -226,8 +358,14 @@ pub fn toml_to_json(text: &str) -> Option<serde_json::Value> {
         use serde_json::Value as J;
         match item {
             toml_edit::Item::Value(v) => conv_value(v),
-            toml_edit::Item::Table(t) => J::Object(t.iter().map(|(k, v)| (k.to_string(), conv(v))).collect()),
-            toml_edit::Item::ArrayOfTables(a) => J::Array(a.iter().map(|t| J::Object(t.iter().map(|(k, v)| (k.to_string(), conv(v))).collect())).collect()),
+            toml_edit::Item::Table(t) => {
+                J::Object(t.iter().map(|(k, v)| (k.to_string(), conv(v))).collect())
+            }
+            toml_edit::Item::ArrayOfTables(a) => J::Array(
+                a.iter()
+                    .map(|t| J::Object(t.iter().map(|(k, v)| (k.to_string(), conv(v))).collect()))
+                    .collect(),
+            ),
             toml_edit::Item::None => J::Null,
         }
     }
@@ -236,11 +374,17 @@ pub fn toml_to_json(text: &str) -> Option<serde_json::Value> {
         match v {
             toml_edit::Value::String(s) => J::String(s.value().clone()),
             toml_edit::Value::Integer(i) => J::from(*i.value()),
-            toml_edit::Value::Float(f) => serde_json::Number::from_f64(*f.value()).map(J::Number).unwrap_or(J::Null),
+            toml_edit::Value::Float(f) => serde_json::Number::from_f64(*f.value())
+                .map(J::Number)
+                .unwrap_or(J::Null),
             toml_edit::Value::Boolean(b) => J::Bool(*b.value()),
             toml_edit::Value::Datetime(d) => J::String(d.value().to_string()),
             toml_edit::Value::Array(a) => J::Array(a.iter().map(conv_value).collect()),
-            toml_edit::Value::InlineTable(t) => J::Object(t.iter().map(|(k, v)| (k.to_string(), conv_value(v))).collect()),
+            toml_edit::Value::InlineTable(t) => J::Object(
+                t.iter()
+                    .map(|(k, v)| (k.to_string(), conv_value(v)))
+                    .collect(),
+            ),
         }
     }
     let doc = text.parse::<toml_edit::DocumentMut>().ok()?;
@@ -250,11 +394,21 @@ pub fn toml_to_json(text: &str) -> Option<serde_json::Value> {
 /// Statically scans shell startup files for exported variables that override Agent behaviour.
 /// Files are read as text, never sourced or executed. Only variable names are recorded.
 pub fn scan_shell_profiles(ctx: &HostContext, names: &[&str]) -> Vec<(String, String)> {
-    let files = [".zshrc", ".zprofile", ".zshenv", ".bash_profile", ".bashrc", ".profile", ".config/fish/config.fish"];
+    let files = [
+        ".zshrc",
+        ".zprofile",
+        ".zshenv",
+        ".bash_profile",
+        ".bashrc",
+        ".profile",
+        ".config/fish/config.fish",
+    ];
     let mut found = Vec::new();
     for rel in files {
         let path = ctx.home.join(rel);
-        let Ok(read) = read_bounded(&path, 256 * 1024) else { continue };
+        let Ok(read) = read_bounded(&path, 256 * 1024) else {
+            continue;
+        };
         let text = String::from_utf8_lossy(&read.bytes);
         for line in text.lines() {
             let line = line.trim();
@@ -262,11 +416,31 @@ pub fn scan_shell_profiles(ctx: &HostContext, names: &[&str]) -> Vec<(String, St
                 continue;
             }
             for name in names {
-                let exported = line.strip_prefix("export ").map(|l| l.trim_start()).unwrap_or(line);
-                let fish = line.strip_prefix("set -gx ").or_else(|| line.strip_prefix("set -x ")).or_else(|| line.strip_prefix("set -Ux "));
-                let hit = exported.strip_prefix(name).map(|r| r.starts_with('=')).unwrap_or(false)
-                    || fish.map(|f| f.trim_start().strip_prefix(name).map(|r| r.starts_with(' ')).unwrap_or(false)).unwrap_or(false);
-                if hit && !found.iter().any(|(n, f): &(String, String)| n == name && *f == ctx.display_path(&path)) {
+                let exported = line
+                    .strip_prefix("export ")
+                    .map(|l| l.trim_start())
+                    .unwrap_or(line);
+                let fish = line
+                    .strip_prefix("set -gx ")
+                    .or_else(|| line.strip_prefix("set -x "))
+                    .or_else(|| line.strip_prefix("set -Ux "));
+                let hit = exported
+                    .strip_prefix(name)
+                    .map(|r| r.starts_with('='))
+                    .unwrap_or(false)
+                    || fish
+                        .map(|f| {
+                            f.trim_start()
+                                .strip_prefix(name)
+                                .map(|r| r.starts_with(' '))
+                                .unwrap_or(false)
+                        })
+                        .unwrap_or(false);
+                if hit
+                    && !found
+                        .iter()
+                        .any(|(n, f): &(String, String)| n == name && *f == ctx.display_path(&path))
+                {
                     found.push((name.to_string(), ctx.display_path(&path)));
                 }
             }
@@ -278,13 +452,17 @@ pub fn scan_shell_profiles(ctx: &HostContext, names: &[&str]) -> Vec<(String, St
 pub fn skills_in(ctx: &HostContext, dir: &Path) -> (Vec<Skill>, ObsStatus) {
     let entries = match std::fs::read_dir(dir) {
         Ok(e) => e,
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return (Vec::new(), ObsStatus::NotFound),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+            return (Vec::new(), ObsStatus::NotFound)
+        }
         Err(_) => return (Vec::new(), ObsStatus::AccessDenied),
     };
     let mut skills = Vec::new();
     for entry in entries.flatten().take(500) {
         let path = entry.path();
-        let Ok(meta) = std::fs::metadata(&path) else { continue };
+        let Ok(meta) = std::fs::metadata(&path) else {
+            continue;
+        };
         // A skill is a directory with a SKILL.md. Hidden folders and containers (e.g. synced
         // collections) are not skills and are not reported as invalid ones.
         if !meta.is_dir() || entry.file_name().to_string_lossy().starts_with('.') {
@@ -297,15 +475,25 @@ pub fn skills_in(ctx: &HostContext, dir: &Path) -> (Vec<Skill>, ObsStatus) {
             Err(_) => (None, None, false),
         };
         let has_scripts = std::fs::read_dir(&path)
-            .map(|it| it.flatten().take(200).any(|e| {
-                let p = e.path();
-                let n = e.file_name().to_string_lossy().to_lowercase();
-                n == "scripts" || n.ends_with(".sh") || n.ends_with(".py") || n.ends_with(".js") || n.ends_with(".ps1") || (p.is_file() && is_executable_file(&p))
-            }))
+            .map(|it| {
+                it.flatten().take(200).any(|e| {
+                    let p = e.path();
+                    let n = e.file_name().to_string_lossy().to_lowercase();
+                    n == "scripts"
+                        || n.ends_with(".sh")
+                        || n.ends_with(".py")
+                        || n.ends_with(".js")
+                        || n.ends_with(".ps1")
+                        || (p.is_file() && is_executable_file(&p))
+                })
+            })
             .unwrap_or(false);
         let dir_name = entry.file_name().to_string_lossy().to_string();
         skills.push(Skill {
-            name: crate::core::redact(&name.unwrap_or(dir_name)).chars().take(80).collect(),
+            name: crate::core::redact(&name.unwrap_or(dir_name))
+                .chars()
+                .take(80)
+                .collect(),
             description: description.map(|d| crate::core::redact(&d).chars().take(240).collect()),
             location: ctx.display_path(&path),
             has_scripts,
@@ -319,8 +507,12 @@ pub fn skills_in(ctx: &HostContext, dir: &Path) -> (Vec<Skill>, ObsStatus) {
 /// Extracts `name` and `description` from YAML frontmatter. Content is untrusted display text.
 pub fn parse_skill_frontmatter(text: &str) -> (Option<String>, Option<String>, bool) {
     let body = text.strip_prefix('\u{feff}').unwrap_or(text);
-    let Some(rest) = body.strip_prefix("---") else { return (None, None, false) };
-    let Some(end) = rest.find("\n---") else { return (None, None, false) };
+    let Some(rest) = body.strip_prefix("---") else {
+        return (None, None, false);
+    };
+    let Some(end) = rest.find("\n---") else {
+        return (None, None, false);
+    };
     let mut name = None;
     let mut description: Option<String> = None;
     let mut block = false;
@@ -349,7 +541,11 @@ pub fn parse_skill_frontmatter(text: &str) -> (Option<String>, Option<String>, b
             }
         }
     }
-    let valid = name.as_deref().map(|n| !n.is_empty()).unwrap_or(false) && description.as_deref().map(|d| !d.is_empty()).unwrap_or(false);
+    let valid = name.as_deref().map(|n| !n.is_empty()).unwrap_or(false)
+        && description
+            .as_deref()
+            .map(|d| !d.is_empty())
+            .unwrap_or(false);
     (name, description, valid)
 }
 
@@ -363,7 +559,11 @@ pub fn command_resolvable(ctx: &HostContext, command: &str) -> Option<bool> {
         return None; // relative to an unknown working directory
     }
     Some(ctx.search_dirs().iter().any(|(dir, _)| {
-        ctx.os.exe_suffixes().iter().chain([".cmd"].iter()).any(|s| dir.join(format!("{command}{s}")).is_file())
+        ctx.os
+            .exe_suffixes()
+            .iter()
+            .chain([".cmd"].iter())
+            .any(|s| dir.join(format!("{command}{s}")).is_file())
     }))
 }
 
@@ -381,21 +581,40 @@ pub fn url_origin(url: &str) -> Option<String> {
 }
 
 pub fn installation_id(resolved: &Path) -> String {
-    format!("inst_{}", &sha256_hex(resolved.to_string_lossy().as_bytes())[..16])
+    format!(
+        "inst_{}",
+        &sha256_hex(resolved.to_string_lossy().as_bytes())[..16]
+    )
 }
 
 /// Full discovery for one Agent. `managed_ids` are installation ids recorded in Nexus's ledger.
-pub fn discover_agent(ctx: &HostContext, adapter: &dyn AgentAdapter, managed_ids: &[String], now: Instant) -> AgentSnapshot {
+pub fn discover_agent(
+    ctx: &HostContext,
+    adapter: &dyn AgentAdapter,
+    managed_ids: &[String],
+    now: Instant,
+) -> AgentSnapshot {
     let mut installations = Vec::new();
     for cand in find_candidates(ctx, adapter.executable_names()) {
         let source = adapter.classify_source(ctx, &cand.resolved);
-        let wrapper = cand.path.extension().map(|e| e.eq_ignore_ascii_case("cmd")).unwrap_or(false);
+        let wrapper = cand
+            .path
+            .extension()
+            .map(|e| e.eq_ignore_ascii_case("cmd"))
+            .unwrap_or(false);
         let version = adapter
             .metadata_version(ctx, &cand.path, &cand.resolved, source, now)
-            .unwrap_or_else(|| if wrapper || is_script(&cand.resolved) {
-                Observed::missing(ObsStatus::NotChecked, EvidenceSource::VersionProbe, Some(ctx.display_path(&cand.resolved)), now)
-            } else {
-                version_probe(ctx, &cand.resolved, now)
+            .unwrap_or_else(|| {
+                if wrapper || is_script(&cand.resolved) {
+                    Observed::missing(
+                        ObsStatus::NotChecked,
+                        EvidenceSource::VersionProbe,
+                        Some(ctx.display_path(&cand.resolved)),
+                        now,
+                    )
+                } else {
+                    version_probe(ctx, &cand.resolved, now)
+                }
             });
         let id = installation_id(&cand.resolved);
         installations.push(Installation {
@@ -416,7 +635,11 @@ pub fn discover_agent(ctx: &HostContext, adapter: &dyn AgentAdapter, managed_ids
         .filter(|(_, i)| i.path_rank.is_some())
         .min_by_key(|(_, i)| i.path_rank)
         .map(|(n, _)| n)
-        .or(if installations.is_empty() { None } else { Some(0) });
+        .or(if installations.is_empty() {
+            None
+        } else {
+            Some(0)
+        });
     let configs = adapter.read_configs(ctx);
     let model = adapter.observe_model(ctx, &configs);
     let auth = adapter.observe_auth(ctx, &configs);
@@ -450,11 +673,17 @@ mod tests {
 
     #[test]
     fn skill_frontmatter_parsing() {
-        let (n, d, ok) = parse_skill_frontmatter("---\nname: review\ndescription: \"Reviews code\"\n---\nBody");
-        assert_eq!((n.as_deref(), d.as_deref(), ok), (Some("review"), Some("Reviews code"), true));
+        let (n, d, ok) =
+            parse_skill_frontmatter("---\nname: review\ndescription: \"Reviews code\"\n---\nBody");
+        assert_eq!(
+            (n.as_deref(), d.as_deref(), ok),
+            (Some("review"), Some("Reviews code"), true)
+        );
         assert!(!parse_skill_frontmatter("no frontmatter").2);
         assert!(!parse_skill_frontmatter("---\nname: x\n---").2);
-        let (_, d, ok) = parse_skill_frontmatter("---\nname: x\ndescription: >\n  Folded\n  text\nlicense: MIT\n---\n");
+        let (_, d, ok) = parse_skill_frontmatter(
+            "---\nname: x\ndescription: >\n  Folded\n  text\nlicense: MIT\n---\n",
+        );
         assert_eq!((d.as_deref(), ok), (Some("Folded text"), true));
     }
 
@@ -466,16 +695,29 @@ mod tests {
         std::fs::create_dir_all(skills.join(".system")).unwrap();
         std::fs::create_dir_all(skills.join("synced/abc")).unwrap();
         std::fs::create_dir_all(skills.join("good")).unwrap();
-        std::fs::write(skills.join("good/SKILL.md"), "---\nname: good\ndescription: d\n---\n").unwrap();
+        std::fs::write(
+            skills.join("good/SKILL.md"),
+            "---\nname: good\ndescription: d\n---\n",
+        )
+        .unwrap();
         std::fs::create_dir_all(skills.join("bad")).unwrap();
         std::fs::write(skills.join("bad/SKILL.md"), "no frontmatter").unwrap();
         let (found, _) = skills_in(&ctx, &skills);
-        assert_eq!(found.iter().map(|s| (s.name.as_str(), s.valid)).collect::<Vec<_>>(), vec![("bad", false), ("good", true)]);
+        assert_eq!(
+            found
+                .iter()
+                .map(|s| (s.name.as_str(), s.valid))
+                .collect::<Vec<_>>(),
+            vec![("bad", false), ("good", true)]
+        );
     }
 
     #[test]
     fn url_origin_strips_credentials_and_paths() {
-        assert_eq!(url_origin("https://user:tok@mcp.example.com:8443/path?key=secret").as_deref(), Some("https://mcp.example.com:8443"));
+        assert_eq!(
+            url_origin("https://user:tok@mcp.example.com:8443/path?key=secret").as_deref(),
+            Some("https://mcp.example.com:8443")
+        );
         assert_eq!(url_origin("file:///etc/passwd"), None);
         assert_eq!(url_origin("not a url"), None);
     }
@@ -512,7 +754,10 @@ mod tests {
         std::fs::set_permissions(&script, std::fs::Permissions::from_mode(0o755)).unwrap();
         // tempdir lives under /var/folders or /tmp on macOS → untrusted location wins first.
         assert!(probe_policy(&ctx, &script).is_err());
-        assert_eq!(version_probe(&ctx, &script, Instant(0)).status, ObsStatus::Unsafe);
+        assert_eq!(
+            version_probe(&ctx, &script, Instant(0)).status,
+            ObsStatus::Unsafe
+        );
         let writable = home.path().join("bin");
         std::fs::write(&writable, "\x7fELF").unwrap();
         std::fs::set_permissions(&writable, std::fs::Permissions::from_mode(0o777)).unwrap();
@@ -524,17 +769,31 @@ mod tests {
         let home = tempfile::tempdir().unwrap();
         std::fs::write(home.path().join(".zshrc"), "# export GEMINI_MODEL=ignored\nexport ANTHROPIC_MODEL=claude-secret-choice\nexport OTHER=1\n").unwrap();
         std::fs::create_dir_all(home.path().join(".config/fish")).unwrap();
-        std::fs::write(home.path().join(".config/fish/config.fish"), "set -gx GEMINI_MODEL foo\n").unwrap();
+        std::fs::write(
+            home.path().join(".config/fish/config.fish"),
+            "set -gx GEMINI_MODEL foo\n",
+        )
+        .unwrap();
         let ctx = HostContext::isolated(home.path(), home.path());
         let found = scan_shell_profiles(&ctx, &["ANTHROPIC_MODEL", "GEMINI_MODEL"]);
         assert_eq!(found.len(), 2);
-        assert!(found.iter().all(|(_, f)| !f.contains("claude-secret-choice")));
-        assert!(found.iter().any(|(n, f)| n == "ANTHROPIC_MODEL" && f.ends_with(".zshrc")));
+        assert!(found
+            .iter()
+            .all(|(_, f)| !f.contains("claude-secret-choice")));
+        assert!(found
+            .iter()
+            .any(|(n, f)| n == "ANTHROPIC_MODEL" && f.ends_with(".zshrc")));
     }
 
     #[test]
     fn toml_conversion_keeps_tables() {
-        let v = toml_to_json("model = \"m\"\n[mcp_servers.docs]\nurl = \"https://x\"\nenabled = false\n").unwrap();
-        assert_eq!(v["mcp_servers"]["docs"]["enabled"], serde_json::json!(false));
+        let v = toml_to_json(
+            "model = \"m\"\n[mcp_servers.docs]\nurl = \"https://x\"\nenabled = false\n",
+        )
+        .unwrap();
+        assert_eq!(
+            v["mcp_servers"]["docs"]["enabled"],
+            serde_json::json!(false)
+        );
     }
 }

@@ -28,7 +28,15 @@ impl ProviderKind {
         }
     }
     pub fn parse(s: &str) -> Option<Self> {
-        [ProviderKind::Anthropic, ProviderKind::Openai, ProviderKind::Google, ProviderKind::Openrouter, ProviderKind::OpenaiCompatible].into_iter().find(|k| k.as_str() == s)
+        [
+            ProviderKind::Anthropic,
+            ProviderKind::Openai,
+            ProviderKind::Google,
+            ProviderKind::Openrouter,
+            ProviderKind::OpenaiCompatible,
+        ]
+        .into_iter()
+        .find(|k| k.as_str() == s)
     }
     pub fn default_origin(self) -> Option<&'static str> {
         match self {
@@ -135,22 +143,26 @@ pub struct AgentModelAssignment {
 
 /// Built-in Providers that route through an Agent's own login. Nothing is stored for them.
 pub fn builtin_providers() -> Vec<ProviderProfile> {
-    [("builtin.anthropic", "Anthropic", ProviderKind::Anthropic), ("builtin.openai", "OpenAI", ProviderKind::Openai), ("builtin.google", "Google", ProviderKind::Google)]
-        .into_iter()
-        .map(|(id, name, kind)| ProviderProfile {
-            id: id.into(),
-            display_name: name.into(),
-            kind,
-            base_url: kind.default_origin().map(String::from),
-            auth_mode: AuthMode::AgentLogin,
-            secret_ref: None,
-            secret_present: None,
-            env_var: None,
-            revision: 1,
-            builtin: true,
-            connection: "notTested",
-        })
-        .collect()
+    [
+        ("builtin.anthropic", "Anthropic", ProviderKind::Anthropic),
+        ("builtin.openai", "OpenAI", ProviderKind::Openai),
+        ("builtin.google", "Google", ProviderKind::Google),
+    ]
+    .into_iter()
+    .map(|(id, name, kind)| ProviderProfile {
+        id: id.into(),
+        display_name: name.into(),
+        kind,
+        base_url: kind.default_origin().map(String::from),
+        auth_mode: AuthMode::AgentLogin,
+        secret_ref: None,
+        secret_present: None,
+        env_var: None,
+        revision: 1,
+        builtin: true,
+        connection: "notTested",
+    })
+    .collect()
 }
 
 /// Reviewed seed metadata. Only Claude Code's documented model aliases are seeded; concrete model
@@ -164,7 +176,9 @@ pub fn builtin_models() -> Vec<ModelDefinition> {
             identifier: alias.into(),
             display_name: None,
             source: "builtin".into(),
-            source_detail: Some("https://code.claude.com/docs/en/model-config (alias, 2026-10-27)".into()),
+            source_detail: Some(
+                "https://code.claude.com/docs/en/model-config (alias, 2026-10-27)".into(),
+            ),
             capabilities: Vec::new(),
         })
         .collect()
@@ -174,13 +188,20 @@ pub fn validate_identifier(identifier: &str) -> NexusResult<()> {
     let ok = !identifier.is_empty()
         && identifier.len() <= 200
         && !identifier.starts_with('-')
-        && identifier.chars().all(|c| c.is_ascii_alphanumeric() || matches!(c, '-' | '_' | '.' | '/' | ':' | '@' | '[' | ']'));
-    if ok { Ok(()) } else { Err(NexusError::new("model.invalid_identifier")) }
+        && identifier.chars().all(|c| {
+            c.is_ascii_alphanumeric() || matches!(c, '-' | '_' | '.' | '/' | ':' | '@' | '[' | ']')
+        });
+    if ok {
+        Ok(())
+    } else {
+        Err(NexusError::new("model.invalid_identifier"))
+    }
 }
 
 pub fn validate_display_name(name: &str) -> NexusResult<String> {
     let trimmed = name.trim();
-    if trimmed.is_empty() || trimmed.chars().count() > 80 || trimmed.chars().any(|c| c.is_control()) {
+    if trimmed.is_empty() || trimmed.chars().count() > 80 || trimmed.chars().any(|c| c.is_control())
+    {
         return Err(NexusError::new("model.invalid_name"));
     }
     Ok(trimmed.to_string())
@@ -193,7 +214,13 @@ pub fn validate_base_url(url: &str) -> NexusResult<String> {
 }
 
 pub fn validate_env_var(name: &str) -> NexusResult<()> {
-    if name.is_empty() || name.len() > 64 || !name.chars().all(|c| c.is_ascii_uppercase() || c.is_ascii_digit() || c == '_') || name.starts_with(|c: char| c.is_ascii_digit()) {
+    if name.is_empty()
+        || name.len() > 64
+        || !name
+            .chars()
+            .all(|c| c.is_ascii_uppercase() || c.is_ascii_digit() || c == '_')
+        || name.starts_with(|c: char| c.is_ascii_digit())
+    {
         return Err(NexusError::new("provider.invalid_env_var"));
     }
     Ok(())
@@ -209,22 +236,54 @@ pub struct Compatibility {
     pub native_identifier: Option<String>,
 }
 
-pub fn compatibility(agent: AgentId, provider: &ProviderProfile, model: &ModelDefinition) -> Compatibility {
+pub fn compatibility(
+    agent: AgentId,
+    provider: &ProviderProfile,
+    model: &ModelDefinition,
+) -> Compatibility {
     let adapter = adapters::adapter(agent);
     let Some(target): Option<&dyn ModelTarget> = adapter.model_target() else {
-        return Compatibility { agent_id: agent, support: Support::Unsupported, reason: Some("compat.noModelTarget"), native_identifier: None };
+        return Compatibility {
+            agent_id: agent,
+            support: Support::Unsupported,
+            reason: Some("compat.noModelTarget"),
+            native_identifier: None,
+        };
     };
     let support = target.provider_support(provider.kind);
     if support == Support::Unsupported {
-        return Compatibility { agent_id: agent, support, reason: Some(if provider.builtin { "compat.providerNotRoutable" } else { "compat.customProviderHandoff" }), native_identifier: None };
+        return Compatibility {
+            agent_id: agent,
+            support,
+            reason: Some(if provider.builtin {
+                "compat.providerNotRoutable"
+            } else {
+                "compat.customProviderHandoff"
+            }),
+            native_identifier: None,
+        };
     }
     if !provider.builtin && provider.auth_mode != AuthMode::AgentLogin {
-        return Compatibility { agent_id: agent, support: Support::Unsupported, reason: Some("compat.customProviderHandoff"), native_identifier: None };
+        return Compatibility {
+            agent_id: agent,
+            support: Support::Unsupported,
+            reason: Some("compat.customProviderHandoff"),
+            native_identifier: None,
+        };
     }
     let native = target.native_identifier(provider.kind, &model.identifier);
     // Manual or observed models are applyable but their availability is not verified.
-    let support = if model.source == "builtin" { Support::Supported } else { Support::Unverified };
-    Compatibility { agent_id: agent, support, reason: (support == Support::Unverified).then_some("compat.availabilityUnverified"), native_identifier: Some(native) }
+    let support = if model.source == "builtin" {
+        Support::Supported
+    } else {
+        Support::Unverified
+    };
+    Compatibility {
+        agent_id: agent,
+        support,
+        reason: (support == Support::Unverified).then_some("compat.availabilityUnverified"),
+        native_identifier: Some(native),
+    }
 }
 
 #[cfg(test)]
@@ -232,32 +291,77 @@ mod tests {
     use super::*;
 
     fn model(provider: &str, id: &str, source: &str) -> ModelDefinition {
-        ModelDefinition { id: format!("m.{id}"), provider_id: provider.into(), identifier: id.into(), display_name: None, source: source.into(), source_detail: None, capabilities: vec![] }
+        ModelDefinition {
+            id: format!("m.{id}"),
+            provider_id: provider.into(),
+            identifier: id.into(),
+            display_name: None,
+            source: source.into(),
+            source_detail: None,
+            capabilities: vec![],
+        }
     }
 
     #[test]
     fn provider_routing_is_agent_specific() {
-        let anthropic = builtin_providers().into_iter().find(|p| p.kind == ProviderKind::Anthropic).unwrap();
+        let anthropic = builtin_providers()
+            .into_iter()
+            .find(|p| p.kind == ProviderKind::Anthropic)
+            .unwrap();
         let sonnet = model("builtin.anthropic", "sonnet", "builtin");
-        assert_eq!(compatibility(AgentId::Claude, &anthropic, &sonnet).support, Support::Supported);
-        assert_eq!(compatibility(AgentId::Codex, &anthropic, &sonnet).support, Support::Unsupported);
-        assert_eq!(compatibility(AgentId::Gemini, &anthropic, &sonnet).support, Support::Unsupported);
+        assert_eq!(
+            compatibility(AgentId::Claude, &anthropic, &sonnet).support,
+            Support::Supported
+        );
+        assert_eq!(
+            compatibility(AgentId::Codex, &anthropic, &sonnet).support,
+            Support::Unsupported
+        );
+        assert_eq!(
+            compatibility(AgentId::Gemini, &anthropic, &sonnet).support,
+            Support::Unsupported
+        );
         let oc = compatibility(AgentId::Opencode, &anthropic, &sonnet);
         assert_eq!(oc.native_identifier.as_deref(), Some("anthropic/sonnet"));
     }
 
     #[test]
     fn manual_models_are_never_verified() {
-        let openai = builtin_providers().into_iter().find(|p| p.kind == ProviderKind::Openai).unwrap();
-        let c = compatibility(AgentId::Codex, &openai, &model("builtin.openai", "my-model", "manual"));
-        assert_eq!((c.support, c.reason), (Support::Unverified, Some("compat.availabilityUnverified")));
+        let openai = builtin_providers()
+            .into_iter()
+            .find(|p| p.kind == ProviderKind::Openai)
+            .unwrap();
+        let c = compatibility(
+            AgentId::Codex,
+            &openai,
+            &model("builtin.openai", "my-model", "manual"),
+        );
+        assert_eq!(
+            (c.support, c.reason),
+            (Support::Unverified, Some("compat.availabilityUnverified"))
+        );
     }
 
     #[test]
     fn custom_providers_requiring_secret_handoff_are_unsupported() {
-        let custom = ProviderProfile { id: "p1".into(), display_name: "Local".into(), kind: ProviderKind::OpenaiCompatible, base_url: Some("http://localhost:11434".into()), auth_mode: AuthMode::NexusSecret, secret_ref: Some("provider:p1".into()), secret_present: Some(true), env_var: None, revision: 1, builtin: false, connection: "notTested" };
+        let custom = ProviderProfile {
+            id: "p1".into(),
+            display_name: "Local".into(),
+            kind: ProviderKind::OpenaiCompatible,
+            base_url: Some("http://localhost:11434".into()),
+            auth_mode: AuthMode::NexusSecret,
+            secret_ref: Some("provider:p1".into()),
+            secret_present: Some(true),
+            env_var: None,
+            revision: 1,
+            builtin: false,
+            connection: "notTested",
+        };
         for agent in AgentId::ALL {
-            assert_eq!(compatibility(agent, &custom, &model("p1", "llama", "manual")).support, Support::Unsupported);
+            assert_eq!(
+                compatibility(agent, &custom, &model("p1", "llama", "manual")).support,
+                Support::Unsupported
+            );
         }
     }
 
@@ -266,10 +370,18 @@ mod tests {
         for bad in ["", "-rf", "a b", "a\nb", "x;y", "$(id)"] {
             assert!(validate_identifier(bad).is_err(), "{bad}");
         }
-        for good in ["claude-opus-5-5", "anthropic/claude-x", "models/gemini-3-flash", "gpt-6.1-sol", "opus[1m]"] {
+        for good in [
+            "claude-opus-5-5",
+            "anthropic/claude-x",
+            "models/gemini-3-flash",
+            "gpt-6.1-sol",
+            "opus[1m]",
+        ] {
             assert!(validate_identifier(good).is_ok(), "{good}");
         }
         assert!(validate_base_url("http://evil.example.com").is_err());
-        assert!(validate_base_url("http://localhost:11434/v1/").unwrap().ends_with("/v1"));
+        assert!(validate_base_url("http://localhost:11434/v1/")
+            .unwrap()
+            .ends_with("/v1"));
     }
 }

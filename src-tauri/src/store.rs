@@ -127,18 +127,26 @@ impl Store {
         Self::init(Connection::open_in_memory().map_err(db_err)?)
     }
     fn init(mut conn: Connection) -> NexusResult<Store> {
-        conn.pragma_update(None, "journal_mode", "WAL").map_err(db_err)?;
-        conn.pragma_update(None, "foreign_keys", "ON").map_err(db_err)?;
-        conn.pragma_update(None, "synchronous", "FULL").map_err(db_err)?;
-        let current: i64 = conn.query_row("PRAGMA user_version", [], |r| r.get(0)).map_err(db_err)?;
+        conn.pragma_update(None, "journal_mode", "WAL")
+            .map_err(db_err)?;
+        conn.pragma_update(None, "foreign_keys", "ON")
+            .map_err(db_err)?;
+        conn.pragma_update(None, "synchronous", "FULL")
+            .map_err(db_err)?;
+        let current: i64 = conn
+            .query_row("PRAGMA user_version", [], |r| r.get(0))
+            .map_err(db_err)?;
         if current > SCHEMA_VERSION {
             // Written by a newer Nexus: never downgrade or write into an unknown schema.
             return Err(NexusError::new("store.newer_schema").with("found", current.to_string()));
         }
         for (version, sql) in MIGRATIONS.iter().filter(|(v, _)| *v > current) {
             let tx = conn.transaction().map_err(db_err)?;
-            tx.execute_batch(sql).map_err(|_| NexusError::new("store.migration_failed").with("version", version.to_string()))?;
-            tx.pragma_update(None, "user_version", version).map_err(db_err)?;
+            tx.execute_batch(sql).map_err(|_| {
+                NexusError::new("store.migration_failed").with("version", version.to_string())
+            })?;
+            tx.pragma_update(None, "user_version", version)
+                .map_err(db_err)?;
             tx.commit().map_err(db_err)?;
         }
         Ok(Store { conn })
@@ -153,7 +161,8 @@ impl Store {
                 Ok(ProviderProfile {
                     id: r.get(0)?,
                     display_name: r.get(1)?,
-                    kind: ProviderKind::parse(&r.get::<_, String>(2)?).unwrap_or(ProviderKind::OpenaiCompatible),
+                    kind: ProviderKind::parse(&r.get::<_, String>(2)?)
+                        .unwrap_or(ProviderKind::OpenaiCompatible),
                     base_url: r.get(3)?,
                     auth_mode: match r.get::<_, String>(4)?.as_str() {
                         "nexusSecret" => AuthMode::NexusSecret,
@@ -173,7 +182,11 @@ impl Store {
     }
 
     pub fn insert_provider(&self, p: &ProviderProfile, now: Instant) -> NexusResult<()> {
-        let auth = match p.auth_mode { AuthMode::AgentLogin => "agentLogin", AuthMode::NexusSecret => "nexusSecret", AuthMode::Environment => "environment" };
+        let auth = match p.auth_mode {
+            AuthMode::AgentLogin => "agentLogin",
+            AuthMode::NexusSecret => "nexusSecret",
+            AuthMode::Environment => "environment",
+        };
         self.conn
             .execute(
                 "INSERT INTO providers (id, display_name, kind, base_url, auth_mode, secret_ref, env_var, revision, created_at, updated_at) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?9)",
@@ -185,13 +198,32 @@ impl Store {
 
     /// Deleting a Provider still referenced by a Model is refused (Architecture §9).
     pub fn delete_provider(&self, id: &str) -> NexusResult<Option<String>> {
-        let refs: i64 = self.conn.query_row("SELECT COUNT(*) FROM models WHERE provider_id = ?1", [id], |r| r.get(0)).map_err(db_err)?;
+        let refs: i64 = self
+            .conn
+            .query_row(
+                "SELECT COUNT(*) FROM models WHERE provider_id = ?1",
+                [id],
+                |r| r.get(0),
+            )
+            .map_err(db_err)?;
         if refs > 0 {
             return Err(NexusError::new("provider.in_use").with("models", refs.to_string()));
         }
-        let secret: Option<Option<String>> = self.conn.query_row("SELECT secret_ref FROM providers WHERE id = ?1", [id], |r| r.get(0)).optional().map_err(db_err)?;
-        let Some(secret) = secret else { return Err(NexusError::new("provider.not_found")) };
-        self.conn.execute("DELETE FROM providers WHERE id = ?1", [id]).map_err(db_err)?;
+        let secret: Option<Option<String>> = self
+            .conn
+            .query_row(
+                "SELECT secret_ref FROM providers WHERE id = ?1",
+                [id],
+                |r| r.get(0),
+            )
+            .optional()
+            .map_err(db_err)?;
+        let Some(secret) = secret else {
+            return Err(NexusError::new("provider.not_found"));
+        };
+        self.conn
+            .execute("DELETE FROM providers WHERE id = ?1", [id])
+            .map_err(db_err)?;
         Ok(secret)
     }
 
@@ -202,7 +234,8 @@ impl Store {
         let rows = stmt
             .query_map([], |r| {
                 let caps: String = r.get(6)?;
-                let claims: Vec<(String, String, String)> = serde_json::from_str(&caps).unwrap_or_default();
+                let claims: Vec<(String, String, String)> =
+                    serde_json::from_str(&caps).unwrap_or_default();
                 Ok(ModelDefinition {
                     id: r.get(0)?,
                     provider_id: r.get(1)?,
@@ -210,7 +243,10 @@ impl Store {
                     display_name: r.get(3)?,
                     source: r.get(4)?,
                     source_detail: r.get(5)?,
-                    capabilities: claims.into_iter().map(|(key, state, source)| CapabilityClaim { key, state, source }).collect(),
+                    capabilities: claims
+                        .into_iter()
+                        .map(|(key, state, source)| CapabilityClaim { key, state, source })
+                        .collect(),
                 })
             })
             .map_err(db_err)?;
@@ -218,7 +254,11 @@ impl Store {
     }
 
     pub fn insert_model(&self, m: &ModelDefinition, now: Instant) -> NexusResult<()> {
-        let caps: Vec<(String, String, String)> = m.capabilities.iter().map(|c| (c.key.clone(), c.state.clone(), c.source.clone())).collect();
+        let caps: Vec<(String, String, String)> = m
+            .capabilities
+            .iter()
+            .map(|c| (c.key.clone(), c.state.clone(), c.source.clone()))
+            .collect();
         self.conn
             .execute(
                 "INSERT INTO models (id, provider_id, identifier, display_name, source, source_detail, capabilities_json, created_at) VALUES (?1,?2,?3,?4,?5,?6,?7,?8)",
@@ -239,7 +279,12 @@ impl Store {
         if refs > 0 {
             return Err(NexusError::new("model.in_use"));
         }
-        if self.conn.execute("DELETE FROM models WHERE id = ?1", [id]).map_err(db_err)? == 0 {
+        if self
+            .conn
+            .execute("DELETE FROM models WHERE id = ?1", [id])
+            .map_err(db_err)?
+            == 0
+        {
             return Err(NexusError::new("model.not_found"));
         }
         Ok(())
@@ -252,7 +297,17 @@ impl Store {
             .conn
             .prepare("SELECT p.id, p.name, p.revision, p.model_id, p.reasoning FROM model_profiles p JOIN (SELECT id, MAX(revision) r FROM model_profiles GROUP BY id) l ON p.id = l.id AND p.revision = l.r ORDER BY p.created_at")
             .map_err(db_err)?;
-        let rows = stmt.query_map([], |r| Ok(ModelProfile { id: r.get(0)?, name: r.get(1)?, revision: r.get(2)?, model_id: r.get(3)?, reasoning: r.get(4)? })).map_err(db_err)?;
+        let rows = stmt
+            .query_map([], |r| {
+                Ok(ModelProfile {
+                    id: r.get(0)?,
+                    name: r.get(1)?,
+                    revision: r.get(2)?,
+                    model_id: r.get(3)?,
+                    reasoning: r.get(4)?,
+                })
+            })
+            .map_err(db_err)?;
         rows.collect::<Result<_, _>>().map_err(db_err)
     }
 
@@ -267,8 +322,22 @@ impl Store {
     }
 
     /// Editing a Profile creates a new revision; applied revisions stay pinned (Architecture §9).
-    pub fn save_profile(&self, id: &str, name: &str, model_id: &str, reasoning: Option<&str>, now: Instant) -> NexusResult<i64> {
-        let next: i64 = self.conn.query_row("SELECT COALESCE(MAX(revision), 0) + 1 FROM model_profiles WHERE id = ?1", [id], |r| r.get(0)).map_err(db_err)?;
+    pub fn save_profile(
+        &self,
+        id: &str,
+        name: &str,
+        model_id: &str,
+        reasoning: Option<&str>,
+        now: Instant,
+    ) -> NexusResult<i64> {
+        let next: i64 = self
+            .conn
+            .query_row(
+                "SELECT COALESCE(MAX(revision), 0) + 1 FROM model_profiles WHERE id = ?1",
+                [id],
+                |r| r.get(0),
+            )
+            .map_err(db_err)?;
         self.conn
             .execute("INSERT INTO model_profiles (id, revision, name, model_id, reasoning, created_at) VALUES (?1,?2,?3,?4,?5,?6)", params![id, next, name, model_id, reasoning, now.to_rfc3339()])
             .map_err(db_err)?;
@@ -285,25 +354,32 @@ impl Store {
         let rows = stmt
             .query_map([], |r| {
                 let applied_identifier: Option<String> = r.get(5)?;
-                Ok((r.get::<_, String>(0)?, AgentModelAssignment {
-                    agent_id: AgentId::Codex,
-                    mode: match r.get::<_, String>(1)?.as_str() { "direct" => AssignmentMode::Direct, "profile" => AssignmentMode::Profile, _ => AssignmentMode::Native },
-                    model_id: r.get(2)?,
-                    profile_id: r.get(3)?,
-                    desired_revision: r.get(4)?,
-                    applied: match applied_identifier {
-                        Some(identifier) => Some(AppliedRecord {
-                            identifier,
-                            profile_revision: r.get(6)?,
-                            provider_revision: r.get(7)?,
-                            applied_at: r.get::<_, Option<String>>(8)?.unwrap_or_default(),
-                            location: r.get::<_, Option<String>>(9)?.unwrap_or_default(),
-                            fingerprint: r.get::<_, Option<String>>(10)?.unwrap_or_default(),
-                        }),
-                        None => None,
+                Ok((
+                    r.get::<_, String>(0)?,
+                    AgentModelAssignment {
+                        agent_id: AgentId::Codex,
+                        mode: match r.get::<_, String>(1)?.as_str() {
+                            "direct" => AssignmentMode::Direct,
+                            "profile" => AssignmentMode::Profile,
+                            _ => AssignmentMode::Native,
+                        },
+                        model_id: r.get(2)?,
+                        profile_id: r.get(3)?,
+                        desired_revision: r.get(4)?,
+                        applied: match applied_identifier {
+                            Some(identifier) => Some(AppliedRecord {
+                                identifier,
+                                profile_revision: r.get(6)?,
+                                provider_revision: r.get(7)?,
+                                applied_at: r.get::<_, Option<String>>(8)?.unwrap_or_default(),
+                                location: r.get::<_, Option<String>>(9)?.unwrap_or_default(),
+                                fingerprint: r.get::<_, Option<String>>(10)?.unwrap_or_default(),
+                            }),
+                            None => None,
+                        },
+                        updated_at: r.get(11)?,
                     },
-                    updated_at: r.get(11)?,
-                }))
+                ))
             })
             .map_err(db_err)?;
         let mut out = Vec::new();
@@ -318,12 +394,27 @@ impl Store {
     }
 
     pub fn assignment(&self, agent: AgentId) -> NexusResult<Option<AgentModelAssignment>> {
-        Ok(self.assignments()?.into_iter().find(|a| a.agent_id == agent))
+        Ok(self
+            .assignments()?
+            .into_iter()
+            .find(|a| a.agent_id == agent))
     }
 
     /// Records desired intent only; the applied record is untouched until a verified apply.
-    pub fn set_desired(&self, agent: AgentId, mode: AssignmentMode, model_id: Option<&str>, profile_id: Option<&str>, desired_revision: Option<i64>, now: Instant) -> NexusResult<()> {
-        let mode_s = match mode { AssignmentMode::Native => "native", AssignmentMode::Direct => "direct", AssignmentMode::Profile => "profile" };
+    pub fn set_desired(
+        &self,
+        agent: AgentId,
+        mode: AssignmentMode,
+        model_id: Option<&str>,
+        profile_id: Option<&str>,
+        desired_revision: Option<i64>,
+        now: Instant,
+    ) -> NexusResult<()> {
+        let mode_s = match mode {
+            AssignmentMode::Native => "native",
+            AssignmentMode::Direct => "direct",
+            AssignmentMode::Profile => "profile",
+        };
         self.conn
             .execute(
                 "INSERT INTO assignments (agent_id, mode, model_id, profile_id, desired_revision, updated_at) VALUES (?1,?2,?3,?4,?5,?6)
@@ -349,13 +440,26 @@ impl Store {
     }
 
     pub fn clear_assignment(&self, agent: AgentId) -> NexusResult<()> {
-        self.conn.execute("DELETE FROM assignments WHERE agent_id = ?1", [agent.as_str()]).map_err(db_err)?;
+        self.conn
+            .execute(
+                "DELETE FROM assignments WHERE agent_id = ?1",
+                [agent.as_str()],
+            )
+            .map_err(db_err)?;
         Ok(())
     }
 
     // ---- Operation journal -----------------------------------------------------------------
 
-    pub fn begin_operation(&self, id: &str, action: &str, agent: Option<AgentId>, digest: &str, summary: &serde_json::Value, now: Instant) -> NexusResult<()> {
+    pub fn begin_operation(
+        &self,
+        id: &str,
+        action: &str,
+        agent: Option<AgentId>,
+        digest: &str,
+        summary: &serde_json::Value,
+        now: Instant,
+    ) -> NexusResult<()> {
         self.conn
             .execute(
                 "INSERT INTO operations (id, action, agent_id, status, plan_digest, summary_json, started_at) VALUES (?1,?2,?3,'executing',?4,?5,?6)",
@@ -376,8 +480,19 @@ impl Store {
         Ok(())
     }
 
-    pub fn finish_operation(&self, op: &str, status: &str, error: Option<&str>, now: Instant) -> NexusResult<()> {
-        self.conn.execute("UPDATE operations SET status=?2, error_code=?3, finished_at=?4 WHERE id=?1", params![op, status, error, now.to_rfc3339()]).map_err(db_err)?;
+    pub fn finish_operation(
+        &self,
+        op: &str,
+        status: &str,
+        error: Option<&str>,
+        now: Instant,
+    ) -> NexusResult<()> {
+        self.conn
+            .execute(
+                "UPDATE operations SET status=?2, error_code=?3, finished_at=?4 WHERE id=?1",
+                params![op, status, error, now.to_rfc3339()],
+            )
+            .map_err(db_err)?;
         Ok(())
     }
 
@@ -400,8 +515,15 @@ impl Store {
             .map_err(db_err)?;
         let mut ops: Vec<OperationRecord> = rows.collect::<Result<_, _>>().map_err(db_err)?;
         for op in ops.iter_mut() {
-            let mut s = self.conn.prepare("SELECT step FROM operation_steps WHERE operation_id = ?1 ORDER BY seq").map_err(db_err)?;
-            op.steps = s.query_map([&op.id], |r| r.get(0)).map_err(db_err)?.collect::<Result<_, _>>().map_err(db_err)?;
+            let mut s = self
+                .conn
+                .prepare("SELECT step FROM operation_steps WHERE operation_id = ?1 ORDER BY seq")
+                .map_err(db_err)?;
+            op.steps = s
+                .query_map([&op.id], |r| r.get(0))
+                .map_err(db_err)?
+                .collect::<Result<_, _>>()
+                .map_err(db_err)?;
         }
         Ok(ops)
     }
@@ -409,8 +531,15 @@ impl Store {
     /// On startup, any operation still `executing` was interrupted (crash, kill, power loss).
     /// It is marked `interrupted`, never replayed automatically.
     pub fn reconcile_interrupted(&self, now: Instant) -> NexusResult<Vec<String>> {
-        let mut stmt = self.conn.prepare("SELECT id FROM operations WHERE status = 'executing'").map_err(db_err)?;
-        let ids: Vec<String> = stmt.query_map([], |r| r.get(0)).map_err(db_err)?.collect::<Result<_, _>>().map_err(db_err)?;
+        let mut stmt = self
+            .conn
+            .prepare("SELECT id FROM operations WHERE status = 'executing'")
+            .map_err(db_err)?;
+        let ids: Vec<String> = stmt
+            .query_map([], |r| r.get(0))
+            .map_err(db_err)?
+            .collect::<Result<_, _>>()
+            .map_err(db_err)?;
         for id in &ids {
             self.finish_operation(id, "interrupted", Some("operation.interrupted"), now)?;
         }
@@ -420,7 +549,18 @@ impl Store {
     // ---- Backups ---------------------------------------------------------------------------
 
     #[allow(clippy::too_many_arguments)]
-    pub fn insert_backup(&self, id: &str, op: &str, agent: Option<AgentId>, target_id: &str, target_path: &str, display: &str, sha: &str, size: usize, now: Instant) -> NexusResult<()> {
+    pub fn insert_backup(
+        &self,
+        id: &str,
+        op: &str,
+        agent: Option<AgentId>,
+        target_id: &str,
+        target_path: &str,
+        display: &str,
+        sha: &str,
+        size: usize,
+        now: Instant,
+    ) -> NexusResult<()> {
         self.conn
             .execute(
                 "INSERT INTO backups (id, operation_id, agent_id, target_id, target_path, target_display, sha256, size, created_at) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9)",
@@ -431,7 +571,12 @@ impl Store {
     }
 
     pub fn set_backup_written(&self, id: &str, fingerprint: &str) -> NexusResult<()> {
-        self.conn.execute("UPDATE backups SET written_fingerprint = ?2 WHERE id = ?1", params![id, fingerprint]).map_err(db_err)?;
+        self.conn
+            .execute(
+                "UPDATE backups SET written_fingerprint = ?2 WHERE id = ?1",
+                params![id, fingerprint],
+            )
+            .map_err(db_err)?;
         Ok(())
     }
 
@@ -460,12 +605,22 @@ impl Store {
     }
 
     pub fn backup(&self, id: &str) -> NexusResult<BackupRecord> {
-        self.backups(None)?.into_iter().find(|b| b.id == id).ok_or_else(|| NexusError::new("backup.missing"))
+        self.backups(None)?
+            .into_iter()
+            .find(|b| b.id == id)
+            .ok_or_else(|| NexusError::new("backup.missing"))
     }
 
     // ---- Health history --------------------------------------------------------------------
 
-    pub fn record_health(&self, agent: AgentId, readiness: &str, rule_set: &str, codes: &[String], at: Instant) -> NexusResult<()> {
+    pub fn record_health(
+        &self,
+        agent: AgentId,
+        readiness: &str,
+        rule_set: &str,
+        codes: &[String],
+        at: Instant,
+    ) -> NexusResult<()> {
         let tx = self.conn.unchecked_transaction().map_err(db_err)?;
         tx.execute("INSERT INTO health_history (agent_id, readiness, rule_set, issue_codes, evaluated_at) VALUES (?1,?2,?3,?4,?5)", params![agent.as_str(), readiness, rule_set, codes.join(","), at.to_rfc3339()])
             .map_err(db_err)?;
@@ -479,7 +634,16 @@ impl Store {
         let rows = stmt
             .query_map(params![agent.as_str(), limit], |r| {
                 let codes: String = r.get(2)?;
-                Ok(HealthHistoryRow { agent_id: r.get(0)?, readiness: r.get(1)?, issue_codes: codes.split(',').filter(|s| !s.is_empty()).map(String::from).collect(), evaluated_at: r.get(3)? })
+                Ok(HealthHistoryRow {
+                    agent_id: r.get(0)?,
+                    readiness: r.get(1)?,
+                    issue_codes: codes
+                        .split(',')
+                        .filter(|s| !s.is_empty())
+                        .map(String::from)
+                        .collect(),
+                    evaluated_at: r.get(3)?,
+                })
             })
             .map_err(db_err)?;
         rows.collect::<Result<_, _>>().map_err(db_err)
@@ -487,19 +651,36 @@ impl Store {
 
     // ---- Nexus-managed extensions and installations ---------------------------------------
 
-    pub fn add_managed_extension(&self, agent: AgentId, name: &str, origin: Option<&str>, op: &str, now: Instant) -> NexusResult<()> {
+    pub fn add_managed_extension(
+        &self,
+        agent: AgentId,
+        name: &str,
+        origin: Option<&str>,
+        op: &str,
+        now: Instant,
+    ) -> NexusResult<()> {
         self.conn
             .execute("INSERT OR REPLACE INTO managed_extensions (agent_id, name, origin, created_at, operation_id) VALUES (?1,?2,?3,?4,?5)", params![agent.as_str(), name, origin, now.to_rfc3339(), op])
             .map_err(db_err)?;
         Ok(())
     }
     pub fn remove_managed_extension(&self, agent: AgentId, name: &str) -> NexusResult<()> {
-        self.conn.execute("DELETE FROM managed_extensions WHERE agent_id = ?1 AND name = ?2", params![agent.as_str(), name]).map_err(db_err)?;
+        self.conn
+            .execute(
+                "DELETE FROM managed_extensions WHERE agent_id = ?1 AND name = ?2",
+                params![agent.as_str(), name],
+            )
+            .map_err(db_err)?;
         Ok(())
     }
     pub fn managed_extensions(&self, agent: AgentId) -> NexusResult<Vec<String>> {
-        let mut stmt = self.conn.prepare("SELECT name FROM managed_extensions WHERE agent_id = ?1").map_err(db_err)?;
-        let rows = stmt.query_map([agent.as_str()], |r| r.get(0)).map_err(db_err)?;
+        let mut stmt = self
+            .conn
+            .prepare("SELECT name FROM managed_extensions WHERE agent_id = ?1")
+            .map_err(db_err)?;
+        let rows = stmt
+            .query_map([agent.as_str()], |r| r.get(0))
+            .map_err(db_err)?;
         rows.collect::<Result<_, _>>().map_err(db_err)
     }
 
@@ -513,13 +694,28 @@ impl Store {
         Ok(())
     }
     pub fn remove_installation(&self, agent: AgentId, recipe: &str) -> NexusResult<()> {
-        self.conn.execute("DELETE FROM nexus_installations WHERE agent_id = ?1 AND recipe_id = ?2", params![agent.as_str(), recipe]).map_err(db_err)?;
+        self.conn
+            .execute(
+                "DELETE FROM nexus_installations WHERE agent_id = ?1 AND recipe_id = ?2",
+                params![agent.as_str(), recipe],
+            )
+            .map_err(db_err)?;
         Ok(())
     }
     pub fn ledger(&self) -> NexusResult<Vec<LedgerEntry>> {
         let mut stmt = self.conn.prepare("SELECT agent_id, recipe_id, version, installation_id, operation_id, status, at FROM nexus_installations").map_err(db_err)?;
         let rows = stmt
-            .query_map([], |r| Ok(LedgerEntry { agent_id: r.get(0)?, recipe_id: r.get(1)?, version: r.get(2)?, installation_id: r.get(3)?, operation_id: r.get(4)?, status: r.get(5)?, at: r.get(6)? }))
+            .query_map([], |r| {
+                Ok(LedgerEntry {
+                    agent_id: r.get(0)?,
+                    recipe_id: r.get(1)?,
+                    version: r.get(2)?,
+                    installation_id: r.get(3)?,
+                    operation_id: r.get(4)?,
+                    status: r.get(5)?,
+                    at: r.get(6)?,
+                })
+            })
             .map_err(db_err)?;
         rows.collect::<Result<_, _>>().map_err(db_err)
     }
@@ -545,11 +741,23 @@ mod tests {
     fn profile_edits_create_revisions_and_references_block_deletes() {
         let s = Store::open_in_memory().unwrap();
         let now = Instant(1000);
-        let m = ModelDefinition { id: "m1".into(), provider_id: "builtin.openai".into(), identifier: "gpt-x".into(), display_name: None, source: "manual".into(), source_detail: None, capabilities: vec![] };
+        let m = ModelDefinition {
+            id: "m1".into(),
+            provider_id: "builtin.openai".into(),
+            identifier: "gpt-x".into(),
+            display_name: None,
+            source: "manual".into(),
+            source_detail: None,
+            capabilities: vec![],
+        };
         s.insert_model(&m, now).unwrap();
         assert_eq!(s.insert_model(&m, now).unwrap_err().code, "model.duplicate");
         assert_eq!(s.save_profile("p", "Fast", "m1", None, now).unwrap(), 1);
-        assert_eq!(s.save_profile("p", "Fast", "m1", Some("high"), now).unwrap(), 2);
+        assert_eq!(
+            s.save_profile("p", "Fast", "m1", Some("high"), now)
+                .unwrap(),
+            2
+        );
         assert_eq!(s.profiles().unwrap()[0].revision, 2);
         assert!(s.profile_revision("p", 1).unwrap().is_some());
         assert_eq!(s.delete_model("m1").unwrap_err().code, "model.in_use");
@@ -558,10 +766,26 @@ mod tests {
     #[test]
     fn interrupted_operations_are_reconciled_not_replayed() {
         let s = Store::open_in_memory().unwrap();
-        s.begin_operation("op_1", "lifecycle.install", Some(AgentId::Gemini), "d", &serde_json::json!({}), Instant(1)).unwrap();
+        s.begin_operation(
+            "op_1",
+            "lifecycle.install",
+            Some(AgentId::Gemini),
+            "d",
+            &serde_json::json!({}),
+            Instant(1),
+        )
+        .unwrap();
         s.step("op_1", "started", Instant(1)).unwrap();
-        assert_eq!(s.begin_operation("op_1", "x", None, "d", &serde_json::json!({}), Instant(1)).unwrap_err().code, "operation.replayed");
-        assert_eq!(s.reconcile_interrupted(Instant(2)).unwrap(), vec!["op_1".to_string()]);
+        assert_eq!(
+            s.begin_operation("op_1", "x", None, "d", &serde_json::json!({}), Instant(1))
+                .unwrap_err()
+                .code,
+            "operation.replayed"
+        );
+        assert_eq!(
+            s.reconcile_interrupted(Instant(2)).unwrap(),
+            vec!["op_1".to_string()]
+        );
         let ops = s.operations(10).unwrap();
         assert_eq!(ops[0].status, "interrupted");
         assert_eq!(ops[0].steps, vec!["started".to_string()]);
@@ -570,10 +794,42 @@ mod tests {
     #[test]
     fn applied_record_is_separate_from_desired_intent() {
         let s = Store::open_in_memory().unwrap();
-        s.set_desired(AgentId::Claude, AssignmentMode::Direct, Some("m"), None, None, Instant(1)).unwrap();
-        assert!(s.assignment(AgentId::Claude).unwrap().unwrap().applied.is_none());
-        s.set_applied(AgentId::Claude, &AppliedRecord { identifier: "opus".into(), profile_revision: None, provider_revision: Some(1), applied_at: "t".into(), location: "~/x".into(), fingerprint: "f".into() }).unwrap();
-        s.set_desired(AgentId::Claude, AssignmentMode::Direct, Some("m2"), None, None, Instant(2)).unwrap();
+        s.set_desired(
+            AgentId::Claude,
+            AssignmentMode::Direct,
+            Some("m"),
+            None,
+            None,
+            Instant(1),
+        )
+        .unwrap();
+        assert!(s
+            .assignment(AgentId::Claude)
+            .unwrap()
+            .unwrap()
+            .applied
+            .is_none());
+        s.set_applied(
+            AgentId::Claude,
+            &AppliedRecord {
+                identifier: "opus".into(),
+                profile_revision: None,
+                provider_revision: Some(1),
+                applied_at: "t".into(),
+                location: "~/x".into(),
+                fingerprint: "f".into(),
+            },
+        )
+        .unwrap();
+        s.set_desired(
+            AgentId::Claude,
+            AssignmentMode::Direct,
+            Some("m2"),
+            None,
+            None,
+            Instant(2),
+        )
+        .unwrap();
         let a = s.assignment(AgentId::Claude).unwrap().unwrap();
         assert_eq!(a.model_id.as_deref(), Some("m2"));
         assert_eq!(a.applied.unwrap().identifier, "opus");
@@ -583,7 +839,12 @@ mod tests {
     fn schema_has_no_secret_columns() {
         for (_, sql) in MIGRATIONS {
             let lower = sql.to_lowercase();
-            assert!(!lower.contains("api_key") && !lower.contains("token") && !lower.contains("password") && !lower.contains("secret_value"));
+            assert!(
+                !lower.contains("api_key")
+                    && !lower.contains("token")
+                    && !lower.contains("password")
+                    && !lower.contains("secret_value")
+            );
         }
     }
 }

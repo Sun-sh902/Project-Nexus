@@ -87,11 +87,22 @@ pub fn run(spec: &ProcessSpec) -> NexusResult<ProcessOutcome> {
         use std::os::unix::process::CommandExt;
         command.process_group(0);
     }
-    let mut child = command.spawn().map_err(|_| NexusError::new("process.spawn_failed"))?;
+    let mut child = command
+        .spawn()
+        .map_err(|_| NexusError::new("process.spawn_failed"))?;
     let cap = spec.max_output;
     let buffers: [SharedTail; 2] = [Arc::default(), Arc::default()];
     let (done_tx, done_rx) = mpsc::channel::<()>();
-    let streams: [Option<Box<dyn Read + Send>>; 2] = [child.stdout.take().map(|s| Box::new(s) as Box<dyn Read + Send>), child.stderr.take().map(|s| Box::new(s) as Box<dyn Read + Send>)];
+    let streams: [Option<Box<dyn Read + Send>>; 2] = [
+        child
+            .stdout
+            .take()
+            .map(|s| Box::new(s) as Box<dyn Read + Send>),
+        child
+            .stderr
+            .take()
+            .map(|s| Box::new(s) as Box<dyn Read + Send>),
+    ];
     let mut readers = 0;
     for (stream, buffer) in streams.into_iter().zip(buffers.iter()) {
         if let Some(mut stream) = stream {
@@ -123,7 +134,12 @@ pub fn run(spec: &ProcessSpec) -> NexusResult<ProcessOutcome> {
     let started = StdInstant::now();
     let exit = loop {
         match child.try_wait() {
-            Ok(Some(status)) => break status.code().map(ExitKind::Exited).unwrap_or(ExitKind::Signalled),
+            Ok(Some(status)) => {
+                break status
+                    .code()
+                    .map(ExitKind::Exited)
+                    .unwrap_or(ExitKind::Signalled)
+            }
             Ok(None) if started.elapsed() >= spec.timeout => {
                 kill_tree(&mut child);
                 let _ = child.wait();
@@ -139,7 +155,10 @@ pub fn run(spec: &ProcessSpec) -> NexusResult<ProcessOutcome> {
     // Readers end when the pipes close; bound the wait in case a detached grandchild holds them.
     let deadline = StdInstant::now() + Duration::from_secs(2);
     for _ in 0..readers {
-        if done_rx.recv_timeout(deadline.saturating_duration_since(StdInstant::now())).is_err() {
+        if done_rx
+            .recv_timeout(deadline.saturating_duration_since(StdInstant::now()))
+            .is_err()
+        {
             break;
         }
     }
@@ -172,11 +191,18 @@ fn kill_tree(child: &mut std::process::Child) {
 /// variables are never forwarded implicitly.
 pub fn base_env(home: &std::path::Path, path_dirs: &[PathBuf]) -> Vec<(String, String)> {
     let sep = if cfg!(windows) { ";" } else { ":" };
-    let path = path_dirs.iter().map(|p| p.display().to_string()).collect::<Vec<_>>().join(sep);
+    let path = path_dirs
+        .iter()
+        .map(|p| p.display().to_string())
+        .collect::<Vec<_>>()
+        .join(sep);
     #[allow(unused_mut)]
     let mut env = vec![
         ("PATH".to_string(), path),
-        (if cfg!(windows) { "USERPROFILE" } else { "HOME" }.to_string(), home.display().to_string()),
+        (
+            if cfg!(windows) { "USERPROFILE" } else { "HOME" }.to_string(),
+            home.display().to_string(),
+        ),
         ("NO_COLOR".to_string(), "1".to_string()),
         ("TERM".to_string(), "dumb".to_string()),
         ("LANG".to_string(), "en_US.UTF-8".to_string()),
@@ -216,7 +242,11 @@ mod tests {
     #[test]
     fn arguments_are_not_shell_interpreted() {
         let dir = tempfile::tempdir().unwrap();
-        let echo = script(dir.path(), "echoargs", "for a in \"$@\"; do printf '[%s]' \"$a\"; done");
+        let echo = script(
+            dir.path(),
+            "echoargs",
+            "for a in \"$@\"; do printf '[%s]' \"$a\"; done",
+        );
         let marker = dir.path().join("pwned");
         let hostile = format!("x; touch {}", marker.display());
         let out = run(&spec(echo, &[&hostile, "$(id)", "--flag"], dir.path())).unwrap();
@@ -237,7 +267,11 @@ mod tests {
     #[test]
     fn timeouts_kill_and_output_is_bounded() {
         let dir = tempfile::tempdir().unwrap();
-        let p = script(dir.path(), "slow", "i=0; while [ $i -lt 200 ]; do echo line$i; i=$((i+1)); done; sleep 30");
+        let p = script(
+            dir.path(),
+            "slow",
+            "i=0; while [ $i -lt 200 ]; do echo line$i; i=$((i+1)); done; sleep 30",
+        );
         let mut s = spec(p, &[], dir.path());
         s.timeout = Duration::from_millis(400);
         let out = run(&s).unwrap();
@@ -248,11 +282,22 @@ mod tests {
     #[test]
     fn invalid_programs_and_arguments_are_rejected() {
         let dir = tempfile::tempdir().unwrap();
-        assert_eq!(run(&spec(PathBuf::from("sh"), &[], dir.path())).unwrap_err().code, "process.program_invalid");
+        assert_eq!(
+            run(&spec(PathBuf::from("sh"), &[], dir.path()))
+                .unwrap_err()
+                .code,
+            "process.program_invalid"
+        );
         let p = script(dir.path(), "ok", "true");
-        assert_eq!(run(&spec(p, &["a\nb"], dir.path())).unwrap_err().code, "process.argument_invalid");
+        assert_eq!(
+            run(&spec(p, &["a\nb"], dir.path())).unwrap_err().code,
+            "process.argument_invalid"
+        );
         let non_exec = dir.path().join("plain");
         std::fs::write(&non_exec, "x").unwrap();
-        assert_eq!(run(&spec(non_exec, &[], dir.path())).unwrap_err().code, "process.program_invalid");
+        assert_eq!(
+            run(&spec(non_exec, &[], dir.path())).unwrap_err().code,
+            "process.program_invalid"
+        );
     }
 }

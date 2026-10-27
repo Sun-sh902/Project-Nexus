@@ -12,17 +12,26 @@ const SERVICE: &str = "dev.projectnexus.desktop.selftest";
 
 impl SecretStore for SelfTestStore {
     fn get(&self, account: &str) -> NexusResult<Option<Vec<u8>>> {
-        match keyring::Entry::new(SERVICE, account).map_err(|_| NexusError::new("credential.store_error"))?.get_secret() {
+        match keyring::Entry::new(SERVICE, account)
+            .map_err(|_| NexusError::new("credential.store_error"))?
+            .get_secret()
+        {
             Ok(v) => Ok(Some(v)),
             Err(keyring::Error::NoEntry) => Ok(None),
             Err(_) => Err(NexusError::new("credential.store_unavailable")),
         }
     }
     fn set(&self, account: &str, secret: &[u8]) -> NexusResult<()> {
-        keyring::Entry::new(SERVICE, account).map_err(|_| NexusError::new("credential.store_error"))?.set_secret(secret).map_err(|_| NexusError::new("credential.store_unavailable"))
+        keyring::Entry::new(SERVICE, account)
+            .map_err(|_| NexusError::new("credential.store_error"))?
+            .set_secret(secret)
+            .map_err(|_| NexusError::new("credential.store_unavailable"))
     }
     fn delete(&self, account: &str) -> NexusResult<()> {
-        match keyring::Entry::new(SERVICE, account).map_err(|_| NexusError::new("credential.store_error"))?.delete_credential() {
+        match keyring::Entry::new(SERVICE, account)
+            .map_err(|_| NexusError::new("credential.store_error"))?
+            .delete_credential()
+        {
             Ok(()) | Err(keyring::Error::NoEntry) => Ok(()),
             Err(_) => Err(NexusError::new("credential.store_error")),
         }
@@ -36,7 +45,9 @@ fn keychain_selftest() {
     let dir = tempfile::tempdir().unwrap();
     let vault = BackupVault::new(dir.path().join("backups"), store.clone());
     let payload = b"{\"model\": \"opus\", \"note\": \"keychain self-test\"}";
-    let r = vault.protect(payload).expect("real Keychain must hold the backup key");
+    let r = vault
+        .protect(payload)
+        .expect("real Keychain must hold the backup key");
     assert_eq!(vault.read(&r.id).unwrap(), payload);
     // A second vault instance reuses the persisted key from the OS store.
     let again = BackupVault::new(dir.path().join("backups"), store.clone());

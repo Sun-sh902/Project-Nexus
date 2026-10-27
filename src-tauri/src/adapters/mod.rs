@@ -30,12 +30,20 @@ pub trait AgentAdapter: Send + Sync {
     }
     /// Version from metadata (package manifest, install layout) without executing anything.
     /// `None` means "fall back to the reviewed --version probe".
-    fn metadata_version(&self, ctx: &HostContext, exe: &Path, resolved: &Path, source: InstallSource, now: Instant) -> Option<Observed<String>>;
+    fn metadata_version(
+        &self,
+        ctx: &HostContext,
+        exe: &Path,
+        resolved: &Path,
+        source: InstallSource,
+        now: Instant,
+    ) -> Option<Observed<String>>;
 
     fn read_configs(&self, ctx: &HostContext) -> Vec<ReadConfig>;
     fn observe_model(&self, ctx: &HostContext, configs: &[ReadConfig]) -> ModelObservation;
     fn observe_auth(&self, ctx: &HostContext, configs: &[ReadConfig]) -> AuthObservation;
-    fn observe_extensions(&self, ctx: &HostContext, configs: &[ReadConfig]) -> ExtensionObservation;
+    fn observe_extensions(&self, ctx: &HostContext, configs: &[ReadConfig])
+        -> ExtensionObservation;
     /// Variables that change this Agent's behaviour, found in Nexus's environment or (statically)
     /// in shell startup files.
     fn override_variables(&self) -> &'static [(&'static str, &'static str)];
@@ -44,12 +52,26 @@ pub trait AgentAdapter: Send + Sync {
         let mut out: Vec<EnvOverride> = vars
             .iter()
             .filter(|(name, _)| ctx.env_present(name))
-            .map(|(name, affects)| EnvOverride { variable: name.to_string(), origin: "process".into(), location: None, affects: affects.to_string() })
+            .map(|(name, affects)| EnvOverride {
+                variable: name.to_string(),
+                origin: "process".into(),
+                location: None,
+                affects: affects.to_string(),
+            })
             .collect();
         let names: Vec<&str> = vars.iter().map(|(n, _)| *n).collect();
         for (name, file) in discovery::scan_shell_profiles(ctx, &names) {
-            let affects = vars.iter().find(|(n, _)| *n == name).map(|(_, a)| a.to_string()).unwrap_or_default();
-            out.push(EnvOverride { variable: name, origin: "shellProfile".into(), location: Some(file), affects });
+            let affects = vars
+                .iter()
+                .find(|(n, _)| *n == name)
+                .map(|(_, a)| a.to_string())
+                .unwrap_or_default();
+            out.push(EnvOverride {
+                variable: name,
+                origin: "shellProfile".into(),
+                location: Some(file),
+                affects,
+            });
         }
         out
     }
@@ -87,15 +109,27 @@ pub trait McpTarget: Send + Sync {
 }
 
 pub fn registry() -> Vec<Box<dyn AgentAdapter>> {
-    vec![Box::new(codex::Codex), Box::new(claude::Claude), Box::new(gemini::Gemini), Box::new(opencode::OpenCode)]
+    vec![
+        Box::new(codex::Codex),
+        Box::new(claude::Claude),
+        Box::new(gemini::Gemini),
+        Box::new(opencode::OpenCode),
+    ]
 }
 
 pub fn adapter(id: AgentId) -> Box<dyn AgentAdapter> {
-    registry().into_iter().find(|a| a.id() == id).expect("every AgentId has a compiled adapter")
+    registry()
+        .into_iter()
+        .find(|a| a.id() == id)
+        .expect("every AgentId has a compiled adapter")
 }
 
 pub fn cap(key: &'static str, support: Support, reason: Option<&'static str>) -> Capability {
-    Capability { key, support, reason }
+    Capability {
+        key,
+        support,
+        reason,
+    }
 }
 
 /// macOS behaviour is verified on this machine; Windows paths are implemented from official docs
@@ -110,7 +144,13 @@ pub fn platform_support_level(os: Os) -> Support {
 
 /// MCP names Nexus accepts for new bindings: conservative, config-key safe for TOML and JSON.
 pub fn validate_mcp_name(name: &str) -> NexusResult<()> {
-    if name.is_empty() || name.len() > 64 || !name.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_') || name.starts_with('-') {
+    if name.is_empty()
+        || name.len() > 64
+        || !name
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+        || name.starts_with('-')
+    {
         return Err(crate::core::NexusError::new("extension.invalid_name"));
     }
     Ok(())
@@ -128,7 +168,15 @@ pub fn validate_mcp_url(url: &str) -> NexusResult<()> {
     if authority.contains('@') || authority.is_empty() {
         return Err(err());
     }
-    let host = if authority.starts_with('[') { authority.split(']').next().unwrap_or("").trim_start_matches('[') } else { authority.split(':').next().unwrap_or("") };
+    let host = if authority.starts_with('[') {
+        authority
+            .split(']')
+            .next()
+            .unwrap_or("")
+            .trim_start_matches('[')
+    } else {
+        authority.split(':').next().unwrap_or("")
+    };
     let host = host.to_ascii_lowercase();
     let loopback = host == "localhost" || host == "127.0.0.1" || host == "::1";
     match scheme {
@@ -137,15 +185,31 @@ pub fn validate_mcp_url(url: &str) -> NexusResult<()> {
         _ => return Err(err()),
     }
     // Link-local / cloud metadata endpoints are never valid MCP servers.
-    if host.starts_with("169.254.") || host == "metadata.google.internal" || host.starts_with("fe80:") {
+    if host.starts_with("169.254.")
+        || host == "metadata.google.internal"
+        || host.starts_with("fe80:")
+    {
         return Err(err());
     }
-    let v4_blocked = |v4: std::net::Ipv4Addr| v4.is_private() || v4.is_loopback() || v4.is_unspecified() || v4.is_link_local() || (v4.octets()[0] == 100 && (64..128).contains(&v4.octets()[1]));
+    let v4_blocked = |v4: std::net::Ipv4Addr| {
+        v4.is_private()
+            || v4.is_loopback()
+            || v4.is_unspecified()
+            || v4.is_link_local()
+            || (v4.octets()[0] == 100 && (64..128).contains(&v4.octets()[1]))
+    };
     let ip_blocked = host.parse::<std::net::IpAddr>().map(|ip| match ip {
         std::net::IpAddr::V4(v4) => v4_blocked(v4),
-        std::net::IpAddr::V6(v6) => v6.is_loopback() || v6.is_unspecified() || (v6.segments()[0] & 0xfe00) == 0xfc00 || (v6.segments()[0] & 0xffc0) == 0xfe80 || v6.to_ipv4_mapped().map(v4_blocked).unwrap_or(false),
+        std::net::IpAddr::V6(v6) => {
+            v6.is_loopback()
+                || v6.is_unspecified()
+                || (v6.segments()[0] & 0xfe00) == 0xfc00
+                || (v6.segments()[0] & 0xffc0) == 0xfe80
+                || v6.to_ipv4_mapped().map(v4_blocked).unwrap_or(false)
+        }
     });
-    if !loopback && (*ip_blocked.as_ref().unwrap_or(&false) || (ip_blocked.is_err() && !host.contains('.')))
+    if !loopback
+        && (*ip_blocked.as_ref().unwrap_or(&false) || (ip_blocked.is_err() && !host.contains('.')))
     {
         return Err(err());
     }
@@ -162,7 +226,12 @@ mod tests {
 
     #[test]
     fn mcp_url_policy() {
-        for ok in ["https://mcp.example.com/sse", "http://localhost:3000/mcp", "http://127.0.0.1:8080", "https://mcp.example.com:8443/x?y=1"] {
+        for ok in [
+            "https://mcp.example.com/sse",
+            "http://localhost:3000/mcp",
+            "http://127.0.0.1:8080",
+            "https://mcp.example.com:8443/x?y=1",
+        ] {
             assert!(validate_mcp_url(ok).is_ok(), "{ok}");
         }
         for bad in [
@@ -187,7 +256,15 @@ mod tests {
     #[test]
     fn mcp_name_policy() {
         assert!(validate_mcp_name("docs-server_1").is_ok());
-        for bad in ["", "-flag", "a b", "a.b", "a\"b", "x]\n[evil", &"a".repeat(65)] {
+        for bad in [
+            "",
+            "-flag",
+            "a b",
+            "a.b",
+            "a\"b",
+            "x]\n[evil",
+            &"a".repeat(65),
+        ] {
             assert!(validate_mcp_name(bad).is_err(), "{bad}");
         }
     }

@@ -98,12 +98,25 @@ impl HostContext {
         let mut env = BTreeMap::new();
         for (name, secret) in OBSERVED_ENV {
             if let Ok(value) = std::env::var(name) {
-                env.insert(name.to_string(), EnvValue { present: true, value: if *secret { None } else { Some(value) } });
+                env.insert(
+                    name.to_string(),
+                    EnvValue {
+                        present: true,
+                        value: if *secret { None } else { Some(value) },
+                    },
+                );
             }
         }
         let os = Os::current();
         let extra_bin_dirs = default_bin_dirs(os, &home, &env);
-        HostContext { os, arch: std::env::consts::ARCH, home, data_dir, env, extra_bin_dirs }
+        HostContext {
+            os,
+            arch: std::env::consts::ARCH,
+            home,
+            data_dir,
+            env,
+            extra_bin_dirs,
+        }
     }
 
     /// Fully isolated context for tests: nothing comes from the real environment.
@@ -122,7 +135,17 @@ impl HostContext {
     #[cfg(test)]
     pub fn set_env(&mut self, name: &str, value: &str) {
         let secret = OBSERVED_ENV.iter().any(|(n, s)| *n == name && *s);
-        self.env.insert(name.to_string(), EnvValue { present: true, value: if secret { None } else { Some(value.to_string()) } });
+        self.env.insert(
+            name.to_string(),
+            EnvValue {
+                present: true,
+                value: if secret {
+                    None
+                } else {
+                    Some(value.to_string())
+                },
+            },
+        );
     }
 
     pub fn env_value(&self, name: &str) -> Option<&str> {
@@ -135,7 +158,13 @@ impl HostContext {
     pub fn path_dirs(&self) -> Vec<PathBuf> {
         let sep = if self.os == Os::Windows { ';' } else { ':' };
         self.env_value("PATH")
-            .map(|p| p.split(sep).filter(|s| !s.is_empty()).map(PathBuf::from).filter(|p| p.is_absolute()).collect())
+            .map(|p| {
+                p.split(sep)
+                    .filter(|s| !s.is_empty())
+                    .map(PathBuf::from)
+                    .filter(|p| p.is_absolute())
+                    .collect()
+            })
             .unwrap_or_default()
     }
 
@@ -159,7 +188,12 @@ impl HostContext {
     pub fn display_path(&self, path: &Path) -> String {
         // Canonicalized paths may reach the home through a symlink (e.g. /var → /private/var).
         let canonical_home = std::fs::canonicalize(&self.home).ok();
-        let stripped = path.strip_prefix(&self.home).or_else(|e| canonical_home.as_deref().map(|h| path.strip_prefix(h)).unwrap_or(Err(e)));
+        let stripped = path.strip_prefix(&self.home).or_else(|e| {
+            canonical_home
+                .as_deref()
+                .map(|h| path.strip_prefix(h))
+                .unwrap_or(Err(e))
+        });
         match stripped {
             Ok(rest) if rest.as_os_str().is_empty() => "~".to_string(),
             Ok(rest) => format!("~{}{}", std::path::MAIN_SEPARATOR, rest.display()),
@@ -205,7 +239,12 @@ fn default_bin_dirs(os: Os, home: &Path, env: &BTreeMap<String, EnvValue>) -> Ve
             }
             dirs.push(home.join(".local").join("bin"));
             if let Some(local) = env.get("LOCALAPPDATA").and_then(|v| v.value.clone()) {
-                dirs.push(PathBuf::from(&local).join("Microsoft").join("WinGet").join("Links"));
+                dirs.push(
+                    PathBuf::from(&local)
+                        .join("Microsoft")
+                        .join("WinGet")
+                        .join("Links"),
+                );
             }
         }
     }
@@ -220,8 +259,14 @@ mod tests {
     #[test]
     fn display_path_hides_home_prefix() {
         let ctx = HostContext::isolated(Path::new("/Users/someone"), Path::new("/tmp/data"));
-        assert_eq!(ctx.display_path(Path::new("/Users/someone/.codex/config.toml")), format!("~{}.codex/config.toml", std::path::MAIN_SEPARATOR));
-        assert_eq!(ctx.display_path(Path::new("/opt/homebrew/bin/codex")), "/opt/homebrew/bin/codex");
+        assert_eq!(
+            ctx.display_path(Path::new("/Users/someone/.codex/config.toml")),
+            format!("~{}.codex/config.toml", std::path::MAIN_SEPARATOR)
+        );
+        assert_eq!(
+            ctx.display_path(Path::new("/opt/homebrew/bin/codex")),
+            "/opt/homebrew/bin/codex"
+        );
     }
 
     #[test]
@@ -237,7 +282,14 @@ mod tests {
     #[test]
     fn relative_path_entries_are_ignored() {
         let mut ctx = HostContext::isolated(Path::new("/h"), Path::new("/d"));
-        ctx.set_env("PATH", if cfg!(windows) { ".;C:\\bin" } else { ".:/usr/bin::bin" });
+        ctx.set_env(
+            "PATH",
+            if cfg!(windows) {
+                ".;C:\\bin"
+            } else {
+                ".:/usr/bin::bin"
+            },
+        );
         let dirs = ctx.path_dirs();
         assert_eq!(dirs.len(), 1);
     }

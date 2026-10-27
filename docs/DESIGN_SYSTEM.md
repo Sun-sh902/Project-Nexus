@@ -1,5 +1,7 @@
 # Project Nexus design system
 
+> Publication note (2026-10-27): the `design-lab/` and `.impeccable/` design evidence referenced here is kept in the local development environment and is not part of the published repository.
+
 Status: canonical visual system for the **Phase 1.2 — Readiness Atelier** production redesign, 2026-10-27 (Asia/Shanghai). It supersedes the Phase 1.1B-1R "Editorial Instrument" visuals, which the product owner rejected. The tokens, type roles and layouts below describe the current React implementation in [src/styles.css](../src/styles.css). Final aesthetic approval remains with the product owner. [PRD](PRD.md) owns product hierarchy, [I18N](I18N.md) owns terminology, [ARCHITECTURE](ARCHITECTURE.md) owns readiness semantics and [ROADMAP](ROADMAP.md) remains the sole phase sequence. Native evidence for this revision is in [.impeccable/review/phase1-2-atelier](../.impeccable/review/phase1-2-atelier/README.md).
 
 The implemented application remains a **fixture-only Phase 1 shell**. Health evidence, installation states, Models, configuration records, System information and activity are demonstrations, labelled in the sidebar register on every page. Descriptions of installation, authentication, configuration application and repair later in this document are future phase-gated principles, not implemented operations or authorization to begin Phase 2.

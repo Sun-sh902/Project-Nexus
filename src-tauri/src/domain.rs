@@ -15,7 +15,12 @@ pub enum AgentId {
 }
 
 impl AgentId {
-    pub const ALL: [AgentId; 4] = [AgentId::Codex, AgentId::Claude, AgentId::Gemini, AgentId::Opencode];
+    pub const ALL: [AgentId; 4] = [
+        AgentId::Codex,
+        AgentId::Claude,
+        AgentId::Gemini,
+        AgentId::Opencode,
+    ];
     pub fn as_str(self) -> &'static str {
         match self {
             AgentId::Codex => "codex",
@@ -78,10 +83,27 @@ pub struct Observed<T> {
 
 impl<T> Observed<T> {
     pub fn ok(value: T, source: EvidenceSource, location: Option<String>, at: Instant) -> Self {
-        Observed { value: Some(value), status: ObsStatus::Observed, source, location, observed_at: at }
+        Observed {
+            value: Some(value),
+            status: ObsStatus::Observed,
+            source,
+            location,
+            observed_at: at,
+        }
     }
-    pub fn missing(status: ObsStatus, source: EvidenceSource, location: Option<String>, at: Instant) -> Self {
-        Observed { value: None, status, source, location, observed_at: at }
+    pub fn missing(
+        status: ObsStatus,
+        source: EvidenceSource,
+        location: Option<String>,
+        at: Instant,
+    ) -> Self {
+        Observed {
+            value: None,
+            status,
+            source,
+            location,
+            observed_at: at,
+        }
     }
 }
 
@@ -299,7 +321,11 @@ impl AgentSnapshot {
         self.primary.and_then(|i| self.installations.get(i))
     }
     pub fn capability(&self, key: &str) -> Support {
-        self.capabilities.iter().find(|c| c.key == key).map(|c| c.support).unwrap_or(Support::Unsupported)
+        self.capabilities
+            .iter()
+            .find(|c| c.key == key)
+            .map(|c| c.support)
+            .unwrap_or(Support::Unsupported)
     }
 }
 
@@ -315,7 +341,11 @@ pub struct RuntimeRequirement {
 /// Compares dotted numeric versions, ignoring pre-release suffixes. `None` if unparseable.
 pub fn version_at_least(version: &str, minimum: &str) -> Option<bool> {
     let parse = |s: &str| -> Option<Vec<u64>> {
-        let core = s.trim().trim_start_matches('v').split(['-', '+', ' ']).next()?;
+        let core = s
+            .trim()
+            .trim_start_matches('v')
+            .split(['-', '+', ' '])
+            .next()?;
         core.split('.').map(|p| p.parse::<u64>().ok()).collect()
     };
     let (mut a, mut b) = (parse(version)?, parse(minimum)?);
@@ -332,7 +362,11 @@ pub fn extract_version(text: &str) -> Option<String> {
         .find(|t| {
             let core = t.split(['-', '+']).next().unwrap_or("");
             let parts: Vec<&str> = core.split('.').collect();
-            parts.len() >= 2 && parts.len() <= 4 && parts.iter().all(|p| !p.is_empty() && p.len() <= 9 && p.chars().all(|c| c.is_ascii_digit()))
+            parts.len() >= 2
+                && parts.len() <= 4
+                && parts
+                    .iter()
+                    .all(|p| !p.is_empty() && p.len() <= 9 && p.chars().all(|c| c.is_ascii_digit()))
         })
         .map(|t| t.chars().take(64).collect())
 }
@@ -343,10 +377,19 @@ mod tests {
 
     #[test]
     fn version_extraction_from_real_probe_shapes() {
-        assert_eq!(extract_version("codex-cli 0.164.0\n").as_deref(), Some("0.164.0"));
+        assert_eq!(
+            extract_version("codex-cli 0.164.0\n").as_deref(),
+            Some("0.164.0")
+        );
         assert_eq!(extract_version("opencode v2.1.4").as_deref(), Some("2.1.4"));
-        assert_eq!(extract_version("2.1.311 (Claude Code)").as_deref(), Some("2.1.311"));
-        assert_eq!(extract_version("0.64.0-preview.1").as_deref(), Some("0.64.0-preview.1"));
+        assert_eq!(
+            extract_version("2.1.311 (Claude Code)").as_deref(),
+            Some("2.1.311")
+        );
+        assert_eq!(
+            extract_version("0.64.0-preview.1").as_deref(),
+            Some("0.64.0-preview.1")
+        );
         assert_eq!(extract_version("no version here"), None);
         assert_eq!(extract_version("error 404"), None);
     }

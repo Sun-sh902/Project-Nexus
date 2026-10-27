@@ -8,7 +8,11 @@ use std::collections::BTreeMap;
 use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
 
 fn catalog(locale: &str) -> BTreeMap<String, String> {
-    let source = if locale == "zh-CN" { include_str!("../../src/locales/zh-CN/native.json") } else { include_str!("../../src/locales/en-US/native.json") };
+    let source = if locale == "zh-CN" {
+        include_str!("../../src/locales/zh-CN/native.json")
+    } else {
+        include_str!("../../src/locales/en-US/native.json")
+    };
     serde_json::from_str(source).expect("bundled native catalog must be valid")
 }
 
@@ -16,17 +20,35 @@ fn catalog(locale: &str) -> BTreeMap<String, String> {
 pub fn dialog_text(plan: &PlanView, locale: &str) -> (String, String, String, String) {
     let m = catalog(locale);
     let t = |k: &str| m.get(k).cloned().unwrap_or_else(|| k.to_string());
-    let param = |k: &str| plan.params.iter().find(|(key, _)| key == k).map(|(_, v)| v.clone());
-    let agent = plan.agent_id.map(|a| crate::adapters::adapter(a).name().to_string()).unwrap_or_default();
+    let param = |k: &str| {
+        plan.params
+            .iter()
+            .find(|(key, _)| key == k)
+            .map(|(_, v)| v.clone())
+    };
+    let agent = plan
+        .agent_id
+        .map(|a| crate::adapters::adapter(a).name().to_string())
+        .unwrap_or_default();
     let mut lines = vec![format!("{} — {agent}", t(&format!("action.{}", plan.kind)))];
     if let Some(cfg) = &plan.config {
         lines.push(format!("{}: {}", t("label.file"), cfg.location));
         for change in cfg.changes.iter().take(4) {
-            lines.push(format!("  {}: {} → {}", change.key, change.before.clone().unwrap_or_else(|| "∅".into()), change.after.clone().unwrap_or_else(|| "∅".into())));
+            lines.push(format!(
+                "  {}: {} → {}",
+                change.key,
+                change.before.clone().unwrap_or_else(|| "∅".into()),
+                change.after.clone().unwrap_or_else(|| "∅".into())
+            ));
         }
     }
     if let Some(p) = &plan.process {
-        lines.push(format!("{}: {} {}", t("label.command"), p.program, p.args.join(" ")));
+        lines.push(format!(
+            "{}: {} {}",
+            t("label.command"),
+            p.program,
+            p.args.join(" ")
+        ));
         if let Some(v) = &p.version {
             lines.push(format!("{}: {v}", t("label.version")));
         }
@@ -37,13 +59,30 @@ pub fn dialog_text(plan: &PlanView, locale: &str) -> (String, String, String, St
     if let Some(v) = param("model") {
         lines.push(format!("{}: {v}", t("label.model")));
     }
-    lines.push(format!("{}: {}", t("label.backup"), t(&format!("backup.{}", plan.backup))));
-    lines.push(format!("{}: {}", t("label.rollback"), t(&format!("rollback.{}", plan.rollback))));
-    lines.push(format!("{}: {}", t("label.privileges"), t(&format!("privileges.{}", plan.privileges))));
+    lines.push(format!(
+        "{}: {}",
+        t("label.backup"),
+        t(&format!("backup.{}", plan.backup))
+    ));
+    lines.push(format!(
+        "{}: {}",
+        t("label.rollback"),
+        t(&format!("rollback.{}", plan.rollback))
+    ));
+    lines.push(format!(
+        "{}: {}",
+        t("label.privileges"),
+        t(&format!("privileges.{}", plan.privileges))
+    ));
     for warning in &plan.warnings {
         lines.push(format!("• {}", t(warning)));
     }
-    (t("title"), lines.join("\n"), t("button.confirm"), t("button.cancel"))
+    (
+        t("title"),
+        lines.join("\n"),
+        t("button.confirm"),
+        t("button.cancel"),
+    )
 }
 
 pub struct NativeConfirmer {

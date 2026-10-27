@@ -13,16 +13,16 @@ mod discovery;
 mod domain;
 mod health;
 mod ipc;
+#[cfg(test)]
+mod keychain_selftest;
 mod lifecycle;
 mod models;
 mod native_confirm;
 mod platform;
-mod secrets;
-mod store;
-#[cfg(test)]
-mod keychain_selftest;
 #[cfg(test)]
 mod scenario_tests;
+mod secrets;
+mod store;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -83,9 +83,13 @@ pub fn run() {
             let data_dir = app.path().app_data_dir()?;
             let ctx = platform::HostContext::detect(data_dir.clone());
             platform::fs::ensure_private_dir(&data_dir).map_err(|e| e.to_string())?;
-            let store = store::Store::open(&data_dir.join("nexus.db")).map_err(|e| e.to_string())?;
-            let confirmer = Box::new(native_confirm::NativeConfirmer { handle: app.handle().clone() });
-            let state = app::App::new(ctx, store, Arc::new(secrets::OsSecretStore), confirmer).map_err(|e| e.to_string())?;
+            let store =
+                store::Store::open(&data_dir.join("nexus.db")).map_err(|e| e.to_string())?;
+            let confirmer = Box::new(native_confirm::NativeConfirmer {
+                handle: app.handle().clone(),
+            });
+            let state = app::App::new(ctx, store, Arc::new(secrets::OsSecretStore), confirmer)
+                .map_err(|e| e.to_string())?;
             app.manage::<ipc::AppState>(Arc::new(state));
             if let Some(window) = app.get_webview_window("main") {
                 // Never force the practical minimum beyond the monitor work area.

@@ -11,7 +11,10 @@ pub struct Instant(pub i64);
 
 impl Instant {
     pub fn now() -> Self {
-        let secs = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or(Duration::ZERO).as_secs();
+        let secs = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or(Duration::ZERO)
+            .as_secs();
         Instant(secs as i64)
     }
     pub fn plus_secs(self, secs: i64) -> Self {
@@ -22,12 +25,24 @@ impl Instant {
         let days = self.0.div_euclid(86_400);
         let rem = self.0.rem_euclid(86_400);
         let (y, m, d) = civil_from_days(days);
-        format!("{y:04}-{m:02}-{d:02}T{:02}:{:02}:{:02}Z", rem / 3600, (rem % 3600) / 60, rem % 60)
+        format!(
+            "{y:04}-{m:02}-{d:02}T{:02}:{:02}:{:02}Z",
+            rem / 3600,
+            (rem % 3600) / 60,
+            rem % 60
+        )
     }
     #[cfg(test)]
     pub fn parse_rfc3339(text: &str) -> Option<Self> {
         let b = text.as_bytes();
-        if b.len() != 20 || b[4] != b'-' || b[7] != b'-' || b[10] != b'T' || b[13] != b':' || b[16] != b':' || b[19] != b'Z' {
+        if b.len() != 20
+            || b[4] != b'-'
+            || b[7] != b'-'
+            || b[10] != b'T'
+            || b[13] != b':'
+            || b[16] != b':'
+            || b[19] != b'Z'
+        {
             return None;
         }
         let n = |s: &str| s.parse::<i64>().ok();
@@ -36,7 +51,9 @@ impl Instant {
         if !(1..=12).contains(&m) || !(1..=31).contains(&d) || hh > 23 || mm > 59 || ss > 60 {
             return None;
         }
-        Some(Instant(days_from_civil(y, m, d) * 86_400 + hh * 3600 + mm * 60 + ss))
+        Some(Instant(
+            days_from_civil(y, m, d) * 86_400 + hh * 3600 + mm * 60 + ss,
+        ))
     }
 }
 
@@ -97,7 +114,11 @@ pub struct NexusError {
 
 impl NexusError {
     pub fn new(code: &'static str) -> Self {
-        NexusError { code, params: Vec::new(), retryable: false }
+        NexusError {
+            code,
+            params: Vec::new(),
+            retryable: false,
+        }
     }
     pub fn retryable(mut self) -> Self {
         self.retryable = true;
@@ -121,7 +142,11 @@ pub type NexusResult<T> = Result<T, NexusError>;
 /// Display-safe identifier (config key): control characters removed, length bounded, never
 /// masked, because the exact name is needed to address the entry later.
 pub fn clean_name(input: &str) -> String {
-    input.chars().filter(|c| !c.is_control()).take(128).collect()
+    input
+        .chars()
+        .filter(|c| !c.is_control())
+        .take(128)
+        .collect()
 }
 
 /// Removes terminal control sequences and masks token-shaped substrings. Applied to every
@@ -151,7 +176,9 @@ pub fn redact(input: &str) -> String {
         }
     }
     clean
-        .split_inclusive(|c: char| c.is_whitespace() || c == '"' || c == '\'' || c == '=' || c == ',')
+        .split_inclusive(|c: char| {
+            c.is_whitespace() || c == '"' || c == '\'' || c == '=' || c == ','
+        })
         .map(|part| {
             let (word, sep) = split_trailing_sep(part);
             if looks_like_secret(word) {
@@ -165,13 +192,25 @@ pub fn redact(input: &str) -> String {
 
 fn split_trailing_sep(part: &str) -> (&str, &str) {
     match part.char_indices().last() {
-        Some((i, c)) if c.is_whitespace() || c == '"' || c == '\'' || c == '=' || c == ',' => (&part[..i], &part[i..]),
+        Some((i, c)) if c.is_whitespace() || c == '"' || c == '\'' || c == '=' || c == ',' => {
+            (&part[..i], &part[i..])
+        }
         _ => (part, ""),
     }
 }
 
 fn looks_like_secret(word: &str) -> bool {
-    const PREFIXES: [&str; 9] = ["sk-", "sk_", "ghp_", "gho_", "github_pat_", "xox", "AIza", "ya29.", "Bearer"];
+    const PREFIXES: [&str; 9] = [
+        "sk-",
+        "sk_",
+        "ghp_",
+        "gho_",
+        "github_pat_",
+        "xox",
+        "AIza",
+        "ya29.",
+        "Bearer",
+    ];
     if PREFIXES.iter().any(|p| word.starts_with(p)) && word.len() >= 12 {
         return true;
     }
@@ -179,7 +218,9 @@ fn looks_like_secret(word: &str) -> bool {
     word.len() >= 32
         && !word.contains('/')
         && !word.contains('\\')
-        && word.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == '.')
+        && word
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == '.')
         && word.chars().any(|c| c.is_ascii_digit())
         && word.chars().any(|c| c.is_ascii_alphabetic())
 }
@@ -190,7 +231,11 @@ mod tests {
 
     #[test]
     fn rfc3339_round_trips() {
-        for text in ["1970-01-01T00:00:00Z", "2026-10-27T02:30:59Z", "2000-02-29T23:59:59Z"] {
+        for text in [
+            "1970-01-01T00:00:00Z",
+            "2026-10-27T02:30:59Z",
+            "2000-02-29T23:59:59Z",
+        ] {
             assert_eq!(Instant::parse_rfc3339(text).unwrap().to_rfc3339(), text);
         }
         assert!(Instant::parse_rfc3339("2026-13-01T00:00:00Z").is_none());
@@ -217,7 +262,8 @@ mod tests {
 
     #[test]
     fn error_params_are_redacted() {
-        let e = NexusError::new("config.parse_failed").with("detail", "token ghp_abcdefghijklmnopqrstuv1234");
+        let e = NexusError::new("config.parse_failed")
+            .with("detail", "token ghp_abcdefghijklmnopqrstuv1234");
         assert!(!e.params[0].1.contains("ghp_abc"));
     }
 }

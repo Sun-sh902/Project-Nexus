@@ -191,6 +191,12 @@ A separate reviewer agent with no implementation context reviewed commits a7481d
 | P3 | Journal step writes inside the transaction callback are best-effort | **Open** |
 | P3 | Windows `npm.cmd` fails the executable check, so Windows npm recipes are inert | **Open**, consistent with Windows `unverified` status |
 
+## Release preparation (2026-10-27)
+
+- Branch merged into `main` (fast-forward). Before publication, history was rewritten (with user approval, never pushed before) to exclude `design-lab/`, `.impeccable/` (third-party reference images, local paths) and the dead worktree pointer; absolute home paths were scrubbed from Phase 1 records. Those folders remain on disk and are git-ignored. Pre-cleanup `.git` backup: `~/Documents/Project-Nexus-Dev-git-before-cleanup-20261027.tar.gz`.
+- Version 0.2.0 (tag `v0.2.0-beta.1`, pre-release). `cargo fmt` applied.
+- Release artifact: `Project Nexus_0.2.0_aarch64.dmg` — ad-hoc signed, **not notarized** (Security §5 signing gate still open; disclosed in release notes).
+
 ## Continuation point
 
 All gates implemented. Next steps toward a public Beta: Windows build + runtime validation (paths,

@@ -1,5 +1,7 @@
 # Phase 1.1B-1 生产桌面 UI 历史实施记录（视觉基线已被否决）
 
+> 发布说明（2026-10-27）：本文链接的 `design-lab/` 与 `.impeccable/` 设计证据仅保存在本地开发环境，不包含在发布的仓库中。
+
 历史记录日期：2026-10-11（Asia/Shanghai）。本文件保存 Phase 1.1B-1 当时的实施与验证证据，其生产视觉基线已被用户否决。当前获授权的 Phase 1.1B-1R / **Editorial Instrument** 视觉、原生截图、验证结果与剩余限制由 [PHASE1_UI_REDESIGN.md](PHASE1_UI_REDESIGN.md) 记录；当前视觉规格由 [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) 统一维护。旧字标、pink/purple 上下文、字号、间距、tokens、截图与测试计数不代表当前应用，也不构成审美批准。
 
 **当前状态：本文件为保留的历史证据，已由 1.1B-1R 取代其视觉实施定义；新版本仍等待用户明确视觉批准。** 下文所有“当前”“本批次”“已完成”及结果均指历史 B-1 批次，不能转移为 B-1R 验证。B-1 当时已在现有 React / Tauri 2 桌面应用中实施共享视觉系统、外壳、Home 与 Agent Detail，业务数据全部来自 fixture。其独立评审最终 `ship` 仅针对 R1/R2 两项无障碍修正，不代表最终审美批准、完整无障碍认证或跨平台验收。保留 [当时最终评审](../.impeccable/review/phase1-ui/finish-review.md)、[当时验证记录](../.impeccable/review/phase1-ui/validation.json) 与 [当时验证限制](../.impeccable/review/phase1-ui/validation-limits.json)，不删除历史证据。

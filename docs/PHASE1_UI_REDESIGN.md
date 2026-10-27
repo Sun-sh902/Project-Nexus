@@ -1,5 +1,7 @@
 # Phase 1.1B-1R — Editorial Instrument
 
+> 发布说明（2026-10-27）：本文链接的 `design-lab/` 与 `.impeccable/` 设计证据仅保存在本地开发环境，不包含在发布的仓库中。
+
 2026-10-11，macOS arm64。真实 React / Tauri 应用的视觉重设计已实现并生成可运行 `.app`，等待用户视觉批准。未创建独立设计实验，未进入 Phase 2，未提交 Git。完整 DMG 封装失败，不能称为完整分发构建通过。
 
 ## 范围与原有工作

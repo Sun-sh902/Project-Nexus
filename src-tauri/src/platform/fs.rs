@@ -60,21 +60,35 @@ pub fn read_bounded(path: &Path, max: u64) -> Result<FileRead, ReadFailure> {
     }
     let mut file = File::open(path).map_err(|e| classify(&e))?;
     let mut bytes = Vec::with_capacity(meta.len() as usize);
-    (&mut file).take(max + 1).read_to_end(&mut bytes).map_err(|e| classify(&e))?;
+    (&mut file)
+        .take(max + 1)
+        .read_to_end(&mut bytes)
+        .map_err(|e| classify(&e))?;
     if bytes.len() as u64 > max {
         return Err(ReadFailure::TooLarge);
     }
-    Ok(FileRead { fingerprint: sha256_hex(&bytes), bytes, via_symlink })
+    Ok(FileRead {
+        fingerprint: sha256_hex(&bytes),
+        bytes,
+        via_symlink,
+    })
 }
 
 /// A path is safe to mutate only if it is a regular, non-symlinked file (or absent with a real,
 /// non-symlinked parent directory), owned by the current user, and not group/world writable.
 pub fn check_mutable_target(path: &Path) -> NexusResult<bool> {
-    if !path.is_absolute() || path.components().any(|c| matches!(c, std::path::Component::ParentDir)) {
+    if !path.is_absolute()
+        || path
+            .components()
+            .any(|c| matches!(c, std::path::Component::ParentDir))
+    {
         return Err(NexusError::new("config.unsafe_path"));
     }
-    let parent = path.parent().ok_or_else(|| NexusError::new("config.unsafe_path"))?;
-    let parent_meta = fs::symlink_metadata(parent).map_err(|_| NexusError::new("config.parent_missing"))?;
+    let parent = path
+        .parent()
+        .ok_or_else(|| NexusError::new("config.unsafe_path"))?;
+    let parent_meta =
+        fs::symlink_metadata(parent).map_err(|_| NexusError::new("config.parent_missing"))?;
     if parent_meta.file_type().is_symlink() || !parent_meta.is_dir() {
         return Err(NexusError::new("config.unsafe_symlink"));
     }
@@ -131,18 +145,31 @@ fn check_hard_links(_meta: &fs::Metadata) -> NexusResult<()> {
 /// Atomic replacement: securely created sibling temporary file → write → fsync → rename →
 /// directory fsync. Preserves the original file's permission bits. Fails closed if the target's
 /// current fingerprint no longer matches `expected_fingerprint` (concurrent external edit).
-pub fn atomic_replace(path: &Path, bytes: &[u8], expected_fingerprint: Option<&str>) -> NexusResult<String> {
+pub fn atomic_replace(
+    path: &Path,
+    bytes: &[u8],
+    expected_fingerprint: Option<&str>,
+) -> NexusResult<String> {
     let existed = check_mutable_target(path)?;
     let current = if existed {
-        Some(read_bounded(path, MAX_CONFIG_BYTES).map_err(|f| NexusError::new(f.code()))?.fingerprint)
+        Some(
+            read_bounded(path, MAX_CONFIG_BYTES)
+                .map_err(|f| NexusError::new(f.code()))?
+                .fingerprint,
+        )
     } else {
         None
     };
     if current.as_deref() != expected_fingerprint {
         return Err(NexusError::new("config.concurrent_change"));
     }
-    let parent = path.parent().ok_or_else(|| NexusError::new("config.unsafe_path"))?;
-    let name = path.file_name().and_then(|n| n.to_str()).ok_or_else(|| NexusError::new("config.unsafe_path"))?;
+    let parent = path
+        .parent()
+        .ok_or_else(|| NexusError::new("config.unsafe_path"))?;
+    let name = path
+        .file_name()
+        .and_then(|n| n.to_str())
+        .ok_or_else(|| NexusError::new("config.unsafe_path"))?;
     let tmp: PathBuf = parent.join(format!(".{name}.{}.nexus-tmp", new_id("w")));
     let result = (|| -> NexusResult<()> {
         let mut options = OpenOptions::new();
@@ -152,19 +179,29 @@ pub fn atomic_replace(path: &Path, bytes: &[u8], expected_fingerprint: Option<&s
             use std::os::unix::fs::OpenOptionsExt;
             options.mode(0o600);
         }
-        let mut file = options.open(&tmp).map_err(|_| NexusError::new("fs.write_failed"))?;
-        file.write_all(bytes).map_err(|_| NexusError::new("fs.write_failed").retryable())?;
-        file.sync_all().map_err(|_| NexusError::new("fs.write_failed").retryable())?;
+        let mut file = options
+            .open(&tmp)
+            .map_err(|_| NexusError::new("fs.write_failed"))?;
+        file.write_all(bytes)
+            .map_err(|_| NexusError::new("fs.write_failed").retryable())?;
+        file.sync_all()
+            .map_err(|_| NexusError::new("fs.write_failed").retryable())?;
         #[cfg(unix)]
         if existed {
             use std::os::unix::fs::PermissionsExt;
-            let mode = fs::metadata(path).map_err(|_| NexusError::new("fs.write_failed"))?.permissions().mode();
-            fs::set_permissions(&tmp, fs::Permissions::from_mode(mode & 0o7777)).map_err(|_| NexusError::new("fs.write_failed"))?;
+            let mode = fs::metadata(path)
+                .map_err(|_| NexusError::new("fs.write_failed"))?
+                .permissions()
+                .mode();
+            fs::set_permissions(&tmp, fs::Permissions::from_mode(mode & 0o7777))
+                .map_err(|_| NexusError::new("fs.write_failed"))?;
         }
         drop(file);
         // Re-check immediately before replacement to narrow the race window.
         if existed {
-            let again = read_bounded(path, MAX_CONFIG_BYTES).map_err(|f| NexusError::new(f.code()))?.fingerprint;
+            let again = read_bounded(path, MAX_CONFIG_BYTES)
+                .map_err(|f| NexusError::new(f.code()))?
+                .fingerprint;
             if Some(again.as_str()) != expected_fingerprint {
                 return Err(NexusError::new("config.concurrent_change"));
             }
@@ -174,7 +211,13 @@ pub fn atomic_replace(path: &Path, bytes: &[u8], expected_fingerprint: Option<&s
         } else {
             // Creation must never replace a file that appeared after planning: a hard link
             // fails if the target exists, unlike rename.
-            fs::hard_link(&tmp, path).map_err(|e| if e.kind() == std::io::ErrorKind::AlreadyExists { NexusError::new("config.concurrent_change") } else { NexusError::new("fs.write_failed") })?;
+            fs::hard_link(&tmp, path).map_err(|e| {
+                if e.kind() == std::io::ErrorKind::AlreadyExists {
+                    NexusError::new("config.concurrent_change")
+                } else {
+                    NexusError::new("fs.write_failed")
+                }
+            })?;
             let _ = fs::remove_file(&tmp);
         }
         #[cfg(unix)]
@@ -199,9 +242,13 @@ pub fn write_private(path: &Path, bytes: &[u8]) -> NexusResult<()> {
         use std::os::unix::fs::OpenOptionsExt;
         options.mode(0o600);
     }
-    let mut file = options.open(path).map_err(|_| NexusError::new("fs.write_failed"))?;
-    file.write_all(bytes).map_err(|_| NexusError::new("fs.write_failed"))?;
-    file.sync_all().map_err(|_| NexusError::new("fs.write_failed"))?;
+    let mut file = options
+        .open(path)
+        .map_err(|_| NexusError::new("fs.write_failed"))?;
+    file.write_all(bytes)
+        .map_err(|_| NexusError::new("fs.write_failed"))?;
+    file.sync_all()
+        .map_err(|_| NexusError::new("fs.write_failed"))?;
     Ok(())
 }
 
@@ -210,7 +257,8 @@ pub fn ensure_private_dir(path: &Path) -> NexusResult<()> {
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
-        fs::set_permissions(path, fs::Permissions::from_mode(0o700)).map_err(|_| NexusError::new("fs.write_failed"))?;
+        fs::set_permissions(path, fs::Permissions::from_mode(0o700))
+            .map_err(|_| NexusError::new("fs.write_failed"))?;
     }
     Ok(())
 }
@@ -226,7 +274,9 @@ pub fn is_executable_file(path: &Path) -> bool {
             }
             #[cfg(not(unix))]
             {
-                path.extension().map(|e| e.eq_ignore_ascii_case("exe")).unwrap_or(false)
+                path.extension()
+                    .map(|e| e.eq_ignore_ascii_case("exe"))
+                    .unwrap_or(false)
             }
         }
         _ => false,
@@ -253,7 +303,10 @@ mod tests {
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
-            assert_eq!(fs::metadata(&path).unwrap().permissions().mode() & 0o777, 0o640);
+            assert_eq!(
+                fs::metadata(&path).unwrap().permissions().mode() & 0o777,
+                0o640
+            );
         }
         // Stale fingerprint → refused, file untouched.
         let err = atomic_replace(&path, b"{}", Some(&fp)).unwrap_err();
@@ -271,12 +324,20 @@ mod tests {
         fs::write(&real, b"{}").unwrap();
         let link = dir.path().join("link.json");
         std::os::unix::fs::symlink(&real, &link).unwrap();
-        assert_eq!(check_mutable_target(&link).unwrap_err().code, "config.unsafe_symlink");
+        assert_eq!(
+            check_mutable_target(&link).unwrap_err().code,
+            "config.unsafe_symlink"
+        );
         let real_dir = dir.path().join("realdir");
         fs::create_dir(&real_dir).unwrap();
         let link_dir = dir.path().join("linkdir");
         std::os::unix::fs::symlink(&real_dir, &link_dir).unwrap();
-        assert_eq!(check_mutable_target(&link_dir.join("x.json")).unwrap_err().code, "config.unsafe_symlink");
+        assert_eq!(
+            check_mutable_target(&link_dir.join("x.json"))
+                .unwrap_err()
+                .code,
+            "config.unsafe_symlink"
+        );
     }
 
     #[cfg(unix)]
@@ -286,12 +347,18 @@ mod tests {
         let a = dir.path().join("a.json");
         fs::write(&a, b"{}").unwrap();
         fs::hard_link(&a, dir.path().join("b.json")).unwrap();
-        assert_eq!(check_mutable_target(&a).unwrap_err().code, "config.unsafe_hard_link");
+        assert_eq!(
+            check_mutable_target(&a).unwrap_err().code,
+            "config.unsafe_hard_link"
+        );
         let c = dir.path().join("c.json");
         fs::write(&c, b"{}").unwrap();
         use std::os::unix::fs::PermissionsExt;
         fs::set_permissions(&c, fs::Permissions::from_mode(0o666)).unwrap();
-        assert_eq!(check_mutable_target(&c).unwrap_err().code, "config.unsafe_permissions");
+        assert_eq!(
+            check_mutable_target(&c).unwrap_err().code,
+            "config.unsafe_permissions"
+        );
     }
 
     #[test]
@@ -299,7 +366,10 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("new.json");
         atomic_replace(&path, b"{}", None).unwrap();
-        assert_eq!(atomic_replace(&path, b"{\"x\":1}", None).unwrap_err().code, "config.concurrent_change");
+        assert_eq!(
+            atomic_replace(&path, b"{\"x\":1}", None).unwrap_err().code,
+            "config.concurrent_change"
+        );
         assert_eq!(fs::read(&path).unwrap(), b"{}");
         assert_eq!(fs::read_dir(dir.path()).unwrap().count(), 1);
     }
@@ -308,8 +378,16 @@ mod tests {
     fn traversal_paths_are_refused() {
         let dir = tempfile::tempdir().unwrap();
         let p = dir.path().join("a").join("..").join("x.json");
-        assert_eq!(check_mutable_target(&p).unwrap_err().code, "config.unsafe_path");
-        assert_eq!(check_mutable_target(Path::new("relative.json")).unwrap_err().code, "config.unsafe_path");
+        assert_eq!(
+            check_mutable_target(&p).unwrap_err().code,
+            "config.unsafe_path"
+        );
+        assert_eq!(
+            check_mutable_target(Path::new("relative.json"))
+                .unwrap_err()
+                .code,
+            "config.unsafe_path"
+        );
     }
 
     #[test]
@@ -318,6 +396,9 @@ mod tests {
         let p = dir.path().join("big");
         fs::write(&p, vec![b'a'; 100]).unwrap();
         assert_eq!(read_bounded(&p, 10).unwrap_err(), ReadFailure::TooLarge);
-        assert_eq!(read_bounded(&dir.path().join("missing"), 10).unwrap_err(), ReadFailure::NotFound);
+        assert_eq!(
+            read_bounded(&dir.path().join("missing"), 10).unwrap_err(),
+            ReadFailure::NotFound
+        );
     }
 }

@@ -23,15 +23,29 @@ pub struct Member {
 
 #[derive(Clone, Debug)]
 pub enum Node {
-    Object { start: usize, end: usize, members: Vec<Member> },
-    Array { start: usize, end: usize, items: Vec<Node> },
-    Scalar { start: usize, end: usize, value: Value },
+    Object {
+        start: usize,
+        end: usize,
+        members: Vec<Member>,
+    },
+    Array {
+        start: usize,
+        end: usize,
+        items: Vec<Node>,
+    },
+    Scalar {
+        start: usize,
+        end: usize,
+        value: Value,
+    },
 }
 
 impl Node {
     pub fn span(&self) -> (usize, usize) {
         match self {
-            Node::Object { start, end, .. } | Node::Array { start, end, .. } | Node::Scalar { start, end, .. } => (*start, *end),
+            Node::Object { start, end, .. }
+            | Node::Array { start, end, .. }
+            | Node::Scalar { start, end, .. } => (*start, *end),
         }
     }
     pub fn to_value(&self) -> Value {
@@ -130,7 +144,11 @@ impl<'a> Parser<'a> {
             Some(b'[') => self.array()?,
             Some(b'"') => {
                 let s = self.string()?;
-                Node::Scalar { start, end: self.i, value: Value::String(s) }
+                Node::Scalar {
+                    start,
+                    end: self.i,
+                    value: Value::String(s),
+                }
             }
             Some(_) => self.literal()?,
             None => return Err(err("config.parse_failed", self.i)),
@@ -148,7 +166,11 @@ impl<'a> Parser<'a> {
             match self.b.get(self.i) {
                 Some(b'}') => {
                     self.i += 1;
-                    return Ok(Node::Object { start, end: self.i, members });
+                    return Ok(Node::Object {
+                        start,
+                        end: self.i,
+                        members,
+                    });
                 }
                 Some(b'"') => {
                     let key_start = self.i;
@@ -159,7 +181,11 @@ impl<'a> Parser<'a> {
                     }
                     self.i += 1;
                     let value = self.value()?;
-                    members.push(Member { key, start: key_start, value });
+                    members.push(Member {
+                        key,
+                        start: key_start,
+                        value,
+                    });
                     self.ws()?;
                     match self.b.get(self.i) {
                         Some(b',') => {
@@ -186,7 +212,11 @@ impl<'a> Parser<'a> {
             self.ws()?;
             if self.b.get(self.i) == Some(&b']') {
                 self.i += 1;
-                return Ok(Node::Array { start, end: self.i, items });
+                return Ok(Node::Array {
+                    start,
+                    end: self.i,
+                    items,
+                });
             }
             items.push(self.value()?);
             self.ws()?;
@@ -212,8 +242,10 @@ impl<'a> Parser<'a> {
                 b'\\' => self.i += 2,
                 b'"' => {
                     self.i += 1;
-                    let raw = std::str::from_utf8(&self.b[start..self.i]).map_err(|_| err("config.parse_failed", start))?;
-                    return serde_json::from_str::<String>(raw).map_err(|_| err("config.parse_failed", start));
+                    let raw = std::str::from_utf8(&self.b[start..self.i])
+                        .map_err(|_| err("config.parse_failed", start))?;
+                    return serde_json::from_str::<String>(raw)
+                        .map_err(|_| err("config.parse_failed", start));
                 }
                 c if c < 0x20 => return Err(err("config.parse_failed", self.i)),
                 _ => self.i += 1,
@@ -224,15 +256,26 @@ impl<'a> Parser<'a> {
 
     fn literal(&mut self) -> NexusResult<Node> {
         let start = self.i;
-        while self.i < self.b.len() && !matches!(self.b[self.i], b',' | b'}' | b']' | b' ' | b'\t' | b'\n' | b'\r' | b'/') {
+        while self.i < self.b.len()
+            && !matches!(
+                self.b[self.i],
+                b',' | b'}' | b']' | b' ' | b'\t' | b'\n' | b'\r' | b'/'
+            )
+        {
             self.i += 1;
         }
-        let raw = std::str::from_utf8(&self.b[start..self.i]).map_err(|_| err("config.parse_failed", start))?;
-        let value: Value = serde_json::from_str(raw).map_err(|_| err("config.parse_failed", start))?;
+        let raw = std::str::from_utf8(&self.b[start..self.i])
+            .map_err(|_| err("config.parse_failed", start))?;
+        let value: Value =
+            serde_json::from_str(raw).map_err(|_| err("config.parse_failed", start))?;
         if value.is_object() || value.is_array() || value.is_string() {
             return Err(err("config.parse_failed", start));
         }
-        Ok(Node::Scalar { start, end: self.i, value })
+        Ok(Node::Scalar {
+            start,
+            end: self.i,
+            value,
+        })
     }
 }
 
@@ -240,7 +283,12 @@ impl Document {
     pub fn parse(text: &str, dialect: Dialect) -> NexusResult<Document> {
         let body = text.strip_prefix('\u{feff}').unwrap_or(text);
         let offset = text.len() - body.len();
-        let mut parser = Parser { b: text.as_bytes(), i: offset, dialect, depth: 0 };
+        let mut parser = Parser {
+            b: text.as_bytes(),
+            i: offset,
+            dialect,
+            depth: 0,
+        };
         let root = parser.value()?;
         parser.ws()?;
         if parser.i != text.len() {
@@ -249,7 +297,10 @@ impl Document {
         if !matches!(root, Node::Object { .. }) {
             return Err(NexusError::new("config.unexpected_shape"));
         }
-        Ok(Document { text: text.to_string(), root })
+        Ok(Document {
+            text: text.to_string(),
+            root,
+        })
     }
 
     pub fn value(&self) -> Value {
@@ -258,7 +309,10 @@ impl Document {
 
     fn indent_unit(&self) -> String {
         for line in self.text.lines() {
-            let ws: String = line.chars().take_while(|c| *c == ' ' || *c == '\t').collect();
+            let ws: String = line
+                .chars()
+                .take_while(|c| *c == ' ' || *c == '\t')
+                .collect();
             if !ws.is_empty() && line.trim_start().starts_with('"') {
                 return ws;
             }
@@ -267,12 +321,19 @@ impl Document {
     }
 
     fn newline(&self) -> &'static str {
-        if self.text.contains("\r\n") { "\r\n" } else { "\n" }
+        if self.text.contains("\r\n") {
+            "\r\n"
+        } else {
+            "\n"
+        }
     }
 
     fn line_indent(&self, at: usize) -> String {
         let line_start = self.text[..at].rfind('\n').map(|i| i + 1).unwrap_or(0);
-        self.text[line_start..at].chars().take_while(|c| *c == ' ' || *c == '\t').collect()
+        self.text[line_start..at]
+            .chars()
+            .take_while(|c| *c == ' ' || *c == '\t')
+            .collect()
     }
 
     fn render(&self, value: &Value, indent: &str) -> String {
@@ -307,7 +368,12 @@ impl Document {
                     let (s, e) = member.value.span();
                     let indent = self.line_indent(member.start);
                     let rendered = self.render(value, &indent);
-                    return Ok(format!("{}{}{}", &self.text[..s], rendered, &self.text[e..]));
+                    return Ok(format!(
+                        "{}{}{}",
+                        &self.text[..s],
+                        rendered,
+                        &self.text[e..]
+                    ));
                 }
                 Some(member) => {
                     if !matches!(member.value, Node::Object { .. }) {
@@ -331,19 +397,36 @@ impl Document {
     }
 
     fn insert_member(&self, object: &Node, key: &str, value: &Value) -> NexusResult<String> {
-        let Node::Object { start, end, members } = object else {
+        let Node::Object {
+            start,
+            end,
+            members,
+        } = object
+        else {
             return Err(NexusError::new("config.unexpected_shape"));
         };
         let key_json = serde_json::to_string(key).expect("string key");
         match members.last() {
             Some(last) => {
                 let indent = self.line_indent(members[0].start);
-                let indent = if indent.is_empty() { self.indent_unit() } else { indent };
+                let indent = if indent.is_empty() {
+                    self.indent_unit()
+                } else {
+                    indent
+                };
                 let at = last.value.span().1;
                 let rendered = self.render(value, &indent);
                 let same_line = !self.text[*start..members[0].start].contains('\n');
-                let sep = if same_line { " ".to_string() } else { format!("{}{indent}", self.newline()) };
-                Ok(format!("{},{sep}{key_json}: {rendered}{}", &self.text[..at], &self.text[at..]))
+                let sep = if same_line {
+                    " ".to_string()
+                } else {
+                    format!("{}{indent}", self.newline())
+                };
+                Ok(format!(
+                    "{},{sep}{key_json}: {rendered}{}",
+                    &self.text[..at],
+                    &self.text[at..]
+                ))
             }
             None => {
                 let base = self.line_indent(*start);
@@ -352,10 +435,18 @@ impl Document {
                 let nl = self.newline();
                 let inner = &self.text[start + 1..end - 1];
                 if inner.trim().is_empty() {
-                    Ok(format!("{}{{{nl}{indent}{key_json}: {rendered}{nl}{base}}}{}", &self.text[..*start], &self.text[*end..]))
+                    Ok(format!(
+                        "{}{{{nl}{indent}{key_json}: {rendered}{nl}{base}}}{}",
+                        &self.text[..*start],
+                        &self.text[*end..]
+                    ))
                 } else {
                     // The object holds only comments: insert before them and keep them.
-                    Ok(format!("{}{{{nl}{indent}{key_json}: {rendered}{inner}}}{}", &self.text[..*start], &self.text[*end..]))
+                    Ok(format!(
+                        "{}{{{nl}{indent}{key_json}: {rendered}{inner}}}{}",
+                        &self.text[..*start],
+                        &self.text[*end..]
+                    ))
                 }
             }
         }
@@ -363,21 +454,43 @@ impl Document {
 
     /// Removes the member at `path`. Missing members are an error so callers notice drift.
     pub fn remove(&self, path: &[&str]) -> NexusResult<String> {
-        let (last, parents) = path.split_last().ok_or_else(|| NexusError::new("config.unexpected_shape"))?;
-        let parent = self.root.get(parents).ok_or_else(|| NexusError::new("config.entry_missing"))?;
+        let (last, parents) = path
+            .split_last()
+            .ok_or_else(|| NexusError::new("config.unexpected_shape"))?;
+        let parent = self
+            .root
+            .get(parents)
+            .ok_or_else(|| NexusError::new("config.entry_missing"))?;
         let Node::Object { members, .. } = parent else {
             return Err(NexusError::new("config.unexpected_shape"));
         };
-        let index = members.iter().rposition(|m| m.key == *last).ok_or_else(|| NexusError::new("config.entry_missing"))?;
+        let index = members
+            .iter()
+            .rposition(|m| m.key == *last)
+            .ok_or_else(|| NexusError::new("config.entry_missing"))?;
         let member = &members[index];
         let member_end = member.value.span().1;
         let (from, to) = if index + 1 < members.len() {
             // Remove "key": value, plus the separating comma and whitespace up to the next member.
-            let line_start = self.text[..member.start].rfind('\n').map(|i| i + 1).unwrap_or(0);
-            let from = if self.text[line_start..member.start].trim().is_empty() { line_start } else { member.start };
+            let line_start = self.text[..member.start]
+                .rfind('\n')
+                .map(|i| i + 1)
+                .unwrap_or(0);
+            let from = if self.text[line_start..member.start].trim().is_empty() {
+                line_start
+            } else {
+                member.start
+            };
             let next = members[index + 1].start;
             let next_line_start = self.text[..next].rfind('\n').map(|i| i + 1).unwrap_or(0);
-            let to = if next_line_start > member_end && self.text[next_line_start..next].trim().is_empty() && from == line_start { next_line_start } else { next };
+            let to = if next_line_start > member_end
+                && self.text[next_line_start..next].trim().is_empty()
+                && from == line_start
+            {
+                next_line_start
+            } else {
+                next
+            };
             (from, to)
         } else if index > 0 {
             // Last member: remove from the end of the previous member's value.
@@ -421,10 +534,21 @@ mod tests {
     fn parses_jsonc_and_rejects_comments_in_strict_json() {
         let v = round(JSONC, Dialect::Jsonc);
         assert_eq!(v["mcp"]["docs"]["enabled"], json!(true));
-        assert_eq!(Document::parse(JSONC, Dialect::Json).unwrap_err().code, "config.parse_failed");
-        assert_eq!(Document::parse("{\"a\":1,}", Dialect::Json).unwrap_err().code, "config.parse_failed");
+        assert_eq!(
+            Document::parse(JSONC, Dialect::Json).unwrap_err().code,
+            "config.parse_failed"
+        );
+        assert_eq!(
+            Document::parse("{\"a\":1,}", Dialect::Json)
+                .unwrap_err()
+                .code,
+            "config.parse_failed"
+        );
         assert!(Document::parse("{\"a\":1,}", Dialect::Jsonc).is_ok());
-        assert_eq!(Document::parse("[1]", Dialect::Json).unwrap_err().code, "config.unexpected_shape");
+        assert_eq!(
+            Document::parse("[1]", Dialect::Json).unwrap_err().code,
+            "config.unexpected_shape"
+        );
         assert!(Document::parse("{\"a\": tru}", Dialect::Json).is_err());
         assert!(Document::parse("{\"a\": 1} trailing", Dialect::Json).is_err());
         assert!(Document::parse("{\"a\": \"unterminated}", Dialect::Json).is_err());
@@ -434,7 +558,10 @@ mod tests {
     fn replacing_a_value_preserves_every_other_byte() {
         let doc = Document::parse(JSONC, Dialect::Jsonc).unwrap();
         let out = doc.set(&["mcp", "docs", "enabled"], &json!(false)).unwrap();
-        assert_eq!(out, JSONC.replace("\"enabled\": true", "\"enabled\": false"));
+        assert_eq!(
+            out,
+            JSONC.replace("\"enabled\": true", "\"enabled\": false")
+        );
         assert!(out.contains("// Theme chosen by hand") && out.contains("/* inline */"));
     }
 
@@ -471,7 +598,10 @@ mod tests {
         assert!(out.contains("/* keep */"));
         assert_eq!(round(&out, Dialect::Jsonc), json!({"model": "x"}));
         let crlf = "{\r\n  \"a\": 1\r\n}\r\n";
-        let out = Document::parse(crlf, Dialect::Json).unwrap().set(&["b"], &json!({"c": 2})).unwrap();
+        let out = Document::parse(crlf, Dialect::Json)
+            .unwrap()
+            .set(&["b"], &json!({"c": 2}))
+            .unwrap();
         assert!(!out.replace("\r\n", "").contains('\n'), "{out:?}");
         assert_eq!(round(&out, Dialect::Json), json!({"a": 1, "b": {"c": 2}}));
     }
@@ -484,18 +614,27 @@ mod tests {
         assert_eq!(doc.remove(&["c"]).unwrap(), "{\n  \"a\": 1,\n  \"b\": 2\n}");
         assert_eq!(doc.remove(&["a"]).unwrap(), "{\n  \"b\": 2,\n  \"c\": 3\n}");
         let single = Document::parse("{ \"only\": true }", Dialect::Json).unwrap();
-        assert_eq!(round(&single.remove(&["only"]).unwrap(), Dialect::Json), json!({}));
+        assert_eq!(
+            round(&single.remove(&["only"]).unwrap(), Dialect::Json),
+            json!({})
+        );
         let doc = Document::parse(JSONC, Dialect::Jsonc).unwrap();
         let out = doc.remove(&["mcp", "docs"]).unwrap();
         assert_eq!(round(&out, Dialect::Jsonc)["mcp"], json!({}));
         assert!(out.contains("// Theme chosen by hand"));
-        assert_eq!(doc.remove(&["missing"]).unwrap_err().code, "config.entry_missing");
+        assert_eq!(
+            doc.remove(&["missing"]).unwrap_err().code,
+            "config.entry_missing"
+        );
     }
 
     #[test]
     fn non_object_intermediate_is_refused() {
         let doc = Document::parse("{\"model\": \"x\"}", Dialect::Json).unwrap();
-        assert_eq!(doc.set(&["model", "name"], &json!("y")).unwrap_err().code, "config.unexpected_shape");
+        assert_eq!(
+            doc.set(&["model", "name"], &json!("y")).unwrap_err().code,
+            "config.unexpected_shape"
+        );
     }
 
     #[test]

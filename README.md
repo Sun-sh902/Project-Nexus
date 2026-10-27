@@ -33,11 +33,17 @@ cargo clippy --locked --manifest-path src-tauri/Cargo.toml --all-targets -- -D w
 pnpm desktop:build -- --locked
 ```
 
-For macOS application-only packaging, use `pnpm desktop:build --bundles app -- --locked`. The bundle is generated at `src-tauri/target/release/bundle/macos/Project Nexus.app`. Windows packaging must run on a Windows build environment; it has not been validated here. No signed/notarized public release is provided.
+For macOS application-only packaging, use `pnpm desktop:build --bundles app -- --locked`. The bundle is generated at `src-tauri/target/release/bundle/macos/Project Nexus.app`. Windows packaging must run on a Windows build environment; it has not been validated here.
 
-The shell includes Home, Agents and Agent Detail, Models/Model Profiles/Providers, MCP/Skills, supporting System views, and Settings. Language and theme are the only persisted preferences. Native access is limited to application metadata/OS locale and enum-bound Nexus menu/window preferences. No Agent/System discovery, Agent operations, credentials, networking or database exists.
+### Installing a pre-release build
 
-Implementation choices, dependency licenses, executed checks, visual review and remaining validation are recorded in [Phase 1 implementation record](docs/PHASE1.md). Browser screenshots and the HTML test report are generated under ignored `test-results/` and `playwright-report/` directories.
+Pre-release DMGs (Apple Silicon) are **ad-hoc signed and not notarized**. macOS Gatekeeper will block the first launch: Control-click the app → Open, or remove the quarantine attribute after reviewing the source. Do not use pre-release builds on machines where you cannot accept that risk.
+
+### What the app does
+
+Inside the desktop app, Nexus performs a read-only scan of this computer: installed Agents (Codex, Claude Code, Gemini CLI, OpenCode), their versions and sources, configuration files, model settings and overrides, MCP servers and Skills, and supporting tools. Deterministic Health and structured Diagnostics explain readiness. Every change (model assignment, MCP enable/disable or add, lifecycle install/update/uninstall, backup restore, interrupted-install recovery) is previewed as an exact plan, confirmed in a native system dialog, journaled, backed up (encrypted) where it edits a file, and independently verified. Secrets are kept only in the macOS Keychain. Capability coverage, limits and test evidence: [backend implementation record](docs/BACKEND_IMPLEMENTATION_PROGRESS.md). Release notes: [CHANGELOG](CHANGELOG.md).
+
+Browser preview (`pnpm dev`) has no native backend and shows the clearly labeled Phase 1 demo fixtures. Phase 1 UI history: [Phase 1 implementation record](docs/PHASE1.md). Browser screenshots and the HTML test report are generated under ignored `test-results/` and `playwright-report/` directories.
 
 ## Canonical specifications
 

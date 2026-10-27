@@ -23,18 +23,28 @@ pub enum Op {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase", tag = "type")]
 pub enum Mechanism {
-    Npm { package: &'static str },
-    HomebrewCask { token: &'static str },
-    HomebrewFormula { name: &'static str },
+    Npm {
+        package: &'static str,
+    },
+    HomebrewCask {
+        token: &'static str,
+    },
+    HomebrewFormula {
+        name: &'static str,
+    },
     /// The Agent's own documented updater, run against a verified native installation.
-    AgentSelfUpdate { args: &'static [&'static str] },
+    AgentSelfUpdate {
+        args: &'static [&'static str],
+    },
 }
 
 impl Mechanism {
     pub fn source(self) -> InstallSource {
         match self {
             Mechanism::Npm { .. } => InstallSource::Npm,
-            Mechanism::HomebrewCask { .. } | Mechanism::HomebrewFormula { .. } => InstallSource::Homebrew,
+            Mechanism::HomebrewCask { .. } | Mechanism::HomebrewFormula { .. } => {
+                InstallSource::Homebrew
+            }
             Mechanism::AgentSelfUpdate { .. } => InstallSource::NativeInstaller,
         }
     }
@@ -72,12 +82,23 @@ pub struct Recipe {
 pub fn validate_version(v: &str) -> NexusResult<()> {
     let ok = v.len() <= 64
         && !v.starts_with('-')
-        && v.split(['-', '+']).next().map(|core| {
-            let parts: Vec<&str> = core.split('.').collect();
-            parts.len() == 3 && parts.iter().all(|p| !p.is_empty() && p.chars().all(|c| c.is_ascii_digit()))
-        }).unwrap_or(false)
-        && v.chars().all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '-' | '+'));
-    if ok { Ok(()) } else { Err(NexusError::new("lifecycle.invalid_version")) }
+        && v.split(['-', '+'])
+            .next()
+            .map(|core| {
+                let parts: Vec<&str> = core.split('.').collect();
+                parts.len() == 3
+                    && parts
+                        .iter()
+                        .all(|p| !p.is_empty() && p.chars().all(|c| c.is_ascii_digit()))
+            })
+            .unwrap_or(false)
+        && v.chars()
+            .all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '-' | '+'));
+    if ok {
+        Ok(())
+    } else {
+        Err(NexusError::new("lifecycle.invalid_version"))
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -90,15 +111,30 @@ pub struct Toolchain {
 /// Locates package managers. npm must resolve to a file owned by the user or root and not be
 /// writable by others; Homebrew is accepted only at its documented prefixes.
 pub fn toolchain(ctx: &HostContext) -> Toolchain {
-    let npm = find_candidates(ctx, &["npm"]).into_iter().min_by_key(|c| c.path_rank.unwrap_or(usize::MAX)).filter(|c| owner_ok(&c.resolved) && owner_ok(&c.path)).map(|c| c.path);
+    let npm = find_candidates(ctx, &["npm"])
+        .into_iter()
+        .min_by_key(|c| c.path_rank.unwrap_or(usize::MAX))
+        .filter(|c| owner_ok(&c.resolved) && owner_ok(&c.path))
+        .map(|c| c.path);
     // npm runs `#!/usr/bin/env node`, so node (first on the child PATH) gets the same scrutiny.
-    let node_dir = find_candidates(ctx, &["node"]).into_iter().min_by_key(|c| c.path_rank.unwrap_or(usize::MAX)).filter(|c| owner_ok(&c.resolved) && owner_ok(&c.path)).and_then(|c| c.path.parent().map(PathBuf::from));
+    let node_dir = find_candidates(ctx, &["node"])
+        .into_iter()
+        .min_by_key(|c| c.path_rank.unwrap_or(usize::MAX))
+        .filter(|c| owner_ok(&c.resolved) && owner_ok(&c.path))
+        .and_then(|c| c.path.parent().map(PathBuf::from));
     let brew = if ctx.os == Os::Macos {
-        ["/opt/homebrew/bin/brew", "/usr/local/bin/brew"].iter().map(PathBuf::from).find(|p| p.is_file() && owner_ok(p))
+        ["/opt/homebrew/bin/brew", "/usr/local/bin/brew"]
+            .iter()
+            .map(PathBuf::from)
+            .find(|p| p.is_file() && owner_ok(p))
     } else {
         None
     };
-    Toolchain { npm, node_dir, brew }
+    Toolchain {
+        npm,
+        node_dir,
+        brew,
+    }
 }
 
 /// File owned by the user or root and not writable by others, inside a directory that is not
@@ -111,7 +147,9 @@ fn dir_ok(d: &std::path::Path) -> bool {
     #[cfg(unix)]
     {
         use std::os::unix::fs::MetadataExt;
-        let Ok(meta) = std::fs::metadata(d) else { return false };
+        let Ok(meta) = std::fs::metadata(d) else {
+            return false;
+        };
         let uid = unsafe { libc::getuid() };
         (meta.uid() == uid || meta.uid() == 0) && meta.mode() & 0o002 == 0
     }
@@ -150,12 +188,18 @@ pub fn available(recipe: &Recipe, ctx: &HostContext, tools: &Toolchain) -> bool 
     recipe.mechanism.platforms().contains(&ctx.os)
         && match recipe.mechanism {
             Mechanism::Npm { .. } => tools.npm.is_some() && tools.node_dir.is_some(),
-            Mechanism::HomebrewCask { .. } | Mechanism::HomebrewFormula { .. } => tools.brew.is_some(),
+            Mechanism::HomebrewCask { .. } | Mechanism::HomebrewFormula { .. } => {
+                tools.brew.is_some()
+            }
             Mechanism::AgentSelfUpdate { .. } => true,
         }
 }
 
-fn child_env(ctx: &HostContext, tools: &Toolchain, extra: &[(&str, &str)]) -> Vec<(String, String)> {
+fn child_env(
+    ctx: &HostContext,
+    tools: &Toolchain,
+    extra: &[(&str, &str)],
+) -> Vec<(String, String)> {
     let mut dirs: Vec<PathBuf> = Vec::new();
     if let Some(d) = &tools.node_dir {
         dirs.push(d.clone());
@@ -166,7 +210,11 @@ fn child_env(ctx: &HostContext, tools: &Toolchain, extra: &[(&str, &str)]) -> Ve
     if let Some(b) = tools.brew.as_ref().and_then(|b| b.parent()) {
         dirs.push(b.to_path_buf());
     }
-    dirs.extend(["/usr/bin", "/bin", "/usr/sbin", "/sbin"].iter().map(PathBuf::from));
+    dirs.extend(
+        ["/usr/bin", "/bin", "/usr/sbin", "/sbin"]
+            .iter()
+            .map(PathBuf::from),
+    );
     dirs.dedup();
     let mut env = base_env(&ctx.home, &dirs);
     for (k, v) in extra {
@@ -175,22 +223,73 @@ fn child_env(ctx: &HostContext, tools: &Toolchain, extra: &[(&str, &str)]) -> Ve
     env
 }
 
-const BREW_ENV: &[(&str, &str)] = &[("HOMEBREW_NO_AUTO_UPDATE", "1"), ("HOMEBREW_NO_ANALYTICS", "1"), ("HOMEBREW_NO_ENV_HINTS", "1")];
+const BREW_ENV: &[(&str, &str)] = &[
+    ("HOMEBREW_NO_AUTO_UPDATE", "1"),
+    ("HOMEBREW_NO_ANALYTICS", "1"),
+    ("HOMEBREW_NO_ENV_HINTS", "1"),
+];
 
 /// Resolves the exact version a plan will install, *before* confirmation. Never `latest` after.
-pub fn resolve_version(ctx: &HostContext, tools: &Toolchain, recipe: &Recipe) -> NexusResult<Option<String>> {
-    let (program, args, extra): (PathBuf, Vec<String>, &[(&str, &str)]) = match recipe.mechanism {
-        Mechanism::Npm { package } => (tools.npm.clone().ok_or_else(|| NexusError::new("lifecycle.tool_missing").with("tool", "npm"))?, vec!["view".into(), format!("{package}@latest"), "version".into(), "--json".into()], &[]),
-        Mechanism::HomebrewCask { token } => (tools.brew.clone().ok_or_else(|| NexusError::new("lifecycle.tool_missing").with("tool", "brew"))?, vec!["info".into(), "--json=v2".into(), "--cask".into(), token.into()], BREW_ENV),
-        Mechanism::HomebrewFormula { name } => (tools.brew.clone().ok_or_else(|| NexusError::new("lifecycle.tool_missing").with("tool", "brew"))?, vec!["info".into(), "--json=v2".into(), "--formula".into(), name.into()], BREW_ENV),
-        Mechanism::AgentSelfUpdate { .. } => return Ok(None),
+pub fn resolve_version(
+    ctx: &HostContext,
+    tools: &Toolchain,
+    recipe: &Recipe,
+) -> NexusResult<Option<String>> {
+    let (program, args, extra): (PathBuf, Vec<String>, &[(&str, &str)]) =
+        match recipe.mechanism {
+            Mechanism::Npm { package } => (
+                tools
+                    .npm
+                    .clone()
+                    .ok_or_else(|| NexusError::new("lifecycle.tool_missing").with("tool", "npm"))?,
+                vec![
+                    "view".into(),
+                    format!("{package}@latest"),
+                    "version".into(),
+                    "--json".into(),
+                ],
+                &[],
+            ),
+            Mechanism::HomebrewCask { token } => (
+                tools.brew.clone().ok_or_else(|| {
+                    NexusError::new("lifecycle.tool_missing").with("tool", "brew")
+                })?,
+                vec![
+                    "info".into(),
+                    "--json=v2".into(),
+                    "--cask".into(),
+                    token.into(),
+                ],
+                BREW_ENV,
+            ),
+            Mechanism::HomebrewFormula { name } => (
+                tools.brew.clone().ok_or_else(|| {
+                    NexusError::new("lifecycle.tool_missing").with("tool", "brew")
+                })?,
+                vec![
+                    "info".into(),
+                    "--json=v2".into(),
+                    "--formula".into(),
+                    name.into(),
+                ],
+                BREW_ENV,
+            ),
+            Mechanism::AgentSelfUpdate { .. } => return Ok(None),
+        };
+    let spec = ProcessSpec {
+        program,
+        args,
+        env: child_env(ctx, tools, extra),
+        cwd: ctx.data_dir.clone(),
+        timeout: Duration::from_secs(60),
+        max_output: 256 * 1024,
     };
-    let spec = ProcessSpec { program, args, env: child_env(ctx, tools, extra), cwd: ctx.data_dir.clone(), timeout: Duration::from_secs(60), max_output: 256 * 1024 };
     let out = run(&spec)?;
     if !out.success() {
         return Err(NexusError::new("lifecycle.version_resolution_failed").retryable());
     }
-    let version = parse_resolved_version(recipe.mechanism, &out.stdout).ok_or_else(|| NexusError::new("lifecycle.version_resolution_failed"))?;
+    let version = parse_resolved_version(recipe.mechanism, &out.stdout)
+        .ok_or_else(|| NexusError::new("lifecycle.version_resolution_failed"))?;
     validate_version(&version)?;
     Ok(Some(version))
 }
@@ -199,14 +298,28 @@ pub fn parse_resolved_version(mechanism: Mechanism, stdout: &str) -> Option<Stri
     let v: serde_json::Value = serde_json::from_str(stdout.trim()).ok()?;
     match mechanism {
         Mechanism::Npm { .. } => v.as_str().map(String::from),
-        Mechanism::HomebrewCask { .. } => v.pointer("/casks/0/version")?.as_str().map(|s| s.split(',').next().unwrap_or(s).to_string()),
-        Mechanism::HomebrewFormula { .. } => v.pointer("/formulae/0/versions/stable")?.as_str().map(String::from),
+        Mechanism::HomebrewCask { .. } => v
+            .pointer("/casks/0/version")?
+            .as_str()
+            .map(|s| s.split(',').next().unwrap_or(s).to_string()),
+        Mechanism::HomebrewFormula { .. } => v
+            .pointer("/formulae/0/versions/stable")?
+            .as_str()
+            .map(String::from),
         Mechanism::AgentSelfUpdate { .. } => None,
     }
 }
 
 /// Builds the exact process for an operation. `agent_exe` is required for self-update.
-pub fn build_spec(ctx: &HostContext, tools: &Toolchain, recipe: &Recipe, op: Op, version: Option<&str>, agent_exe: Option<&std::path::Path>, npm_prefix: Option<&std::path::Path>) -> NexusResult<ProcessSpec> {
+pub fn build_spec(
+    ctx: &HostContext,
+    tools: &Toolchain,
+    recipe: &Recipe,
+    op: Op,
+    version: Option<&str>,
+    agent_exe: Option<&std::path::Path>,
+    npm_prefix: Option<&std::path::Path>,
+) -> NexusResult<ProcessSpec> {
     if !recipe.ops.contains(&op) {
         return Err(NexusError::new("lifecycle.unsupported_operation"));
     }
@@ -220,49 +333,129 @@ pub fn build_spec(ctx: &HostContext, tools: &Toolchain, recipe: &Recipe, op: Op,
         Some(p) => vec!["--prefix".into(), p.to_string_lossy().to_string()],
         None => Vec::new(),
     };
-    let (program, args, extra): (PathBuf, Vec<String>, &[(&str, &str)]) = match (recipe.mechanism, op) {
-        (Mechanism::Npm { package }, Op::Install | Op::Update) => {
-            let v = version.ok_or_else(|| NexusError::new("lifecycle.version_required"))?;
-            (tools.npm.clone().ok_or_else(|| NexusError::new("lifecycle.tool_missing"))?, ["install", "--global", "--no-fund", "--no-audit"].iter().map(|s| s.to_string()).chain(prefix_args.clone()).chain([format!("{package}@{v}")]).collect(), &[])
-        }
-        (Mechanism::Npm { package }, Op::Uninstall) => {
-            if npm_prefix.is_none() {
-                return Err(NexusError::new("lifecycle.prefix_unknown"));
+    let (program, args, extra): (PathBuf, Vec<String>, &[(&str, &str)]) =
+        match (recipe.mechanism, op) {
+            (Mechanism::Npm { package }, Op::Install | Op::Update) => {
+                let v = version.ok_or_else(|| NexusError::new("lifecycle.version_required"))?;
+                (
+                    tools
+                        .npm
+                        .clone()
+                        .ok_or_else(|| NexusError::new("lifecycle.tool_missing"))?,
+                    ["install", "--global", "--no-fund", "--no-audit"]
+                        .iter()
+                        .map(|s| s.to_string())
+                        .chain(prefix_args.clone())
+                        .chain([format!("{package}@{v}")])
+                        .collect(),
+                    &[],
+                )
             }
-            (tools.npm.clone().ok_or_else(|| NexusError::new("lifecycle.tool_missing"))?, ["uninstall", "--global"].iter().map(|s| s.to_string()).chain(prefix_args.clone()).chain([package.to_string()]).collect(), &[])
-        }
-        (Mechanism::HomebrewCask { token }, op) => (
-            tools.brew.clone().ok_or_else(|| NexusError::new("lifecycle.tool_missing"))?,
-            vec![match op { Op::Install => "install", Op::Update => "upgrade", Op::Uninstall => "uninstall" }.into(), "--cask".into(), token.into()],
-            BREW_ENV,
-        ),
-        (Mechanism::HomebrewFormula { name }, op) => (
-            tools.brew.clone().ok_or_else(|| NexusError::new("lifecycle.tool_missing"))?,
-            vec![match op { Op::Install => "install", Op::Update => "upgrade", Op::Uninstall => "uninstall" }.into(), "--formula".into(), name.into()],
-            BREW_ENV,
-        ),
-        (Mechanism::AgentSelfUpdate { args }, Op::Update) => {
-            let exe = agent_exe.ok_or_else(|| NexusError::new("lifecycle.target_missing"))?;
-            probe_policy(ctx, exe).map_err(|r| NexusError::new("lifecycle.untrusted_executable").with("reason", r))?;
-            (exe.to_path_buf(), args.iter().map(|s| s.to_string()).collect(), &[])
-        }
-        _ => return Err(NexusError::new("lifecycle.unsupported_operation")),
-    };
-    Ok(ProcessSpec { program, args, env: child_env(ctx, tools, extra), cwd: ctx.home.clone(), timeout, max_output: 16 * 1024 })
+            (Mechanism::Npm { package }, Op::Uninstall) => {
+                if npm_prefix.is_none() {
+                    return Err(NexusError::new("lifecycle.prefix_unknown"));
+                }
+                (
+                    tools
+                        .npm
+                        .clone()
+                        .ok_or_else(|| NexusError::new("lifecycle.tool_missing"))?,
+                    ["uninstall", "--global"]
+                        .iter()
+                        .map(|s| s.to_string())
+                        .chain(prefix_args.clone())
+                        .chain([package.to_string()])
+                        .collect(),
+                    &[],
+                )
+            }
+            (Mechanism::HomebrewCask { token }, op) => (
+                tools
+                    .brew
+                    .clone()
+                    .ok_or_else(|| NexusError::new("lifecycle.tool_missing"))?,
+                vec![
+                    match op {
+                        Op::Install => "install",
+                        Op::Update => "upgrade",
+                        Op::Uninstall => "uninstall",
+                    }
+                    .into(),
+                    "--cask".into(),
+                    token.into(),
+                ],
+                BREW_ENV,
+            ),
+            (Mechanism::HomebrewFormula { name }, op) => (
+                tools
+                    .brew
+                    .clone()
+                    .ok_or_else(|| NexusError::new("lifecycle.tool_missing"))?,
+                vec![
+                    match op {
+                        Op::Install => "install",
+                        Op::Update => "upgrade",
+                        Op::Uninstall => "uninstall",
+                    }
+                    .into(),
+                    "--formula".into(),
+                    name.into(),
+                ],
+                BREW_ENV,
+            ),
+            (Mechanism::AgentSelfUpdate { args }, Op::Update) => {
+                let exe = agent_exe.ok_or_else(|| NexusError::new("lifecycle.target_missing"))?;
+                probe_policy(ctx, exe).map_err(|r| {
+                    NexusError::new("lifecycle.untrusted_executable").with("reason", r)
+                })?;
+                (
+                    exe.to_path_buf(),
+                    args.iter().map(|s| s.to_string()).collect(),
+                    &[],
+                )
+            }
+            _ => return Err(NexusError::new("lifecycle.unsupported_operation")),
+        };
+    Ok(ProcessSpec {
+        program,
+        args,
+        env: child_env(ctx, tools, extra),
+        cwd: ctx.home.clone(),
+        timeout,
+        max_output: 16 * 1024,
+    })
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    const NPM: Recipe = Recipe { id: "gemini.npm", agent: AgentId::Gemini, mechanism: Mechanism::Npm { package: "@google/gemini-cli" }, ops: &[Op::Install, Op::Update, Op::Uninstall], evidence: "", runs_package_scripts: true };
+    const NPM: Recipe = Recipe {
+        id: "gemini.npm",
+        agent: AgentId::Gemini,
+        mechanism: Mechanism::Npm {
+            package: "@google/gemini-cli",
+        },
+        ops: &[Op::Install, Op::Update, Op::Uninstall],
+        evidence: "",
+        runs_package_scripts: true,
+    };
 
     #[test]
     fn version_grammar_rejects_injection() {
         for ok in ["0.64.0", "2.1.311", "1.0.0-preview.1"] {
             assert!(validate_version(ok).is_ok(), "{ok}");
         }
-        for bad in ["latest", "1.0", "-1.0.0", "1.0.0 --registry=http://evil", "1.0.0;rm", "^1.0.0", "1.0.0\n", "1.0.0@x"] {
+        for bad in [
+            "latest",
+            "1.0",
+            "-1.0.0",
+            "1.0.0 --registry=http://evil",
+            "1.0.0;rm",
+            "^1.0.0",
+            "1.0.0\n",
+            "1.0.0@x",
+        ] {
             assert!(validate_version(bad).is_err(), "{bad}");
         }
     }
@@ -271,24 +464,60 @@ mod tests {
     fn npm_install_is_pinned_and_argv_is_fixed() {
         let dir = tempfile::tempdir().unwrap();
         let ctx = HostContext::isolated(dir.path(), dir.path());
-        let tools = Toolchain { npm: Some(PathBuf::from("/usr/bin/true")), node_dir: Some(PathBuf::from("/usr/bin")), brew: None };
+        let tools = Toolchain {
+            npm: Some(PathBuf::from("/usr/bin/true")),
+            node_dir: Some(PathBuf::from("/usr/bin")),
+            brew: None,
+        };
         let spec = build_spec(&ctx, &tools, &NPM, Op::Install, Some("0.64.0"), None, None).unwrap();
         assert_eq!(spec.args.last().unwrap(), "@google/gemini-cli@0.64.0");
         assert!(spec.env.iter().all(|(k, _)| k != "NPM_TOKEN"));
-        assert_eq!(build_spec(&ctx, &tools, &NPM, Op::Install, None, None, None).unwrap_err().code, "lifecycle.version_required");
-        assert_eq!(build_spec(&ctx, &tools, &NPM, Op::Install, Some("latest"), None, None).unwrap_err().code, "lifecycle.invalid_version");
+        assert_eq!(
+            build_spec(&ctx, &tools, &NPM, Op::Install, None, None, None)
+                .unwrap_err()
+                .code,
+            "lifecycle.version_required"
+        );
+        assert_eq!(
+            build_spec(&ctx, &tools, &NPM, Op::Install, Some("latest"), None, None)
+                .unwrap_err()
+                .code,
+            "lifecycle.invalid_version"
+        );
     }
 
     #[test]
     fn existing_npm_installs_are_addressed_by_their_own_prefix() {
         let dir = tempfile::tempdir().unwrap();
         let ctx = HostContext::isolated(dir.path(), dir.path());
-        let tools = Toolchain { npm: Some(PathBuf::from("/usr/bin/true")), node_dir: Some(PathBuf::from("/usr/bin")), brew: None };
-        let prefix = npm_prefix_of(std::path::Path::new("/Users/x/.nvm/versions/node/v18/lib/node_modules/@google/gemini-cli/bundle/gemini.js")).unwrap();
+        let tools = Toolchain {
+            npm: Some(PathBuf::from("/usr/bin/true")),
+            node_dir: Some(PathBuf::from("/usr/bin")),
+            brew: None,
+        };
+        let prefix = npm_prefix_of(std::path::Path::new(
+            "/Users/x/.nvm/versions/node/v18/lib/node_modules/@google/gemini-cli/bundle/gemini.js",
+        ))
+        .unwrap();
         assert_eq!(prefix, PathBuf::from("/Users/x/.nvm/versions/node/v18"));
-        let spec = build_spec(&ctx, &tools, &NPM, Op::Uninstall, None, None, Some(&prefix)).unwrap();
-        assert_eq!(spec.args, vec!["uninstall", "--global", "--prefix", "/Users/x/.nvm/versions/node/v18", "@google/gemini-cli"]);
-        assert_eq!(build_spec(&ctx, &tools, &NPM, Op::Uninstall, None, None, None).unwrap_err().code, "lifecycle.prefix_unknown");
+        let spec =
+            build_spec(&ctx, &tools, &NPM, Op::Uninstall, None, None, Some(&prefix)).unwrap();
+        assert_eq!(
+            spec.args,
+            vec![
+                "uninstall",
+                "--global",
+                "--prefix",
+                "/Users/x/.nvm/versions/node/v18",
+                "@google/gemini-cli"
+            ]
+        );
+        assert_eq!(
+            build_spec(&ctx, &tools, &NPM, Op::Uninstall, None, None, None)
+                .unwrap_err()
+                .code,
+            "lifecycle.prefix_unknown"
+        );
         assert!(npm_prefix_of(std::path::Path::new("/opt/homebrew/bin/codex")).is_none());
     }
 
@@ -296,17 +525,55 @@ mod tests {
     fn unsupported_operations_are_refused() {
         let dir = tempfile::tempdir().unwrap();
         let ctx = HostContext::isolated(dir.path(), dir.path());
-        let tools = Toolchain { npm: None, node_dir: None, brew: None };
-        let r = Recipe { id: "x", agent: AgentId::Claude, mechanism: Mechanism::AgentSelfUpdate { args: &["update"] }, ops: &[Op::Update], evidence: "", runs_package_scripts: false };
-        assert_eq!(build_spec(&ctx, &tools, &r, Op::Install, None, None, None).unwrap_err().code, "lifecycle.unsupported_operation");
-        assert_eq!(build_spec(&ctx, &tools, &r, Op::Update, None, None, None).unwrap_err().code, "lifecycle.target_missing");
+        let tools = Toolchain {
+            npm: None,
+            node_dir: None,
+            brew: None,
+        };
+        let r = Recipe {
+            id: "x",
+            agent: AgentId::Claude,
+            mechanism: Mechanism::AgentSelfUpdate { args: &["update"] },
+            ops: &[Op::Update],
+            evidence: "",
+            runs_package_scripts: false,
+        };
+        assert_eq!(
+            build_spec(&ctx, &tools, &r, Op::Install, None, None, None)
+                .unwrap_err()
+                .code,
+            "lifecycle.unsupported_operation"
+        );
+        assert_eq!(
+            build_spec(&ctx, &tools, &r, Op::Update, None, None, None)
+                .unwrap_err()
+                .code,
+            "lifecycle.target_missing"
+        );
     }
 
     #[test]
     fn resolved_version_parsing() {
-        assert_eq!(parse_resolved_version(NPM.mechanism, "\"0.65.1\"\n").as_deref(), Some("0.65.1"));
-        assert_eq!(parse_resolved_version(Mechanism::HomebrewCask { token: "codex" }, "{\"casks\":[{\"version\":\"0.164.0\"}]}").as_deref(), Some("0.164.0"));
-        assert_eq!(parse_resolved_version(Mechanism::HomebrewFormula { name: "gemini-cli" }, "{\"formulae\":[{\"versions\":{\"stable\":\"0.64.0\"}}]}").as_deref(), Some("0.64.0"));
+        assert_eq!(
+            parse_resolved_version(NPM.mechanism, "\"0.65.1\"\n").as_deref(),
+            Some("0.65.1")
+        );
+        assert_eq!(
+            parse_resolved_version(
+                Mechanism::HomebrewCask { token: "codex" },
+                "{\"casks\":[{\"version\":\"0.164.0\"}]}"
+            )
+            .as_deref(),
+            Some("0.164.0")
+        );
+        assert_eq!(
+            parse_resolved_version(
+                Mechanism::HomebrewFormula { name: "gemini-cli" },
+                "{\"formulae\":[{\"versions\":{\"stable\":\"0.64.0\"}}]}"
+            )
+            .as_deref(),
+            Some("0.64.0")
+        );
         assert_eq!(parse_resolved_version(NPM.mechanism, "<html>"), None);
     }
 }

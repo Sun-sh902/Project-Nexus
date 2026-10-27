@@ -1,7 +1,27 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "main",
-  "description": "Bundled main window can read application/locale metadata and apply enum-bound Nexus UI preferences only.",
-  "windows": ["main"],
-  "permissions": ["allow-app-metadata", "allow-apply-app-preferences"]
+  "description": "Bundled main window: application metadata, enum-bound UI preferences, and the typed Nexus domain commands (queries and plan/confirm intents). No shell, filesystem, dialog, or HTTP permissions are granted to the renderer.",
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "allow-app-metadata",
+    "allow-apply-app-preferences",
+    "allow-nexus-overview",
+    "allow-nexus-agent-history",
+    "allow-nexus-models",
+    "allow-nexus-create-provider",
+    "allow-nexus-set-provider-secret",
+    "allow-nexus-delete-provider",
+    "allow-nexus-create-model",
+    "allow-nexus-delete-model",
+    "allow-nexus-save-profile",
+    "allow-nexus-set-assignment",
+    "allow-nexus-prepare-action",
+    "allow-nexus-confirm-plan",
+    "allow-nexus-discard-plan",
+    "allow-nexus-launch-agent",
+    "allow-nexus-set-locale"
+  ]
 }

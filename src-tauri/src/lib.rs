@@ -1,6 +1,26 @@
 use serde::Serialize;
+use std::sync::Arc;
 use tauri::Manager;
+mod actions;
+mod adapters;
+mod app;
 mod app_preferences;
+mod backup;
+mod config;
+mod core;
+mod diagnostics;
+mod discovery;
+mod domain;
+mod health;
+mod ipc;
+mod lifecycle;
+mod models;
+mod native_confirm;
+mod platform;
+mod secrets;
+mod store;
+#[cfg(test)]
+mod scenario_tests;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -36,11 +56,35 @@ pub fn run() {
             };
             app_preferences::create_menu(app, locale)
         })
+        .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
             app_metadata,
-            app_preferences::apply_app_preferences
+            app_preferences::apply_app_preferences,
+            ipc::nexus_overview,
+            ipc::nexus_agent_history,
+            ipc::nexus_models,
+            ipc::nexus_create_provider,
+            ipc::nexus_set_provider_secret,
+            ipc::nexus_delete_provider,
+            ipc::nexus_create_model,
+            ipc::nexus_delete_model,
+            ipc::nexus_save_profile,
+            ipc::nexus_set_assignment,
+            ipc::nexus_prepare_action,
+            ipc::nexus_confirm_plan,
+            ipc::nexus_discard_plan,
+            ipc::nexus_launch_agent,
+            ipc::nexus_set_locale
         ])
         .setup(|app| {
+            // Nexus-owned data lives in the per-app data directory, never inside Agent folders.
+            let data_dir = app.path().app_data_dir()?;
+            let ctx = platform::HostContext::detect(data_dir.clone());
+            platform::fs::ensure_private_dir(&data_dir).map_err(|e| e.to_string())?;
+            let store = store::Store::open(&data_dir.join("nexus.db")).map_err(|e| e.to_string())?;
+            let confirmer = Box::new(native_confirm::NativeConfirmer { handle: app.handle().clone() });
+            let state = app::App::new(ctx, store, Arc::new(secrets::OsSecretStore), confirmer).map_err(|e| e.to_string())?;
+            app.manage::<ipc::AppState>(Arc::new(state));
             if let Some(window) = app.get_webview_window("main") {
                 // Never force the practical minimum beyond the monitor work area.
                 if let Some(monitor) = window.current_monitor()? {

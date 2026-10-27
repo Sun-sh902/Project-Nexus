@@ -46,5 +46,6 @@
   "liveAddPreview": "Preview change",
   "liveStdioNotice": "Nexus never adds local-process (stdio) servers: they run commands on your computer.",
   "liveMcpBoundary": "Unknown entries are shown, never deleted. Only servers Nexus added can be removed here.",
-  "liveSkillsBoundary": "Skills are read-only in this version."
+  "liveSkillsBoundary": "Skills are read-only in this version.",
+  "compatibleLive": "Configured for"
 }

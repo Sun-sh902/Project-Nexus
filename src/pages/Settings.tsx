@@ -1,13 +1,11 @@
 import { useId } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown } from 'lucide-react';
 import { usePreferences } from '../app/preference-context';
 import { useNexus } from '../app/nexus-context';
-import { InfoList, Notice, PageHeading, StateGlyph } from '../components/ui';
-import type { Language } from '../app/preferences';
+import { InfoList, PageHeading, StateGlyph } from '../components/ui';
 
 const themes = ['light', 'dark', 'system'] as const;
-const groups = ['appearance', 'language', 'about'] as const;
+const groups = ['appearance', 'about'] as const;
 
 // A specimen is real Nexus UI scoped to one palette with data-theme, not a picture of one.
 function Plate({ theme }: { theme: 'light' | 'dark' }) {
@@ -22,7 +20,7 @@ function Plate({ theme }: { theme: 'light' | 'dark' }) {
 
 export function Settings() {
   const { t } = useTranslation(['settings', 'navigation', 'common']);
-  const { preferences, setTheme, setLanguage, storageFailed, localeFailed, version } = usePreferences();
+  const { preferences, setTheme, storageFailed, version } = usePreferences();
   const { mode } = useNexus();
   const live = mode === 'live';
   const id = useId();
@@ -39,18 +37,10 @@ export function Settings() {
               <span className="theme-caption"><span className="theme-name" id={`${id}-${theme}-name`}>{t(theme)}</span><span className="theme-note" id={`${id}-${theme}-note`}>{t(`${theme}Caption`)}</span><span className="theme-radio" aria-hidden="true" /></span>
             </label>)}</div>
           </fieldset>
-        </section>
-        <section className="settings-group" id={`${id}-language`} aria-labelledby={`${id}-language-title`}>
-          <div className="group-head"><h2 id={`${id}-language-title`}><span className="section-index" aria-hidden="true">{t('common:sectionMark', { n: 2 })}</span>{t('language')}</h2></div>
-          <div className="setting-row">
-            <div><label className="setting-label" htmlFor="language-choice">{t('interfaceLanguage')}</label><p id="language-help" className="field-help">{t('languageHelp')}</p></div>
-            <span className="select-control"><select id="language-choice" aria-describedby="language-help" value={preferences.language} onChange={event => setLanguage(event.target.value as Language)}><option value="system">{t('system')}</option><option value="zh-CN">{t('zh-CN')}</option><option value="en-US">{t('en-US')}</option></select><ChevronDown size={14} aria-hidden="true" /></span>
-          </div>
-          {localeFailed && preferences.language === 'system' && <Notice tone="attention">{t('common:localeError')}</Notice>}
           <p className="preference-feedback" role="status">{storageFailed ? t('common:storageError') : t('saved')}</p>
         </section>
         <section className="settings-group" id={`${id}-about`} aria-labelledby={`${id}-about-title`}>
-          <div className="group-head"><h2 id={`${id}-about-title`}><span className="section-index" aria-hidden="true">{t('common:sectionMark', { n: 3 })}</span>{t(live ? 'aboutLive' : 'about')}</h2><span className="kicker">{t(live ? 'common:phaseLive' : 'common:phase')}</span></div>
+          <div className="group-head"><h2 id={`${id}-about-title`}><span className="section-index" aria-hidden="true">{t('common:sectionMark', { n: 2 })}</span>{t(live ? 'aboutLive' : 'about')}</h2><span className="kicker">{t(live ? 'common:phaseLive' : 'common:phase')}</span></div>
           <p className="field-help">{t(live ? 'aboutHelpLive' : 'aboutHelp')}</p>
           <InfoList items={[{ label: t('version'), value: <span className="mono">{version}</span> }, { label: t('build'), value: t(live ? 'common:phaseLive' : 'common:phase') }, ...(live ? [{ label: t('dataMode'), value: t('dataModeLive') }] : [])]} />
         </section>

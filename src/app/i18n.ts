@@ -9,11 +9,11 @@ export async function initializeI18n(locale: string) {
     return;
   }
   await i18n.use(initReactI18next).init({
-    resources, lng: locale, fallbackLng: 'en-US', supportedLngs: ['zh-CN', 'en-US'],
+    resources, lng: locale, fallbackLng: 'en-US', supportedLngs: ['en-US'],
     defaultNS: 'common', ns: Object.keys(resources['en-US']),
     interpolation: { escapeValue: false },
     returnEmptyString: false,
-    parseMissingKeyHandler: () => resources[i18n.resolvedLanguage === 'zh-CN' ? 'zh-CN' : 'en-US'].common.unknown,
+    parseMissingKeyHandler: () => resources['en-US'].common.unknown,
   });
   document.documentElement.lang = locale;
 }

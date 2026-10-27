@@ -2,11 +2,11 @@ import { test, expect, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { resources } from '../../src/app/resources';
 
-async function preferences(page: Page, locale: 'en-US' | 'zh-CN', theme: 'light' | 'dark' | 'system') {
-  await page.addInitScript(({ locale, theme }) => localStorage.setItem('nexus.preferences.v1', JSON.stringify({ version: 1, language: locale, theme })), { locale, theme });
+async function preferences(page: Page, _locale: 'en-US', theme: 'light' | 'dark' | 'system') {
+  await page.addInitScript(theme => localStorage.setItem('nexus.preferences.v1', JSON.stringify({ version: 1, theme })), theme);
 }
 const routes = ['home', 'agents', 'agents/codex', 'models', 'extensions', 'system', 'settings'];
-for (const locale of ['en-US', 'zh-CN'] as const) for (const theme of ['light', 'dark'] as const) for (const size of [{ width: 960, height: 640 }, { width: 1440, height: 1000 }]) {
+for (const locale of ['en-US'] as const) for (const theme of ['light', 'dark'] as const) for (const size of [{ width: 960, height: 640 }, { width: 1440, height: 1000 }]) {
   test(`${locale} ${theme} ${size.width}: primary surfaces and accessibility`, async ({ page }, testInfo) => {
     await preferences(page, locale, theme);
     await page.setViewportSize(size);
@@ -54,20 +54,18 @@ for (const locale of ['en-US', 'zh-CN'] as const) for (const theme of ['light', 
 }
 test('runtime preferences persist and system theme responds without restart', async ({ page }) => {
   await page.goto('/#/settings');
-  await page.locator('#language-choice').selectOption('zh-CN');
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('设置');
-  await page.getByRole('radio', { name: '深色', exact: true }).check();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Settings');
+  await expect(page.locator('#language-choice')).toHaveCount(0);
+  await page.getByRole('radio', { name: 'Dark', exact: true }).check();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   await page.reload();
-  await expect(page.locator('html')).toHaveAttribute('lang', 'zh-CN');
-  await expect(page.getByRole('radio', { name: '深色', exact: true })).toBeChecked();
-  await page.getByRole('radio', { name: '跟随系统', exact: true }).check();
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en-US');
+  await expect(page.getByRole('radio', { name: 'Dark', exact: true })).toBeChecked();
+  await page.getByRole('radio', { name: 'Follow system', exact: true }).check();
   await page.emulateMedia({ colorScheme: 'light' });
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
   await page.emulateMedia({ colorScheme: 'dark' });
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
-  await page.locator('#language-choice').selectOption('en-US');
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Settings');
 });
 test('keyboard navigation, detail tabs, history, empty and error views', async ({ page }) => {
   await preferences(page, 'en-US', 'light');
@@ -93,54 +91,29 @@ test('keyboard navigation, detail tabs, history, empty and error views', async (
   await expect(page.getByText('This view could not be found')).toBeVisible();
 });
 test('400% equivalent reflow and reduced motion preserve access', async ({ page }) => {
-  await preferences(page, 'zh-CN', 'dark');
+  await preferences(page, 'en-US', 'dark');
   await page.setViewportSize({ width: 320, height: 640 });
   await page.emulateMedia({ reducedMotion: 'reduce' });
   for (const route of routes) {
     await page.goto(`/#/${route}`);
     expect(await page.locator('main').evaluate(el => el.scrollWidth > el.clientWidth)).toBe(false);
-    await expect(page.getByRole('navigation', { name: '主导航' })).toBeVisible();
+    await expect(page.getByRole('navigation', { name: 'Main navigation' })).toBeVisible();
   }
-  await page.getByRole('radio', { name: '浅色', exact: true }).check();
+  await page.getByRole('radio', { name: 'Light', exact: true }).check();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
-  expect(await page.getByRole('radio', { name: '浅色', exact: true }).evaluate(el => getComputedStyle(el).transitionDuration)).toBe('0s');
+  expect(await page.getByRole('radio', { name: 'Light', exact: true }).evaluate(el => getComputedStyle(el).transitionDuration)).toBe('0s');
 });
 
-test('first launch uses native preferred locale; system language refresh and explicit choice are independent', async ({ page }) => {
-  await page.addInitScript(() => {
-    Object.defineProperty(window, 'isTauri', { value: true });
-    Object.defineProperty(window, '__TAURI_INTERNALS__', { value: {
-      invoke: async (command: string, args: { request?: { requestId: string } }) => {
-        if (command === 'apply_app_preferences') return { contractVersion: 1, requestId: args.request?.requestId, result: 'applied' };
-        if (command !== 'app_metadata') throw new Error('denied');
-        return { contractVersion: 1, version: '0.1.0', preferredLocale: document.documentElement.dataset.testLocale ?? 'zh-Hant-TW' };
-      },
-    } });
-  });
-  await page.goto('/#/settings');
-  await expect(page.locator('html')).toHaveAttribute('lang', 'zh-CN');
-  await page.locator('#language-choice').selectOption('en-US');
-  await page.evaluate(() => { document.documentElement.dataset.testLocale = 'zh-CN'; window.dispatchEvent(new Event('focus')); });
-  await expect(page.locator('html')).toHaveAttribute('lang', 'en-US');
-  await page.locator('#language-choice').selectOption('system');
-  await expect(page.locator('html')).toHaveAttribute('lang', 'zh-CN');
-  await page.evaluate(() => { document.documentElement.dataset.testLocale = 'fr-FR'; window.dispatchEvent(new Event('focus')); });
-  await expect(page.locator('html')).toHaveAttribute('lang', 'en-US');
-});
-
-test('native locale failure and denied preference storage stay usable and visible', async ({ page }) => {
+test('native failure and denied preference storage stay usable and visible', async ({ page }) => {
   await page.addInitScript(() => {
     Object.defineProperty(window, 'isTauri', { value: true });
     Object.defineProperty(window, '__TAURI_INTERNALS__', { value: { invoke: async () => { throw new Error('denied'); } } });
     Storage.prototype.setItem = () => { throw new Error('denied'); };
   });
   await page.goto('/#/settings');
-  await expect(page.getByText(resources['en-US'].common.localeError)).toBeVisible();
   await page.getByRole('radio', { name: 'Dark', exact: true }).check();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   await expect(page.getByText(resources['en-US'].common.storageError).first()).toBeVisible();
-  await page.locator('#language-choice').selectOption('zh-CN');
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('设置');
 });
 
 test('attention/blocked diagnostics, empty inventory and expanded labels fit narrow desktop', async ({ page }, testInfo) => {

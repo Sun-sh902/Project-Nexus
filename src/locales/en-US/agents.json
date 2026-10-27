@@ -185,5 +185,6 @@
   "capabilityName.online.validation": "Online validation",
   "support.supported": "Supported",
   "support.unverified": "Implemented, unverified here",
-  "support.unsupported": "Not available"
+  "support.unsupported": "Not available",
+  "directIntentLive": "A direct model assignment chosen in Nexus."
 }

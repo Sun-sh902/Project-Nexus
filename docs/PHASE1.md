@@ -1,5 +1,7 @@
 # Phase 1 implementation record
 
+> Historical record. Since 2026-10-27 the product is English-only (see [I18N](I18N.md)); references below to Chinese, both locales or language switching describe the Phase 1 state at the time.
+
 Authorized scope: application shell and bilingual fixture UI only. Phase 0 specifications remain authoritative. No domain discovery, evaluation, mutation, credentials, database, or networking is implemented.
 
 ## Dependency decisions (2026-10-07)

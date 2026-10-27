@@ -1,12 +1,5 @@
 [
   {
-    "file": "source-han.woff2",
-    "url": "https://raw.githubusercontent.com/adobe-fonts/source-han-sans/a4f7cf94edfb9d7ffbdfc4841de276358bd7e0f2/Variable/WOFF2/TTF/Subset/SourceHanSansCN-VF.ttf.woff2",
-    "sha256": "f971e3bff46f76b49e1d5510556c2297c618ec4b491a295a4e741cdd38257799",
-    "bytes": 7711988,
-    "revision": "a4f7cf94edfb9d7ffbdfc4841de276358bd7e0f2"
-  },
-  {
     "file": "plex-mono.woff2",
     "url": "https://raw.githubusercontent.com/IBM/plex/763c36ef9117782905ae010056dfbe8fd2653a25/packages/plex-mono/fonts/complete/woff2/IBMPlexMono-Regular.woff2",
     "sha256": "ba204497f16b6d334cee9d1e963a831b73e3a56e1d6300a8489d18df7214b350",
@@ -20,15 +13,6 @@
     "bytes": 230368,
     "revision": "71f558992315a12ca1f06a2215d57962a1992162",
     "license": "plex-sans.txt",
-    "retrieved": "2026-10-27"
-  },
-  {
-    "file": "source-han-serif.woff2",
-    "url": "https://raw.githubusercontent.com/adobe-fonts/source-han-serif/7889f11bf31170b5d092a083b357c8c8130f89e0/Variable/WOFF2/OTF/Subset/SourceHanSerifCN-VF.otf.woff2",
-    "sha256": "808cb3203bb9cdd6b166a8a656a0c7608a7dc2a31c41c2cd0374550cae445471",
-    "bytes": 10421244,
-    "revision": "7889f11bf31170b5d092a083b357c8c8130f89e0",
-    "license": "han-serif.txt",
     "retrieved": "2026-10-27"
   },
   {

@@ -4,7 +4,7 @@ Status: sole active Phase 0–13 roadmap, 2026-10-07. [PRD](PRD.md) owns scope. 
 
 **Phase 7 is the differentiated Nexus MVP / public Beta boundary.** Installing Agents, switching Providers, or managing MCP alone is insufficient. Health, structured Diagnostics, and useful Safe Repair must already provide clear user value.
 
-Every delivery phase follows [SECURITY](SECURITY.md), [ARCHITECTURE](ARCHITECTURE.md), [DESIGN_SYSTEM](DESIGN_SYSTEM.md), [I18N](I18N.md), and [AGENT_MANIFEST](AGENT_MANIFEST.md). Acceptance applies to both macOS and Windows and both locales wherever the phase has user-visible behavior. Unsupported upstream capabilities are explicit; they do not excuse missing product support without an approved scope decision.
+Every delivery phase follows [SECURITY](SECURITY.md), [ARCHITECTURE](ARCHITECTURE.md), [DESIGN_SYSTEM](DESIGN_SYSTEM.md), [I18N](I18N.md), and [AGENT_MANIFEST](AGENT_MANIFEST.md). Acceptance applies to both macOS and Windows wherever the phase has user-visible behavior. The product is English-only (owner decision, 2026-10-27). Unsupported upstream capabilities are explicit; they do not excuse missing product support without an approved scope decision.
 
 ## Phase 0 — Product / architecture / security / design foundation
 
@@ -15,14 +15,14 @@ Every delivery phase follows [SECURITY](SECURITY.md), [ARCHITECTURE](ARCHITECTUR
 - **Security considerations:** Close arbitrary-execution and credential/configuration-loss paths at design time; separate signed metadata from executable authority.
 - **Acceptance criteria:** Eight requested documents exist, cross-reference consistently, distinguish fact from design/deferred decisions, include all phase gates, and pass four-perspective review with corrections in the actual text. Repository changes remain documentation-only. Final consistency audit finds one product definition and one active roadmap. No runtime claims are made.
 
-## Phase 1 — Application shell + premium bilingual UI
+## Phase 1 — Application shell + premium UI
 
 - **Goal:** Deliver a polished desktop foundation with honest nonfunctional states.
 - **Scope:** Separately authorized Tauri 2/Rust/React/TypeScript/Vite shell; tokens and Light/Dark/Follow System; Home/Agents/Models/Extensions/System/Settings; navigation and basic accessible primitives; i18n and persisted language/theme. Decide evidence-based Nexus OS/architecture distribution targets and typed IPC conventions. Use clearly labeled development fixtures.
 - **Non-goals:** Native Agent/System probing, real Health evaluation, installs, credentials, SQLite domain schema, Providers/Models implementation, Extensions, AI Doctor, Marketplace, Sync, Team, Billing or Upgrade navigation.
 - **Dependencies:** Phase 0 accepted; current Tauri/runtime requirements researched; minimal build/dependency/license choices recorded.
 - **Security considerations:** Local bundled assets/CSP, least-privilege Tauri permissions, no shell/filesystem/network shortcut exposed to renderer; native preference operations remain bounded.
-- **Acceptance criteria:** Runs on the selected macOS/Windows matrix; both locales and themes render at 960×640 and larger size; narrow/zoom layouts remain usable; language switches without restart; keyboard/focus/screen-reader and contrast checks pass. UI does not invent installed/healthy Agents. No future upsell areas appear.
+- **Acceptance criteria:** Runs on the selected macOS/Windows matrix; both themes render at 960×640 and larger size; narrow/zoom layouts remain usable; language switches without restart; keyboard/focus/screen-reader and contrast checks pass. UI does not invent installed/healthy Agents. No future upsell areas appear.
 
 ## Phase 2 — Agent Discovery + System Discovery
 
@@ -76,7 +76,7 @@ Every delivery phase follows [SECURITY](SECURITY.md), [ARCHITECTURE](ARCHITECTUR
 - **Non-goals:** AI-generated execution, automatic background repairs, AI Doctor, Workspaces, accounts, Pro paywalls, marketplace, usage dashboards.
 - **Dependencies:** Phases 1–6; all destructive primitives already validated in Phase 4; Model/Extension evidence available; official research refreshed for the Beta release matrix.
 - **Security considerations:** Plan/finding freshness, authorization replay, rollback conflicts, irreversible actions, evidence redaction, signing/update incidents, and unverified-result honesty. Essential safety/recovery remains free.
-- **Acceptance criteria:** All [PRD success criteria](PRD.md) pass. Ship at least the three specified useful repair classes across the compatibility matrix and a seeded recovery journey for each initial Agent. Verify missing credentials, config drift, incompatible Model, environment override and Extension faults yield accurate findings, even when repair is manual. Test denied confirmation, crash, stale plan, external edit, verification failure and rollback failure. Both platforms/locales pass usability/accessibility and security review. No P0/P1 safety/data-loss blocker remains; unresolved limitations are documented. Only then may a release be called public Beta.
+- **Acceptance criteria:** All [PRD success criteria](PRD.md) pass. Ship at least the three specified useful repair classes across the compatibility matrix and a seeded recovery journey for each initial Agent. Verify missing credentials, config drift, incompatible Model, environment override and Extension faults yield accurate findings, even when repair is manual. Test denied confirmation, crash, stale plan, external edit, verification failure and rollback failure. Both platforms pass usability/accessibility and security review. No P0/P1 safety/data-loss blocker remains; unresolved limitations are documented. Only then may a release be called public Beta.
 
 ## Phase 8 — Project Workspaces
 
@@ -138,12 +138,12 @@ Every delivery phase follows [SECURITY](SECURITY.md), [ARCHITECTURE](ARCHITECTUR
 | --- | --- | --- | --- |
 | Exact Nexus minimum OS and shipped CPU targets | Engineering | Phase 1 distribution | Official Tauri/runtime guidance plus real platform builds/tests |
 | Final per-Agent version/installer support matrix | Engineering + Security | Phase 2 probes / Phase 4 lifecycle | Current official docs, version fixtures, integrity and recovery tests |
-| Native trusted confirmation primitive | Security + Design | Phase 4 mutation | Renderer-forgery denial and bilingual accessibility tests |
+| Native trusted confirmation primitive | Security + Design | Phase 4 mutation | Renderer-forgery denial and accessibility tests |
 | Signature algorithm/encoding/root rotation and key custody | Security | Remote Manifest or public updater activation | Standard implementation, test vectors, incident/recovery drill |
 | Exact config parsers and atomic-write primitives | Engineering + Security | First config mutation | Preservation fixtures, symlink/race/crash tests on both OSes |
 | Beta Provider coverage and safe credential handoff | Product + Engineering + Security | Phase 5 release | Official per-Agent compatibility/auth evidence and no-plaintext tests |
 | Probe freshness/timeouts and storage budgets | Engineering + Product | Relevant native phase; finalized by Phase 7 | Real performance/failure/privacy tests; Security defaults remain binding until revised |
-| Typography rendering and token adjustments | Design | Phase 1 sign-off | Both OSes/locales/themes, measured contrast, screenshots and accessibility review |
+| Typography rendering and token adjustments | Design | Phase 1 sign-off | Both OSes/themes, measured contrast, screenshots and accessibility review |
 | Pricing, cloud vendor, sync encryption and marketplace business model | Product + Security | Respective post-MVP phase | User demand, cost/privacy/security evidence; no early dependency |
 
 ## Implementation status (2026-10-27)

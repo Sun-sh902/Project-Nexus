@@ -44,20 +44,7 @@ fn app_metadata() -> AppMetadata {
 
 pub fn run() {
     tauri::Builder::default()
-        .menu(|app| {
-            let preferred = sys_locale::get_locale()
-                .unwrap_or_default()
-                .to_ascii_lowercase();
-            let locale = if preferred == "zh"
-                || preferred.starts_with("zh-")
-                || preferred.starts_with("zh_")
-            {
-                app_preferences::LocalePreference::Chinese
-            } else {
-                app_preferences::LocalePreference::English
-            };
-            app_preferences::create_menu(app, locale)
-        })
+        .menu(|app| app_preferences::create_menu(app, app_preferences::LocalePreference::English))
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
             app_metadata,
@@ -75,8 +62,7 @@ pub fn run() {
             ipc::nexus_prepare_action,
             ipc::nexus_confirm_plan,
             ipc::nexus_discard_plan,
-            ipc::nexus_launch_agent,
-            ipc::nexus_set_locale
+            ipc::nexus_launch_agent
         ])
         .setup(|app| {
             // Nexus-owned data lives in the per-app data directory, never inside Agent folders.

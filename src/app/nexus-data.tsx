@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { backend, liveBackend, NexusError, type ModelsView, type Overview } from './backend';
-import { usePreferences } from './preference-context';
 import { agentView, activityViews, toolViews } from '../data/live';
 import { demoActivity, demoAgents, demoExtensions, demoTools } from '../data/demo';
 import { NexusContext, type DataMode, type NexusData } from './nexus-context';
@@ -11,7 +10,6 @@ import { NexusContext, type DataMode, type NexusData } from './nexus-context';
 
 export function NexusDataProvider({ children }: { children: ReactNode }) {
   const mode: DataMode = liveBackend() ? 'live' : 'demo';
-  const { locale } = usePreferences();
   const [overview, setOverview] = useState<Overview | null>(null);
   const [models, setModels] = useState<ModelsView | null>(null);
   const [status, setStatus] = useState<NexusData['status']>(mode === 'live' ? 'loading' : 'ready');
@@ -46,7 +44,6 @@ export function NexusDataProvider({ children }: { children: ReactNode }) {
 
   // Deferred so the scan's state updates never run synchronously inside the effect body.
   useEffect(() => { void Promise.resolve().then(() => load(true)); }, [load]);
-  useEffect(() => { if (mode === 'live') void backend.setLocale(locale).catch(() => undefined); }, [mode, locale]);
 
   const value = useMemo<NexusData>(() => {
     const agents = mode === 'demo' ? demoAgents() : overview ? overview.agents.map(agentView) : [];

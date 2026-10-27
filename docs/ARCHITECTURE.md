@@ -210,7 +210,7 @@ On crash/restart, reconcile journaled operations with current resources. Show in
 
 ## 14. Testing boundaries and decisions
 
-Pure tests: Health aggregation/freshness, compatibility, profile revision resolution, finding eligibility. Fixture/contract tests: each adapter version and config precedence, unknown fields, supported mutation round trips. Native integration tests: secret-store behavior without real keys, typed IPC denial, path races, package-manager stubs, operation recovery. Platform tests on both OSes: process arguments, secure writes, signing/update verification, permissions. UI tests: states, keyboard, screen readers, bilingual layout, themes, progress and partial outcomes. Network fixtures cover timeouts, malformed schemas, revoked manifests, and provider-origin changes. Destructive integration tests use isolated temporary environments, never a developer's live toolchain.
+Pure tests: Health aggregation/freshness, compatibility, profile revision resolution, finding eligibility. Fixture/contract tests: each adapter version and config precedence, unknown fields, supported mutation round trips. Native integration tests: secret-store behavior without real keys, typed IPC denial, path races, package-manager stubs, operation recovery. Platform tests on both OSes: process arguments, secure writes, signing/update verification, permissions. UI tests: states, keyboard, screen readers, layout, themes, progress and partial outcomes. Network fixtures cover timeouts, malformed schemas, revoked manifests, and provider-origin changes. Destructive integration tests use isolated temporary environments, never a developer's live toolchain.
 
 | ADR | Decision | Reason and consequence |
 | --- | --- | --- |

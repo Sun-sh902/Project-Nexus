@@ -270,18 +270,6 @@ pub async fn nexus_launch_agent(
         .map_err(|_| NexusError::new("app.task_failed"))?
 }
 
-#[tauri::command]
-pub fn nexus_set_locale(
-    window: tauri::WebviewWindow,
-    state: State<'_, AppState>,
-    locale: String,
-) -> NexusResult<()> {
-    main_window(&window)?;
-    bounded(&locale, 8)?;
-    state.set_locale(&locale);
-    Ok(())
-}
-
 #[cfg(test)]
 pub const COMMANDS: &[&str] = &[
     "nexus_overview",
@@ -298,7 +286,6 @@ pub const COMMANDS: &[&str] = &[
     "nexus_confirm_plan",
     "nexus_discard_plan",
     "nexus_launch_agent",
-    "nexus_set_locale",
 ];
 
 #[cfg(test)]

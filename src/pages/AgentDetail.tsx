@@ -86,7 +86,7 @@ function ModelLayers({ agent }: { agent: AgentView }) {
   const { t } = useTranslation(['agents']);
   const layers = agent.report?.snapshot.model.layers ?? [];
   return <Section title={t('layersTitle')} aside={<span className="kicker">{t('layersKicker')}</span>}>
-    <div className="sheet"><ul className="ledger-list layer-list">{layers.map((layer, index) => <li key={`${layer.location}-${index}`} className={layer.effective ? 'is-effective' : undefined}>
+    <div className="sheet"><ul className="fact-rows layer-list">{layers.map((layer, index) => <li key={`${layer.location}-${index}`} className={layer.effective ? 'is-effective' : undefined}>
       <strong>{t(`liveSource.${layer.kind}`)}</strong>
       <span className="mono">{layer.location}</span>
       <span className="mono">{layer.uncertain ? t('layerUncertain') : layer.value ?? t('layerUnset')}{layer.effective && <span className="chip">{t('layerEffective')}</span>}</span>
@@ -175,16 +175,16 @@ function Configuration({ agent, flow }: { agent: AgentView; flow: ActionFlow }) 
   </div>;
   return <div className="configuration-area"><p className="view-intro">{t('configurationHelpLive')}</p>
     <Installations agent={agent} flow={flow} />
-    <Section title={t('configSourcesTitle')}><div className="sheet"><ul className="ledger-list">{r.snapshot.configSources.map(source => <li key={source.id}>
+    <Section title={t('configSourcesTitle')}><div className="sheet"><ul className="fact-rows">{r.snapshot.configSources.map(source => <li key={source.id}>
       <strong>{t(`scope.${source.scope}`)}</strong><span className="mono">{source.location}</span><span className="mono">{t(`obs.${source.status}`)}{source.viaSymlink && ` · ${t('viaSymlink')}`}</span>
     </li>)}</ul></div></Section>
     <Section title={t('authTitle')}><InfoList items={[
       { label: t('auth'), value: r.snapshot.auth.evidence.length ? r.snapshot.auth.evidence.map(e => t(`authEvidence.${e}`)).join(' · ') : t('authNone') },
       { label: t('authLocations'), value: r.snapshot.auth.locations.length ? <span className="mono">{r.snapshot.auth.locations.join(', ')}</span> : t('common:none') },
     ]} /><Notice>{t('authBoundary')}</Notice></Section>
-    <Section title={t('capabilitiesTitle')}><div className="sheet"><ul className="ledger-list">{r.snapshot.capabilities.map(c => <li key={c.key}><strong>{t(`capabilityName.${c.key}`)}</strong><span>{t(`support.${c.support}`)}</span><span className="row-meta">{c.reason ? t(`capability:${c.reason}`) : ''}</span></li>)}</ul></div></Section>
+    <Section title={t('capabilitiesTitle')}><div className="sheet"><ul className="fact-rows">{r.snapshot.capabilities.map(c => <li key={c.key}><strong>{t(`capabilityName.${c.key}`)}</strong><span>{t(`support.${c.support}`)}</span><span className="row-meta">{c.reason ? t(`capability:${c.reason}`) : ''}</span></li>)}</ul></div></Section>
     <Section title={t('backupsTitle')} aside={<span className="kicker">{t('backupsKicker')}</span>}>
-      {history && history.backups.length ? <div className="sheet"><ul className="ledger-list">{history.backups.map(b => <li key={b.id}>
+      {history && history.backups.length ? <div className="sheet"><ul className="fact-rows">{history.backups.map(b => <li key={b.id}>
         <strong className="mono">{b.targetDisplay}</strong><time className="mono" dateTime={b.createdAt}>{formatTimestamp(b.createdAt, locale)}</time>
         <button className="button button-small" disabled={flow.busy !== null} onClick={() => void flow.prepare({ kind: 'restoreBackup', backupId: b.id })}>{t('actions:repair.restoreBackup')}</button>
       </li>)}</ul></div> : <EmptyState title={t('noBackups')} description={t('noBackupsHelp')} />}

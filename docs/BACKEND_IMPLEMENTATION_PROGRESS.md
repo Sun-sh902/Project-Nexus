@@ -45,7 +45,7 @@ pointer kept as `.git.broken-worktree-pointer`, fresh `git init`, baseline commi
 | `lifecycle.rs` | Recipes, toolchain resolution, version pinning at plan time, fixed argv construction |
 | `actions.rs` | Action Registry: typed `ActionRequest`, immutable digest-bound plans (10 min TTL, single use), native confirmation, journaled execution, independent verification, compensation |
 | `app.rs` | Use cases: overview, reports, models view, Model-domain record mutations |
-| `native_confirm.rs` | Rust-owned OS confirmation dialog built from the plan (tauri-plugin-dialog), text from `src/locales/*/native.json` |
+| `native_confirm.rs` | Rust-owned OS confirmation dialog built from the plan (tauri-plugin-dialog), text from `src/locales/en-US/native.json` |
 | `ipc.rs` | 15 typed commands, `deny_unknown_fields`, main-window only; each allowlisted in `capabilities/main.json` |
 
 ## Agent capability matrix (macOS verified on this machine; Windows implemented-but-unverified)
@@ -162,7 +162,7 @@ UI files touched: `src/App.tsx`, `src/main.tsx`, all `src/pages/*`, `src/compone
 | `pnpm typecheck` | pass |
 | `npx eslint src tests` | 0 problems (the repository-wide `eslint .` still reports 258 pre-existing errors confined to `design-lab/` prototypes, unchanged from baseline) |
 | `pnpm test` (vitest) | 16 passed |
-| `pnpm test:ui` (Playwright, Chrome) | 50 passed: 40 existing demo-mode UI tests + 10 live-mode tests (both locales) driven by backend-generated fixtures in `tests/fixtures/live/` |
+| `pnpm test:ui` (Playwright, Chrome) | 50 passed: 40 existing demo-mode UI tests + 10 live-mode tests driven by backend-generated fixtures in `tests/fixtures/live/` |
 | `pnpm tauri build --debug --bundles app` | built; app launched; Home showed live data (3 of 4 Agents ready, OpenCode attention: two global config files) |
 
 ## Independent review (Gate I)
@@ -197,9 +197,13 @@ A separate reviewer agent with no implementation context reviewed commits a7481d
 - Version 0.2.0 (tag `v0.2.0-beta.1`, pre-release). `cargo fmt` applied.
 - Release artifact: `Project Nexus_0.2.0_aarch64.dmg` — ad-hoc signed, **not notarized** (Security §5 signing gate still open; disclosed in release notes).
 
+## English-only change (2026-10-27)
+
+Owner decision: the product ships in English only. Removed the zh-CN catalog, the language preference, the toolbar language selector, the Settings language section, the `nexus_set_locale` IPC command and its capability, Chinese native menu/dialog text, `:lang(zh-CN)` CSS and the Source Han Sans/Serif fonts (~18 MB). Chinese-language Phase 1 records were rewritten in English. I18N, PRD, AGENTS, ROADMAP and DESIGN_SYSTEM updated. The i18n structure remains with a single `en-US` catalog. Saved preferences from earlier builds keep their theme; the old language field is ignored.
+
 ## Continuation point
 
 All gates implemented. Next steps toward a public Beta: Windows build + runtime validation (paths,
 `.cmd` shims, Credential Manager, ACL checks for mutation), online Provider validation with the
 Security §7 network controls, Skills install/enable, reviewed stdio MCP recipes, signed release
-and updater, usability sessions in both locales.
+and updater, usability sessions.

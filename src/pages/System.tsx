@@ -18,7 +18,7 @@ export function System() {
         <div><dt>{t(live ? 'environmentLive' : 'environment')}</dt><dd>{t(live ? 'thisComputer' : 'fixtureHost')}</dd></div>
         <div><dt>{t('os')}</dt><dd lang="en-US">{live && sys ? `${t(`osName.${sys.os}`)} ${sys.osVersion.value ?? ''}` : demoSystem.os}</dd></div>
         <div><dt>{t('arch')}</dt><dd className="mono">{live && sys ? sys.arch : demoSystem.arch}</dd></div>
-        <div><dt>{t('toolCount')}</dt><dd className="mono">{formatNumber(tools.filter(tool => !live || tool.version !== null || tool.readiness !== 'unknown').length, locale)}</dd></div>
+        <div><dt>{t('toolCount')}</dt><dd className="mono">{formatNumber(live ? tools.filter(tool => tool.location !== null).length : tools.length, locale)}</dd></div>
       </dl>
     </PageHeading>
     <Notice>{t(live ? 'detectedLive' : 'notDetected')}</Notice>
@@ -42,7 +42,7 @@ export function System() {
       <p className="sheet-foot matrix-legend"><span><span className="matrix-mark is-on" aria-hidden="true" />{t('affectedMark')}</span><span><span className="matrix-mark" aria-hidden="true" />{t('notAffected')}</span></p></div>
     </Section>
     {live && sys && <Section title={t('pathTitle')} aside={<span className="kicker">{t('pathKicker')}</span>}>
-      <div className="sheet"><ul className="ledger-list">{sys.pathEntries.map(entry => <li key={entry.location}><span className="mono">{entry.location}</span><span>{t(entry.onPath ? 'onPath' : 'knownLocation')}</span><span className="mono">{t(entry.exists ? 'exists' : 'missing')}</span></li>)}</ul>
+      <div className="sheet"><ul className="fact-rows">{sys.pathEntries.map(entry => <li key={entry.location}><span className="mono">{entry.location}</span><span>{t(entry.onPath ? 'onPath' : 'knownLocation')}</span><span className="mono">{t(entry.exists ? 'exists' : 'missing')}</span></li>)}</ul>
       <p className="sheet-foot">{t(sys.guiPathNote ? 'guiPathNote' : 'pathNote')}</p></div>
       <Notice>{t('dataDir', { dir: sys.dataDir })}{!sys.dataDirWritable && ` ${t('dataDirNotWritable')}`}</Notice>
     </Section>}

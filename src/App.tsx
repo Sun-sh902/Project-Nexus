@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { Home as HomeIcon, Bot, Layers2, Puzzle, Cpu, Settings2, PanelLeftClose, PanelLeftOpen, SunMoon, Languages, RefreshCw } from 'lucide-react';
+import { Home as HomeIcon, Bot, Layers2, Puzzle, Cpu, Settings2, PanelLeftClose, PanelLeftOpen, SunMoon, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { navigation, parseRoute } from './app/routes';
 import { usePreferences } from './app/preference-context';
-import type { Language, Theme } from './app/preferences';
+import type { Theme } from './app/preferences';
 import { formatNumber, formatTimestamp } from './app/format';
 import type { Readiness } from './data/view';
 import { useNexus } from './app/nexus-context';
@@ -21,7 +21,7 @@ const agentStateContext = (state: Readiness) => `health:${state}`;
 const icons = { home: HomeIcon, agents: Bot, models: Layers2, extensions: Puzzle, system: Cpu, settings: Settings2 };
 export default function App() {
   const { t } = useTranslation(['common', 'navigation', 'settings']);
-  const { preferences, locale, version, setLanguage, setTheme, storageFailed, nativePreferenceFailed } = usePreferences();
+  const { preferences, locale, version, setTheme, storageFailed, nativePreferenceFailed } = usePreferences();
   const { agents, findAgent, scannedAt, mode, refresh, refreshing, status } = useNexus();
   const live = mode === 'live';
   const [hash, setHash] = useState(location.hash);
@@ -74,7 +74,6 @@ export default function App() {
             <span className="fixture-clock mono">{t(live ? 'scanClock' : 'fixtureClock')}<span className="note-divider" aria-hidden="true" />{scannedAt ? formatTimestamp(scannedAt, locale) : t(status === 'error' ? 'scanFailedShort' : 'scanning')}</span>
             {live && <button className="icon-button" aria-label={t('rescan')} title={t('rescan')} disabled={refreshing} onClick={() => void refresh()}><RefreshCw size={14} strokeWidth={1.6} aria-hidden="true" className={refreshing ? 'is-spinning' : undefined} /></button>}
             <label className="toolbar-select" title={t('settings:appearance')}><SunMoon size={14} strokeWidth={1.6} aria-hidden="true" /><span className="sr-only">{t('settings:appearance')}</span><select id="shell-theme" value={preferences.theme} onChange={event => setTheme(event.target.value as Theme)}>{(['light', 'dark', 'system'] as const).map(theme => <option value={theme} key={theme}>{t(`settings:${theme}`)}</option>)}</select></label>
-            <label className="toolbar-select" title={t('settings:language')}><Languages size={14} strokeWidth={1.6} aria-hidden="true" /><span className="sr-only">{t('settings:language')}</span><select id="shell-language" value={preferences.language} onChange={event => setLanguage(event.target.value as Language)}>{(['system', 'zh-CN', 'en-US'] as const).map(language => <option value={language} key={language}>{t(`settings:${language}`)}</option>)}</select></label>
           </div>
         </header>
         <div className="main-inner">{storageFailed && <Notice tone="attention">{t('storageError')}</Notice>}{nativePreferenceFailed && <Notice tone="attention">{t('nativePreferenceError')}</Notice>}{page}</div>

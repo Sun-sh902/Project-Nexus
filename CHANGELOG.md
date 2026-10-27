@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+- English-only interface: removed Simplified Chinese, the language selector in the toolbar and Settings, and the Chinese fonts (smaller app bundle).
+- Detailed README with screenshots and a feature guide.
+
 ## 0.2.0-beta.1 — 2026-10-27 (pre-release, Core Backend Beta Candidate)
 
 First build with a functional backend underneath the approved Phase 1 interface. Validated on macOS arm64 only. **Not a public Beta**: Windows is unvalidated and the build is not notarized.
@@ -13,7 +19,7 @@ First build with a functional backend underneath the approved Phase 1 interface.
 - Models: Providers, Models (built-in aliases, found-in-config, manual), revisioned Model Profiles, per-Agent assignments with desired/applied/effective states; Keychain-only secrets.
 - Extensions: MCP enable/disable, add remote HTTPS server, remove Nexus-added servers (Codex, Gemini CLI, OpenCode); Skills read-only.
 - Local SQLite persistence with versioned migrations; no secrets stored.
-- Live data across Home, Agents, Agent Detail, Models, Extensions, System and Settings, in English and Simplified Chinese.
+- Live data across Home, Agents, Agent Detail, Models, Extensions, System and Settings.
 
 ### Known limitations
 - Windows: implemented paths are unverified; Windows npm recipes are inactive.

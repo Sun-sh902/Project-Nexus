@@ -7,7 +7,7 @@ Project Nexus is an AI Agent Lifecycle Manager that keeps local AI agents instal
 - Agents are the product center. Nexus manages their lifecycle; it does not replace them.
 - Models and Providers are separate domains. Agent Health, structured Diagnostics, and Safe Repair are first-class domains. AI is not required for them.
 - Read [PRD](docs/PRD.md) for product authority and [ROADMAP](docs/ROADMAP.md) for the sole active phase sequence. Phase 7 is the differentiated Nexus MVP / public Beta boundary.
-- Phase 1 application shell and bilingual UI are implemented. The Phases 2–7 core backend (discovery, Health, lifecycle, Models/Providers, MCP/Skills, Diagnostics, Safe Repair, persistence) was explicitly authorized on 2026-10-27 and is implemented as a Core Backend Beta Candidate; it is not a public Beta until the Phase 7 acceptance criteria (including Windows validation) pass. Status and limits: [BACKEND_IMPLEMENTATION_PROGRESS](docs/BACKEND_IMPLEMENTATION_PROGRESS.md). Fixtures remain only for explicit browser demo mode and tests. Phase 8+ requires separate authorization.
+- Phase 1 application shell and UI are implemented. The Phases 2–7 core backend (discovery, Health, lifecycle, Models/Providers, MCP/Skills, Diagnostics, Safe Repair, persistence) was explicitly authorized on 2026-10-27 and is implemented as a Core Backend Beta Candidate; it is not a public Beta until the Phase 7 acceptance criteria (including Windows validation) pass. Status and limits: [BACKEND_IMPLEMENTATION_PROGRESS](docs/BACKEND_IMPLEMENTATION_PROGRESS.md). Fixtures remain only for explicit browser demo mode and tests. Phase 8+ requires separate authorization.
 
 ## Architecture
 
@@ -29,9 +29,9 @@ Project Nexus is an AI Agent Lifecycle Manager that keeps local AI agents instal
 ## Product quality
 
 - Follow [DESIGN_SYSTEM](docs/DESIGN_SYSTEM.md): premium desktop ergonomics, calm dense lists, Agent readiness first, deliberate Light/Dark/Follow System themes. Avoid generic dashboards, decorative metrics, giant cards, copied product expression, and hidden future upsells.
-- Follow [I18N](docs/I18N.md): zh-CN and en-US are equal release requirements. No ordinary user-facing strings in React components. Native errors use stable codes and safe parameters. Localize accessibility labels, validation, dates, numbers, and plural forms.
+- Follow [I18N](docs/I18N.md): the product ships in English (en-US) only; do not add a language selector or another locale without an explicit product decision. No ordinary user-facing strings in React components. Native errors use stable codes and safe parameters. Localize accessibility labels, validation, dates, numbers, and plural forms.
 - Keep macOS and Windows first-class. Separate Nexus runtime requirements from Agent/capability requirements. Verify OS and architecture claims against official sources; do not invent minimum versions.
-- Support keyboard navigation, visible focus, screen readers, non-color states, reduced motion, and bilingual expansion.
+- Support keyboard navigation, visible focus, screen readers, non-color states, reduced motion, and text expansion.
 
 ## Delivery discipline
 

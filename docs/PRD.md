@@ -6,7 +6,7 @@ Status: canonical Phase 0 specification. Research baseline: 2026-10-07 (Asia/Sha
 
 **Project Nexus is an AI Agent Lifecycle Manager that keeps local AI agents installed, configured, healthy, and ready to work.**
 
-Chinese product concept: **AI Agent 管家**. Core promise: **Keep every AI Agent ready to work.** / **让你的所有 AI Agent 始终可用。**
+Core promise: **Keep every AI Agent ready to work.** The product ships in English only (owner decision, 2026-10-27; see [I18N](I18N.md)).
 
 Nexus is a local-first desktop product for macOS and Windows. It manages OpenAI Codex, Claude Code, Gemini CLI, and OpenCode, initially through their local CLI integrations. Their desktop apps, IDE integrations, cloud execution, and every upstream feature are not automatically in scope. Nexus does not replace Agents or become a new coding chat client.
 
@@ -21,7 +21,7 @@ This file is the sole product-scope authority. [ROADMAP](ROADMAP.md) is the sole
 | Individual developer using one or more Agents | Installation exists but the Agent cannot work; errors span runtime, authentication, Models, and configuration | Tell me what is ready and safely restore what is broken |
 | Developer trying another Agent | Existing toolchains and credentials must be preserved | Adopt what I already have; install only what is missing |
 | Developer switching model services | Provider connection and model compatibility are confused | Assign a usable Model without destroying Agent-specific settings |
-| Chinese/English bilingual developer | Mixed terminology, truncated UI, and raw native errors make recovery difficult | Explain issues and consequences clearly in my chosen language |
+| Developer recovering a broken setup | Inconsistent terminology, truncated UI, and raw native errors make recovery difficult | Explain issues and consequences clearly in plain language |
 
 Organization administrators are a future audience. Enterprise control, fleet management, and team dashboards must not distort individual MVP workflows.
 
@@ -37,7 +37,7 @@ Readiness is evidence with scope and freshness, not a universal guarantee. `read
 
 ## 4. Information architecture
 
-The MVP primary navigation, in order, is **Home, Agents, Models, Extensions, System, Settings**. Chinese labels follow I18N. No AI Doctor, Marketplace, Sync, Team, Billing, or Upgrade navigation appears in the early shell.
+The MVP primary navigation, in order, is **Home, Agents, Models, Extensions, System, Settings**. No AI Doctor, Marketplace, Sync, Team, Billing, or Upgrade navigation appears in the early shell.
 
 **Home** answers which Agents exist, whether they are ready, what needs attention, and what to do next. Its order is readiness summary, My Agents, Needs Attention, contextual Quick Actions, compact System health, and recent meaningful activity. Prefer an Agent list and actionable findings over card grids. System issues name affected Agents. Activity records meaningful state changes, not every poll. No decorative analytics or token charts.
 
@@ -91,8 +91,8 @@ Release gates are requirements, not measured results. Acceptance evidence is loc
 - For each initial Agent, a seeded recoverable issue is discovered, explained, confirmed, repaired, and independently verified. The Beta suite also includes shared configuration-conflict, missing-credential, and interrupted-operation cases.
 - Beta ships at least three useful repair classes across its compatibility matrix: restore an eligible known-good configuration backup; reapply a supported assignment displaced by an editable configuration change; recover an interrupted Nexus-owned installation where the installer supports recovery. Manual guidance is required for unsupported cases. Re-authentication may be guided, never silently automated by scraping credentials.
 - All destructive/configuration/lifecycle changes show impact and need explicit confirmation. Failure injection proves preservation or a precise recoverable partial state; no silent loss of unrelated configuration is accepted.
-- In usability testing, at least 4 of 5 representative users in each locale can identify the blocked Agent and its next safe action without reading raw logs. This is a proposed release target, not existing research.
-- Both platforms pass keyboard, screen-reader, Light/Dark, bilingual expansion, and narrow desktop gates. Unknown model metadata is never displayed as a supported capability.
+- In usability testing, at least 4 of 5 representative users can identify the blocked Agent and its next safe action without reading raw logs. This is a proposed release target, not existing research.
+- Both platforms pass keyboard, screen-reader, Light/Dark, text expansion, and narrow desktop gates. Unknown model metadata is never displayed as a supported capability.
 - Quality feedback measures time to a verified ready state and successful recovery, not activity counts or token consumption. Any later analytics proposal needs explicit privacy review and opt-in design.
 
 ## 9. Commercial and post-MVP direction
@@ -117,7 +117,7 @@ Potential **Team**: approved Agents/Providers/Models/Extensions, policy, version
 | Installer or local binary is compromised | Independent native action policy, provenance/integrity controls, no automatic execution of unknown candidates |
 | Safe merge cannot preserve a format | Refuse mutation; show manual guidance rather than rewrite lossily |
 | Shared Model Profile updates affect many Agents | Versioned proposals, impact review, per-Agent outcomes; no implied cross-file atomicity |
-| Premium bilingual desktop UX costs effort | Equal locale/platform release gates; no post-release translation cleanup phase |
+| Premium desktop UX costs effort | Equal platform release gates; no post-release copy cleanup phase |
 | Exact Nexus minimum OS / CPU distribution targets unknown | Decide from current Tauri/runtime evidence plus actual Phase 1 packaging tests; never inherit the strictest Agent minimum |
 
 Before Phase 4, select verified installer channels and supply-chain policy per Agent. Before Phase 5, validate Provider/Agent coverage and secure credential handoff. Before Beta, set concrete evidence freshness/retention limits and distribution signing operations. These are intentional implementation-stage decisions, not permission to weaken the Phase 0 contracts.

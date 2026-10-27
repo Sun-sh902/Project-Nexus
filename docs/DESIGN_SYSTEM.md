@@ -12,14 +12,14 @@ Nexus is drawn as a **readiness atelier**: calm paper (or a composed night ledge
 
 - **Mark.** A high-contrast serif N (hairline stems, one heavy diagonal) overprinted on a cobalt signal disc, like two plates in a letterpress or riso print. The N follows ink; the disc is the brand cobalt. The icon sets this on a warm paper tile with grain and a hairline baseline, inside the macOS 824px body grid. The sidebar mark is that same tile drawn inline (fixed colours in both themes), so the in-app mark and the app icon are one image. The wordmark "Nexus" is set in the display serif. App icons are generated from [public/nexus-mark.svg](../public/nexus-mark.svg).
 - **Readiness line.** Every Agent row draws one path — Install → Runtime → Config → Model → Online — built only by [src/app/readiness.ts](../src/app/readiness.ts) from fixture checks and configuration records. Node shapes: pass solid square; fails diamond; pending review half disc; assigned neutral ink square; *not checked* hatched; *not reached* dotted. Nothing after a failure is presumed to pass, and online service is always drawn as not checked. Agent Detail expands the same path into a five-step procession.
-- **Seal.** A ruled, tinted box in mono caps (Chinese without case transform) is reserved for an Agent's overall readiness. Check results never use the seal.
+- **Seal.** A ruled, tinted box in mono caps is reserved for an Agent's overall readiness. Check results never use the seal.
 - **Hatch means no conclusion.** Diagonal hatching marks what this example never assessed (online service, the "Not checked in this example" sheet). It is never used for a result.
 - **Configuration sheet.** Desired → applied → effective are three separately labelled columns joined by drawn operators: *matches* (=), *differs* (≠, filled attention), *no record* (dashed) and *separate source* (dotted). An effective model owned by the Agent is never drawn as matching a Nexus Profile.
 - **Assignment chain.** Models draws Provider → Model → Profile → Agent as a rail; a dotted link is a step the Agent does not use.
 
 Home hierarchy: two-tone verdict headline (lead in ink, qualification in ink-3) with a readiness register of serif counts → My Agents ledger with readiness lines and seals → Needs attention exhibits (numbered I, II; blocked before attention) beside compact System and Activity sheets → a five-state reading guide. Counts are fixture results, explicitly not a health score.
 
-Premium quality means coherent density, preserved context, predictable keyboard behaviour, native window integration and equal Chinese/English polish. Do not copy another product's layout, assets, branding or wording; components from a UI library are primitives, not a page composition.
+Premium quality means coherent density, preserved context, predictable keyboard behaviour, native window integration and complete English copy. Do not copy another product's layout, assets, branding or wording; components from a UI library are primitives, not a page composition.
 
 ## 2. Desktop layout
 
@@ -57,28 +57,27 @@ Use actual observation counts in a future live view. The current packaged Phase 
 
 ## 3. Typography and spacing
 
-All fonts are SIL OFL 1.1 and bundled offline; provenance, revisions and SHA-256 hashes live in [public/fonts/sources.json](../public/fonts/sources.json) with licence texts beside each file. Font choices were made from rendered zh/en specimens at UI sizes, not by reputation.
+All fonts are SIL OFL 1.1 and bundled offline; provenance, revisions and SHA-256 hashes live in [public/fonts/sources.json](../public/fonts/sources.json) with licence texts beside each file. Font choices were made from rendered specimens at UI sizes, not by reputation.
 
 | Role | Face | Why |
 | --- | --- | --- |
-| Conclusions — verdicts, page and section titles, numerals | **Source Serif 4** (`Nexus Serif`, variable, opsz) + **Source Han Serif CN** (`Nexus Han Serif`) | Designed Latin/CJK siblings: matching proportions and colour let a bilingual two-tone headline read as one line |
-| Interface | **IBM Plex Sans** (`Nexus Sans`, variable) + **Source Han Sans CN** (`Nexus Han`) | Plex's Latin matches Han's colour in mixed lines and shares its skeleton with the mono face |
+| Conclusions — verdicts, page and section titles, numerals | **Source Serif 4** (`Nexus Serif`, variable, opsz) | A calm, readable serif that gives verdicts weight without shouting |
+| Interface | **IBM Plex Sans** (`Nexus Sans`, variable) | Shares its skeleton with the mono face, so exact values sit naturally in prose |
 | Evidence — IDs, versions, times, kickers | **IBM Plex Mono** (`Nexus Mono`) | Exact values read as measured fact |
 
 | Role | Size / line height | Weight |
 | --- | --- | --- |
-| Home verdict / page title | 40 / 46 (zh 34 / 46) | 400 (zh 460, dark 420) |
+| Home verdict / page title | 40 / 46 | 400 |
 | Agent Detail name | 50 / 56 | 400 |
-| Deck (two-tone continuation) | 21 / 30 (zh 18.5 / 30) | 400 |
-| Section title | 27 / 32 (zh 23) | 400 (zh 460) |
-| Sheet title | 20 / 26 (zh 17.5) | 400 (zh 460) |
+| Deck (two-tone continuation) | 21 / 30 | 400 |
+| Section title | 27 / 32 | 400 |
+| Sheet title | 20 / 26 | 400 |
 | Register numerals | 31 / 36, lining tabular | 400 |
-| Body / rows | 14 / 22 (zh 23); Agent name 15.5 / 22 | 400 / 500 (dark 380 / 480) |
+| Body / rows | 14 / 22; Agent name 15.5 / 22 | 400 / 500 (dark 380 / 480) |
 | Meta | 12.5 / 18 | 400 |
 | Kicker / ledger head | Mono 10.5 / 16, caps, +0.09em; zh: Sans 11.5, +0.06em, no case transform | 500 |
 | Technical values | Mono 12.5–16, tabular, slashed zero | 400 |
 
-Chinese headings use positive tracking (+0.01em) rather than Latin's negative tracking. Dark mode trims weights because light text blooms optically. No ultra-light or synthetic styles (`font-synthesis: none`).
 
 Spacing is 4-based with editorial rhythm: 44 page inset, 48 between sections, 22 sheet inset, 16–18 row padding. Rules: 1.5px ink rule for ledger tops/bottoms and registers, 1px border between rows. Radius: 2–3 tags and seals, 4 controls, 6 sheets. Sheets carry one soft drop shadow (plus a 1px top highlight in Night); there is no other elevation.
 
@@ -103,13 +102,13 @@ Status colours are marks and seal inks; readiness is always also encoded by shap
 
 ## 5. Agent readiness, Health, and Diagnostics
 
-| Domain state | English / Chinese | Visual and action |
+| Domain state | Label | Visual and action |
 | --- | --- | --- |
-| ready | Ready / 已就绪 | Solid disc glyph, ready seal; Launch when available (future) |
-| attention | Needs attention / 需关注 | Half-disc glyph, attention seal, concise non-blocking issue, Review |
-| blocked | Blocked / 无法就绪 | Diamond glyph, blocked seal, blocking impact, Diagnose |
-| unknown | Unknown / 待检查 | Dashed-ring glyph with hatch, explain missing/stale evidence, Check again |
-| unsupported | Unsupported / 不支持 | Slashed-ring glyph, specific capability reason, View requirements |
+| ready | Ready | Solid disc glyph, ready seal; Launch when available (future) |
+| attention | Needs attention | Half-disc glyph, attention seal, concise non-blocking issue, Review |
+| blocked | Blocked | Diamond glyph, blocked seal, blocking impact, Diagnose |
+| unknown | Unknown | Dashed-ring glyph with hatch, explain missing/stale evidence, Check again |
+| unsupported | Unsupported | Slashed-ring glyph, specific capability reason, View requirements |
 
 Installation (`not installed`, installed, ambiguous) and operation overlays (`checking`, `repairing`) remain separate. A progress animation never changes a blocked Agent to green. Update available is secondary unless a rule establishes a blocker. Never use “100% healthy,” invented scores, or blank green badges for unperformed checks.
 
@@ -119,7 +118,7 @@ Diagnostics detail order: summary → user impact → observed versus expected �
 
 ## 6. Models and configuration experience
 
-Models view lists display name, exact model identifier, Provider, known capability labels, availability freshness, and compatible Agents. Unknown metadata reads “Unknown / 未知” with explanation. Do not decorate custom models with fabricated capabilities.
+Models view lists display name, exact model identifier, Provider, known capability labels, availability freshness, and compatible Agents. Unknown metadata reads “Unknown” with explanation. Do not decorate custom models with fabricated capabilities.
 
 Provider management is a subordinate view inside Models. The connection form depends on provider type/protocol. Show destination host, authentication method, secure-storage status, and explicit Test connection. Do not collapse account login and API key into one field. Secret fields are write-only after save, with Replace/Remove rather than reading the stored value back. Provider connection success is not Model or Agent success.
 
@@ -129,7 +128,7 @@ Model Profiles display reusable name, Provider/Model, revision, and affected Age
 
 Configuration view separates requested, last applied, and observed effective settings. In the fixture UI, the configuration sheet shows desired, applied and effective as three columns joined by drawn operators (§1); the effective Model carries its own source. A revision record is not a configuration snapshot or field diff; missing records are stated explicitly. Future native configuration operations must preserve unknown keys; show “Managed by your organization” when relevant, without presenting a bypass. Diff views redact secret values and retain important paths/scope labels. A conflict explains that the file changed and asks the user to refresh the plan.
 
-Restoring a backup is labeled **Restore configuration / 恢复配置**, with backup time, target, current changes that will be replaced, protected-copy status, and any reintroduced execution-sensitive settings. Distinguish it from **Undo this operation / 撤销本次操作**, which is available only when automatic compensation preconditions still hold. Never hide these consequences behind a generic Repair button.
+Restoring a backup is labeled **Restore configuration**, with backup time, target, current changes that will be replaced, protected-copy status, and any reintroduced execution-sensitive settings. Distinguish it from **Undo this operation**, which is available only when automatic compensation preconditions still hold. Never hide these consequences behind a generic Repair button.
 
 ## 7. Component behavior
 
@@ -156,7 +155,7 @@ Repair UX: structured plan with before/after, affected Agents, protected backup 
 
 ## 8. Motion, icons, and accessibility
 
-Use one coherent stroke icon family, normally 16px in rows/controls and 20px for prominent state. Icons align optically with Chinese and Latin baselines; primary icons are never emoji. Agent/vendor assets require verified usage rights; use plain names until approved, not copied branding assets.
+Use one coherent stroke icon family, normally 16px in rows/controls and 20px for prominent state. Icons align optically with text baselines; primary icons are never emoji. Agent/vendor assets require verified usage rights; use plain names until approved, not copied branding assets.
 
 Motion communicates user action: 100–160ms hover/focus, 160–220ms disclosure/dialog. Avoid page entrance cascades, pulsing Health, animated background gradients, or decorative counters. Reduced motion removes translation/scale and looping decorative animation; progress remains readable as text and static stage changes.
 
@@ -164,12 +163,12 @@ Use semantic buttons, forms, lists and tables. Provide landmarks and a skip-to-c
 
 Test VoiceOver on macOS and NVDA or Narrator on Windows, keyboard-only flows, OS high-contrast behavior, and 200% zoom; assess 400% reflow for applicable reading/forms. Do not suppress OS focus/high-contrast outlines. Do not rely on dragging, hover, color, or sound alone. Resizable regions have keyboard alternatives.
 
-## 9. Bilingual acceptance and anti-patterns
+## 9. Copy acceptance and anti-patterns
 
-zh-CN and en-US share information hierarchy and interaction behavior. Allow at least 40% Latin label expansion in test fixtures, realistic long Chinese explanations, and mixed Latin paths. Buttons use content-driven widths; sidebar names do not truncate; critical confirmation text wraps. Technical identifiers may truncate only with a keyboard-accessible full-value view/copy. Toasts, tables, dialogs, empty states, tooltips and accessible labels all use the same locale.
+The interface is English only (see [I18N](I18N.md)). Allow at least 40% label expansion in test fixtures, realistic long explanations, and long paths. Buttons use content-driven widths; sidebar names do not truncate; critical confirmation text wraps. Technical identifiers may truncate only with a keyboard-accessible full-value view/copy.
 
 Future sessions must not add generic admin dashboards, giant card grids, crypto styling, purple AI gradients, excessive glass/shadows/rounding, neon, decorative analytics, forced full-width stretching, emoji primary icons, untranslated native errors, meaningless Provider/Model conflation, future billing navigation, or animated health scores. Test designs against the actual Agent recovery journey, not a component-library showcase.
 
-Phase 1 acceptance requires rendered Light/Dark screenshots at 960×640 and larger desktop sizes in both locales, keyboard/assistive-tech review, composed contrast verification, long-content/error fixtures, reduced-motion behavior, and user-language/theme persistence. Phase 1.2 additionally required native Tauri screenshot iteration and refinement after inspecting those captures. Executed checks, native evidence and remaining platform/assistive-tech limits belong to [the current delivery record](../.impeccable/review/phase1-2-atelier/README.md); [PHASE1_UI_REDESIGN](PHASE1_UI_REDESIGN.md) is retained as the Phase 1.1B-1R history. Automated results never constitute aesthetic approval.
+Phase 1 acceptance requires rendered Light/Dark screenshots at 960×640 and larger desktop sizes, keyboard/assistive-tech review, composed contrast verification, long-content/error fixtures, reduced-motion behavior, and theme persistence. Phase 1.2 additionally required native Tauri screenshot iteration and refinement after inspecting those captures. Executed checks, native evidence and remaining platform/assistive-tech limits belong to [the current delivery record](../.impeccable/review/phase1-2-atelier/README.md); [PHASE1_UI_REDESIGN](PHASE1_UI_REDESIGN.md) is retained as the Phase 1.1B-1R history. Automated results never constitute aesthetic approval.
 
 Earlier Phase 0 arithmetic checks concerned the superseded palette and are not evidence for these colors. Validate current composed text/status/control/focus/button colors from the changed state. The user retains final aesthetic authority; Windows runtime review, spoken screen-reader output and long-term reading comfort require separate evidence.

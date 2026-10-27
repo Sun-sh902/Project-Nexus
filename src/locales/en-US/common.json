@@ -29,7 +29,6 @@
   "collapse": "Collapse navigation",
   "expand": "Expand navigation",
   "storageError": "Preferences work for this session, but could not be saved. Check local storage access before restarting.",
-  "localeError": "System language could not be read. Choose a language below; system mode will try again when this window regains focus.",
   "localOnly": "Local application",
   "count_one": "{{count}} Agent",
   "count_other": "{{count}} Agents",

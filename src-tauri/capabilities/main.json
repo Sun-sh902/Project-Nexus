@@ -21,7 +21,6 @@
     "allow-nexus-prepare-action",
     "allow-nexus-confirm-plan",
     "allow-nexus-discard-plan",
-    "allow-nexus-launch-agent",
-    "allow-nexus-set-locale"
+    "allow-nexus-launch-agent"
   ]
 }

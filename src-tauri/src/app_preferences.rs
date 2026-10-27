@@ -13,10 +13,9 @@ pub enum ThemePreference {
     System,
 }
 
+/// Nexus ships in English only; the enum keeps the request contract explicit and bounded.
 #[derive(Clone, Copy, Deserialize, PartialEq, Debug)]
 pub enum LocalePreference {
-    #[serde(rename = "zh-CN")]
-    Chinese,
     #[serde(rename = "en-US")]
     English,
 }
@@ -111,7 +110,6 @@ pub fn apply_app_preferences(
 
 fn catalog(locale: LocalePreference) -> BTreeMap<String, String> {
     let source = match locale {
-        LocalePreference::Chinese => include_str!("../../src/locales/zh-CN/common.json"),
         LocalePreference::English => include_str!("../../src/locales/en-US/common.json"),
     };
     serde_json::from_str(source).expect("Bundled translation catalog must be valid")
@@ -185,14 +183,15 @@ mod tests {
     #[test]
     fn request_denies_unknown_fields_invalid_enums_windows_and_oversized_ids() {
         for input in [
-            r#"{"requestId":"ok","theme":"dark","locale":"zh-CN","path":"/tmp"}"#,
-            r#"{"requestId":"ok","theme":"execute","locale":"zh-CN"}"#,
+            r#"{"requestId":"ok","theme":"dark","locale":"en-US","path":"/tmp"}"#,
+            r#"{"requestId":"ok","theme":"execute","locale":"en-US"}"#,
             r#"{"requestId":"ok","theme":"dark","locale":"fr-FR"}"#,
+            r#"{"requestId":"ok","theme":"dark","locale":"de-DE"}"#,
         ] {
             assert!(serde_json::from_str::<PreferenceRequest>(input).is_err());
         }
         let mut request: PreferenceRequest =
-            serde_json::from_str(r#"{"requestId":"abc-123","theme":"dark","locale":"zh-CN"}"#)
+            serde_json::from_str(r#"{"requestId":"abc-123","theme":"dark","locale":"en-US"}"#)
                 .unwrap();
         assert!(validate_request(&request, "main").is_ok());
         assert!(validate_request(&request, "other").is_err());
@@ -202,13 +201,8 @@ mod tests {
         assert!(validate_request(&request, "main").is_err());
     }
     #[test]
-    fn native_catalogs_share_complete_keys_with_frontend() {
+    fn native_menu_catalog_is_complete() {
         let english = catalog(LocalePreference::English);
-        let chinese = catalog(LocalePreference::Chinese);
-        assert_eq!(
-            english.keys().collect::<Vec<_>>(),
-            chinese.keys().collect::<Vec<_>>()
-        );
         for key in [
             "menuFile",
             "menuEdit",
@@ -229,7 +223,6 @@ mod tests {
             "menuMaximize",
         ] {
             assert!(!english[key].is_empty());
-            assert!(!chinese[key].is_empty());
         }
     }
 }

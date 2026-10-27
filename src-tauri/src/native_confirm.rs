@@ -8,11 +8,8 @@ use std::collections::BTreeMap;
 use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
 
 fn catalog(locale: &str) -> BTreeMap<String, String> {
-    let source = if locale == "zh-CN" {
-        include_str!("../../src/locales/zh-CN/native.json")
-    } else {
-        include_str!("../../src/locales/en-US/native.json")
-    };
+    let _ = locale; // English only
+    let source = include_str!("../../src/locales/en-US/native.json");
     serde_json::from_str(source).expect("bundled native catalog must be valid")
 }
 
@@ -105,9 +102,21 @@ impl Confirmer for NativeConfirmer {
 #[cfg(test)]
 mod tests {
     #[test]
-    fn native_catalogs_have_identical_keys() {
+    fn native_catalog_covers_every_plan_kind_and_warning() {
         let en = super::catalog("en-US");
-        let zh = super::catalog("zh-CN");
-        assert_eq!(en.keys().collect::<Vec<_>>(), zh.keys().collect::<Vec<_>>());
+        for kind in [
+            "applyModel",
+            "setMcpEnabled",
+            "addRemoteMcp",
+            "removeManagedMcp",
+            "restoreBackup",
+            "install",
+            "update",
+            "uninstall",
+            "recoverInstall",
+        ] {
+            assert!(en.contains_key(&format!("action.{kind}")), "{kind}");
+        }
+        assert!(en.keys().filter(|k| k.starts_with("warning.")).count() >= 14);
     }
 }

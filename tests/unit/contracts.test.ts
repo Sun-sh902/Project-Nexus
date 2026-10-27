@@ -21,23 +21,17 @@ describe('offline translations', () => {
     }
     expect(violations).toEqual([]);
   });
-  it('has exact namespace/key and interpolation parity with no empty messages', () => {
-    expect(Object.keys(resources['zh-CN']).sort()).toEqual(Object.keys(resources['en-US']).sort());
-    for (const namespace of Object.keys(resources['en-US']) as (keyof typeof resources['en-US'])[]) {
-      const english = resources['en-US'][namespace];
-      const chinese = resources['zh-CN'][namespace];
-      expect(Object.keys(chinese).sort()).toEqual(Object.keys(english).sort());
-      for (const key of Object.keys(english)) {
-        const en = (english as Record<string, string>)[key];
-        const zh = (chinese as Record<string, string>)[key];
-        expect(en.trim().length).toBeGreaterThan(0);
-        expect(zh.trim().length).toBeGreaterThan(0);
-        expect(zh.match(/\{\{.*?\}\}/g)?.sort() ?? []).toEqual(en.match(/\{\{.*?\}\}/g)?.sort() ?? []);
+  it('ships one complete English catalog with no empty messages or non-English text', () => {
+    expect(Object.keys(resources)).toEqual(['en-US']);
+    for (const namespace of Object.values(resources['en-US'])) {
+      for (const value of Object.values(namespace as Record<string, string>)) {
+        expect(value.trim().length).toBeGreaterThan(0);
+        expect(value).not.toMatch(/[\u3400-\u9fff]/);
       }
     }
   });
-  it('provides every fixture content key in both languages', () => {
-    for (const locale of ['en-US', 'zh-CN'] as const) {
+  it('provides every fixture content key', () => {
+    for (const locale of ['en-US'] as const) {
       const agentStrings = resources[locale].agents as Record<string, string>;
       for (const agent of agents) for (const suffix of ['Summary', 'Issue', 'Next']) expect(agentStrings[`${agent.id}${suffix}`]).toBeTruthy();
       for (const extension of extensions) for (const key of [extension.nameKey, extension.permissionKey]) expect((resources[locale].extensions as Record<string, string>)[key]).toBeTruthy();
@@ -62,14 +56,14 @@ describe('navigation and fixture relationships', () => {
   });
   it('formats dates/numbers with the chosen locale', () => {
     expect(formatNumber(1200, 'en-US')).toBe(new Intl.NumberFormat('en-US').format(1200));
-    expect(formatTimestamp('2026-10-07T00:00:00Z', 'zh-CN')).not.toBe(formatTimestamp('2026-10-07T00:00:00Z', 'en-US'));
+    expect(formatTimestamp('2026-10-07T00:00:00Z', 'en-US')).toContain('2026');
   });
 });
 describe('native scope (Phases 2–7 core backend)', () => {
   it('grants the main window only typed Nexus commands, with no broad core/plugin grants', () => {
     const capability = JSON.parse(readFileSync('src-tauri/capabilities/main.json', 'utf8'));
     expect(capability.windows).toEqual(['main']);
-    const nexus = ['overview', 'agent-history', 'models', 'create-provider', 'set-provider-secret', 'delete-provider', 'create-model', 'delete-model', 'save-profile', 'set-assignment', 'prepare-action', 'confirm-plan', 'discard-plan', 'launch-agent', 'set-locale'];
+    const nexus = ['overview', 'agent-history', 'models', 'create-provider', 'set-provider-secret', 'delete-provider', 'create-model', 'delete-model', 'save-profile', 'set-assignment', 'prepare-action', 'confirm-plan', 'discard-plan', 'launch-agent'];
     expect(capability.permissions).toEqual(['allow-app-metadata', 'allow-apply-app-preferences', ...nexus.map(name => `allow-nexus-${name}`)]);
     for (const permission of capability.permissions as string[]) expect(permission).not.toMatch(/:|shell|fs-|http|dialog|process|execute|write-file|fetch/);
     expect(capability.remote).toBeUndefined();

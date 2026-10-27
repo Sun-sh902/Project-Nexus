@@ -4,10 +4,10 @@ import { agents, findModel } from '../../src/data/fixtures';
 import { demoAgents } from '../../src/data/demo';
 const readinessNodes = (agent: { id: string }) => demoAgents().find(view => view.id === agent.id)!.nodes;
 
-async function start(page: Page, locale: 'zh-CN' | 'en-US', route = 'home') {
-  await page.addInitScript(locale => {
-    if (!localStorage.getItem('nexus.preferences.v1')) localStorage.setItem('nexus.preferences.v1', JSON.stringify({ version: 1, language: locale, theme: 'light' }));
-  }, locale);
+async function start(page: Page, locale: 'en-US', route = 'home') {
+  await page.addInitScript(() => {
+    if (!localStorage.getItem('nexus.preferences.v1')) localStorage.setItem('nexus.preferences.v1', JSON.stringify({ version: 1, theme: 'light' }));
+  });
   const response = await page.goto(`/?production-ui=${route}#/${route}`);
   expect(response?.ok()).toBe(true);
   await expect(page.locator('html')).toHaveAttribute('lang', locale);
@@ -52,10 +52,10 @@ async function assertEssentialControlsFit(page: Page) {
 }
 
 const missionSizes = [{ width: 1440, height: 900 }, { width: 1280, height: 800 }, { width: 960, height: 640 }];
-for (const locale of ['zh-CN', 'en-US'] as const) for (const theme of ['light', 'dark'] as const) for (const size of missionSizes) {
+for (const locale of ['en-US'] as const) for (const theme of ['light', 'dark'] as const) for (const size of missionSizes) {
   test(`mission layout ${locale} ${theme} ${size.width}x${size.height}: Home, Claude and System remain readable`, async ({ page }, testInfo) => {
     await page.setViewportSize(size);
-    await page.addInitScript(({ locale, theme }) => localStorage.setItem('nexus.preferences.v1', JSON.stringify({ version: 1, language: locale, theme })), { locale, theme });
+    await page.addInitScript(theme => localStorage.setItem('nexus.preferences.v1', JSON.stringify({ version: 1, theme })), theme);
     const messages = resources[locale];
     for (const route of ['home', 'agents/claude', 'system']) {
       const response = await page.goto(`/?mission-layout=${route}#/${route}`);
@@ -81,7 +81,7 @@ for (const locale of ['zh-CN', 'en-US'] as const) for (const theme of ['light', 
   });
 }
 
-for (const locale of ['zh-CN', 'en-US'] as const) {
+for (const locale of ['en-US'] as const) {
   test(`${locale}: Home readiness lines, exhibits and configuration truth stay explicit`, async ({ page }) => {
     await start(page, locale);
     const messages = resources[locale];
@@ -129,7 +129,7 @@ for (const locale of ['zh-CN', 'en-US'] as const) {
     }
   });
 
-  test(`${locale}: Overview action opens the existing Model area and language changes retain it`, async ({ page }) => {
+  test(`${locale}: Overview action opens the existing Model area`, async ({ page }) => {
     await start(page, locale, 'agents/claude');
     const messages = resources[locale];
     const action = page.getByRole('button', { name: messages.agents.compareConfiguration });
@@ -140,27 +140,22 @@ for (const locale of ['zh-CN', 'en-US'] as const) {
     await expect(modelTab).toHaveAttribute('aria-selected', 'true');
     await expect(modelTab).toBeFocused();
     await expect(page.getByRole('tabpanel')).toContainText(messages.agents.recordLimit);
-    const otherLocale = locale === 'zh-CN' ? 'en-US' : 'zh-CN';
-    await page.locator('#shell-language').selectOption(otherLocale);
-    await expect(page.getByRole('tab', { name: resources[otherLocale].agents.modelTab, exact: true })).toHaveAttribute('aria-selected', 'true');
-    await expect(page.getByRole('tabpanel')).toContainText(resources[otherLocale].agents.recordLimit);
     expect(new URL(page.url()).hash).toBe('#/agents/claude');
   });
 }
 
-test('collapsed navigation retains named routes and both persistent shell preferences', async ({ page }) => {
+test('collapsed navigation retains named routes and the persistent theme preference', async ({ page }) => {
   await start(page, 'en-US');
   await page.getByRole('button', { name: 'Collapse navigation', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Expand navigation', exact: true })).toBeVisible();
   await page.locator('#shell-theme').selectOption('dark');
-  await page.locator('#shell-language').selectOption('zh-CN');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
-  await expect(page.locator('html')).toHaveAttribute('lang', 'zh-CN');
-  await page.getByRole('navigation', { name: '主导航' }).getByRole('link', { name: '模型', exact: true }).click();
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('模型');
+  // English only: no language selector is shown in the toolbar.
+  await expect(page.locator('#shell-language')).toHaveCount(0);
+  await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Models', exact: true }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Models');
   await page.reload();
   await expect(page.locator('#shell-theme')).toHaveValue('dark');
-  await expect(page.locator('#shell-language')).toHaveValue('zh-CN');
   await page.locator('#shell-theme').selectOption('system');
   await page.emulateMedia({ colorScheme: 'light' });
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
@@ -168,30 +163,13 @@ test('collapsed navigation retains named routes and both persistent shell prefer
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
 });
 
-test('both scripts and exact model values render with the bundled fonts', async ({ page }, testInfo) => {
+test('exact model values render with the bundled fonts and no remote font requests', async ({ page }) => {
   const remoteFonts: string[] = [];
   page.on('request', request => { if (request.resourceType() === 'font' && new URL(request.url()).hostname !== '127.0.0.1') remoteFonts.push(request.url()); });
-  await start(page, 'zh-CN');
-  const cjk = [...new Set(Object.values(resources['zh-CN']).flatMap(namespace => Object.values(namespace)).join('').match(/[\u3400-\u9fff]/g))].join('');
-  await page.evaluate(cjk => {
-    const specimen = document.createElement('p');
-    specimen.id = 'font-coverage-evidence';
-    specimen.textContent = cjk;
-    specimen.style.fontFamily = '"Nexus Han"';
-    document.querySelector('main')!.append(specimen);
-  }, cjk);
+  await start(page, 'en-US');
   await page.evaluate(() => document.fonts.ready);
-  const session = await page.context().newCDPSession(page);
-  await session.send('DOM.enable');
-  await session.send('CSS.enable');
-  const { root } = await session.send('DOM.getDocument');
-  const { nodeId } = await session.send('DOM.querySelector', { nodeId: root.nodeId, selector: '#font-coverage-evidence' });
-  const { fonts } = await session.send('CSS.getPlatformFontsForNode', { nodeId });
-  expect(fonts.length).toBe(1);
-  expect(fonts[0].familyName).toMatch(/Source Han Sans/);
-  expect(fonts[0].isCustomFont).toBe(true);
-  expect(fonts[0].glyphCount).toBe(cjk.length);
-  for (const font of ['Nexus Latin', 'Nexus Han', 'Nexus Mono']) expect(await page.evaluate(font => document.fonts.check(`400 14px "${font}"`), font)).toBe(true);
+  for (const font of ['Nexus Sans', 'Nexus Serif', 'Nexus Mono']) expect(await page.evaluate(font => document.fonts.check(`400 14px "${font}"`), font)).toBe(true);
+  const loaded = await page.evaluate(() => [...document.fonts].filter(font => font.status === 'loaded').map(font => font.family.replace(/"/g, '')));
+  expect(loaded).toEqual(expect.arrayContaining(['Nexus Sans', 'Nexus Serif', 'Nexus Mono']));
   expect(remoteFonts).toEqual([]);
-  await testInfo.attach('font-evidence', { body: JSON.stringify({ uniqueCjk: cjk.length, fonts, remoteFonts }, null, 2), contentType: 'application/json' });
 });

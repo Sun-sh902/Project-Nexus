@@ -130,15 +130,6 @@ impl App {
             .map(|l| l.clone())
             .unwrap_or_else(|_| "en-US".into())
     }
-    pub fn set_locale(&self, locale: &str) {
-        if let Ok(mut l) = self.locale.lock() {
-            *l = if locale == "zh-CN" {
-                "zh-CN".into()
-            } else {
-                "en-US".into()
-            };
-        }
-    }
     pub fn invalidate(&self) {
         if let Ok(mut c) = self.cache.lock() {
             *c = None;

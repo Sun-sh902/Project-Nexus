@@ -639,11 +639,11 @@ mod tests {
 
     #[test]
     fn strings_with_escapes_and_unicode_survive() {
-        let text = "{\"path\": \"C:\\\\Users\\\\张\", \"q\": \"a\\\"b\"}";
+        let text = "{\"path\": \"C:\\\\Users\\\\é\", \"q\": \"a\\\"b\"}";
         let doc = Document::parse(text, Dialect::Json).unwrap();
-        assert_eq!(doc.value()["path"], json!("C:\\Users\\张"));
+        assert_eq!(doc.value()["path"], json!("C:\\Users\\é"));
         let out = doc.set(&["q"], &json!("new")).unwrap();
-        assert!(out.starts_with("{\"path\": \"C:\\\\Users\\\\张\""));
+        assert!(out.starts_with("{\"path\": \"C:\\\\Users\\\\é\""));
     }
 
     #[test]

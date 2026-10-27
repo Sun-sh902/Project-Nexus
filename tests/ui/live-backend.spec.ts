@@ -8,10 +8,10 @@ import { resources } from '../../src/app/resources';
 // only thing simulated; no fixture data from src/data/fixtures.ts may appear.
 const fixture = (name: string) => JSON.parse(readFileSync(`tests/fixtures/live/${name}.json`, 'utf8'));
 
-async function startLive(page: Page, locale: 'en-US' | 'zh-CN', route: string, options: { deny?: boolean; failScan?: boolean } = {}) {
+async function startLive(page: Page, locale: 'en-US', route: string, options: { deny?: boolean; failScan?: boolean } = {}) {
   const data = { overview: fixture('overview'), after: fixture('overview-after'), models: fixture('models'), plan: fixture('plan'), result: fixture('result') };
   await page.addInitScript(({ locale, data, options }) => {
-    localStorage.setItem('nexus.preferences.v1', JSON.stringify({ version: 1, language: locale, theme: 'light' }));
+    localStorage.setItem('nexus.preferences.v1', JSON.stringify({ version: 1, theme: 'light' }));
     const calls: { cmd: string; args: unknown }[] = [];
     let confirmed = false;
     (window as unknown as { __calls: typeof calls }).__calls = calls;
@@ -44,7 +44,7 @@ async function startLive(page: Page, locale: 'en-US' | 'zh-CN', route: string, o
   await expect(page.locator('html')).toHaveAttribute('lang', locale);
 }
 
-for (const locale of ['en-US', 'zh-CN'] as const) {
+for (const locale of ['en-US'] as const) {
   const m = resources[locale];
   test(`${locale}: live Home shows only backend data and labels its provenance`, async ({ page }) => {
     await startLive(page, locale, 'home');

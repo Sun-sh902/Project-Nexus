@@ -32,7 +32,7 @@ export function ConfigurationSheet({ agent, help = true }: { agent: AgentView; h
       <div className="cs-col station station-desired">
         <p className="cs-kicker">{t('desired')}</p>
         <p className={`cs-value ${hasProfile || assigned ? 'mono' : 'is-empty'}`}>{hasProfile ? t('revisionShort', { revision: agent.desiredRevision }) : assigned && agent.report?.assignment ? agent.report.assignment.compatibility.nativeIdentifier ?? agent.report.assignment.model.identifier : t('noRecord')}</p>
-        <p className="cs-note">{hasProfile ? <>{text(agent.profileName)}<span className="note-divider" aria-hidden="true" /><span className={agent.pending ? 'note-pending' : undefined}>{t(agent.pending ? 'pendingReview' : 'matchesRecord')}</span></> : t(agent.assignment === 'direct' ? 'directIntent' : 'nativeIntent')}</p>
+        <p className="cs-note">{hasProfile ? <>{text(agent.profileName)}<span className="note-divider" aria-hidden="true" /><span className={agent.pending ? 'note-pending' : undefined}>{t(agent.pending ? 'pendingReview' : 'matchesRecord')}</span></> : t(agent.assignment === 'direct' ? agent.report ? 'directIntentLive' : 'directIntent' : 'nativeIntent')}</p>
         {help && <p className="cs-help">{t('desiredHelp')}</p>}
       </div>
       <Operator op={recordOp} />

@@ -17,7 +17,6 @@ fn main() {
             "nexus_confirm_plan",
             "nexus_discard_plan",
             "nexus_launch_agent",
-            "nexus_set_locale",
         ]),
     ))
     .expect("Tauri build configuration must be valid");

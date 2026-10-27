@@ -109,5 +109,4 @@ export const backend = {
   confirm: (plan: PlanView) => call<OperationResult>('nexus_confirm_plan', { planId: plan.id, digest: plan.digest }),
   discard: (planId: string) => call<void>('nexus_discard_plan', { planId }),
   launch: (agentId: AgentId, installationId: string) => call<string>('nexus_launch_agent', { agentId, installationId }),
-  setLocale: (locale: string) => call<void>('nexus_set_locale', { locale }),
 };

@@ -271,7 +271,7 @@ pub fn evaluate(snap: &AgentSnapshot, system: &SystemSnapshot, assignment: &Assi
             };
             let c = b.push("model.compatible", "model", Requirement::Required, outcome, None);
             c.params.push(("model".into(), desired.clone()));
-            let user_value = snap.model.layers.iter().find(|l| l.kind == ModelSourceKind::UserConfig).and_then(|l| l.value.clone());
+            let user_value = snap.model.layers.iter().find(|l| l.kind == ModelSourceKind::UserConfig && !l.uncertain).and_then(|l| l.value.clone());
             match &assignment.applied_identifier {
                 None => {
                     let c = b.push("model.applied", "model", Requirement::Advisory, Outcome::Fail, Some("pending"));

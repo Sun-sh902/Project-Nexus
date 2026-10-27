@@ -18,7 +18,6 @@
   "label.backup": "备份",
   "label.rollback": "回滚",
   "label.privileges": "权限",
-  "label.warnings": "Nexus 中显示的提醒",
   "note.packageScripts": "可能运行软件包安装脚本。",
   "backup.encrypted": "写入前加密备份当前文件",
   "backup.notApplicable": "不适用",
@@ -26,5 +25,19 @@
   "rollback.manual": "手动",
   "rollback.reinstallManually": "需手动重新安装",
   "rollback.none": "无",
-  "privileges.currentUser": "仅当前用户，无需管理员权限"
+  "privileges.currentUser": "仅当前用户，无需管理员权限",
+  "warning.agentToolsUnavailable": "Agent 将不再加载此服务器的工具。",
+  "warning.remoteMcpNetwork": "Agent 将连接此来源，并可能向其发送你的提示与工具结果。",
+  "warning.publisherUnverified": "Nexus 未验证此服务器的发布者与行为。",
+  "warning.availabilityUnverified": "此模型为本机录入或发现；尚未验证你的账户能否使用。",
+  "warning.effectiveOverridden": "更高优先级的来源（环境变量或托管设置）仍会覆盖此值。",
+  "warning.nextSession": "正在运行的 Agent 会话将在下次启动时采用该模型。",
+  "warning.alreadyConfigured": "配置已选择此模型；Nexus 只会验证并记录。",
+  "warning.restoreReintroducesExecutable": "备份中包含当前文件没有的可执行设置（hooks、MCP 命令或辅助程序）。",
+  "warning.replacesMalformed": "当前文件格式错误，将被整体替换。",
+  "warning.restoreReplacesLaterChanges": "此备份之后的更改将被替换。当前文件会先被备份。",
+  "warning.packageScripts": "包管理器可能运行此软件包的安装脚本。",
+  "warning.versionChosenByAgent": "版本由 Agent 自身的更新程序决定，无法预先固定。",
+  "warning.network": "将从软件包仓库下载。",
+  "warning.uninstallExternal": "此安装并非由 Nexus 创建；将使用创建它的安装方式移除。"
 }

@@ -6,7 +6,7 @@ AI Agent 管家 · Keep every AI Agent ready to work. · 让你的所有 AI Agen
 
 For macOS and Windows, with first-class Simplified Chinese (zh-CN) and English (en-US).
 
-Status: Phase 1 application shell implemented and locally verified on macOS arm64. All business-domain views use explicitly labeled development fixtures. Windows build/runtime and full assistive-technology release validation remain pending. Phase 2 has not begun.
+Status: Core Backend Beta Candidate (Phases 2–7) on macOS arm64. Inside the desktop app every Agent, model, Extension and System value comes from a read-only scan of this computer; changes happen only through previewed plans confirmed in a native dialog and independently verified. Browser preview (`pnpm dev`) is an explicitly labeled demo using Phase 1 fixtures. Windows runtime validation is outstanding. Details: [backend progress](docs/BACKEND_IMPLEMENTATION_PROGRESS.md).
 
 ## Development
 

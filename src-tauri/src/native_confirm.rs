@@ -40,8 +40,8 @@ pub fn dialog_text(plan: &PlanView, locale: &str) -> (String, String, String, St
     lines.push(format!("{}: {}", t("label.backup"), t(&format!("backup.{}", plan.backup))));
     lines.push(format!("{}: {}", t("label.rollback"), t(&format!("rollback.{}", plan.rollback))));
     lines.push(format!("{}: {}", t("label.privileges"), t(&format!("privileges.{}", plan.privileges))));
-    if !plan.warnings.is_empty() {
-        lines.push(format!("{}: {}", t("label.warnings"), plan.warnings.len()));
+    for warning in &plan.warnings {
+        lines.push(format!("• {}", t(warning)));
     }
     (t("title"), lines.join("\n"), t("button.confirm"), t("button.cancel"))
 }

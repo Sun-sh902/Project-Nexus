@@ -1,5 +1,5 @@
 {
-  "operationId": "op_c3c9dea9f5ca14fc5c4a218e68ea6372",
+  "operationId": "op_80540c719741a1f5af7b7788ccf631c6",
   "kind": "setMcpEnabled",
   "agentId": "codex",
   "status": "succeeded",
@@ -29,10 +29,10 @@
         "informational": false
       }
     ],
-    "verifiedAt": "2026-10-27T12:32:30Z"
+    "verifiedAt": "2026-10-27T12:44:23Z"
   },
   "error": null,
-  "backupId": "bak_d57a0c038fc75c97523f3090fe527985",
+  "backupId": "bak_ff6ecb22b452696698ab8fc4c2e53bad",
   "compensation": null,
   "outputExcerpt": null,
   "warnings": [

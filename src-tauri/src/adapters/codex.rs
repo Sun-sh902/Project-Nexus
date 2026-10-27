@@ -49,6 +49,13 @@ impl AgentAdapter for Codex {
 
     fn observe_model(&self, ctx: &HostContext, configs: &[ReadConfig]) -> ModelObservation {
         let mut layers = Vec::new();
+        // A default `profile` can select `[profiles.<name>].model`; Codex documentation differs
+        // across versions on how it is chosen, so its effect is reported as uncertain.
+        if let Some(read) = find_read(configs, "codex.user") {
+            if let Some(profile) = config_value(read).and_then(|v| v.get("profile").and_then(|p| p.as_str()).map(String::from)) {
+                layers.push(ModelLayer { kind: ModelSourceKind::UserConfig, location: format!("{} (profile = {})", read.source.location, crate::core::redact(&profile)), value: None, effective: false, uncertain: true });
+            }
+        }
         for (id, kind) in [("codex.user", ModelSourceKind::UserConfig), ("codex.system", ModelSourceKind::ManagedConfig)] {
             if let Some(read) = find_read(configs, id) {
                 let value = config_value(read).and_then(|v| v.get("model").and_then(|m| m.as_str()).map(String::from));
@@ -86,7 +93,7 @@ impl AgentAdapter for Codex {
                         let command = entry.get("command").and_then(|c| c.as_str());
                         let url = entry.get("url").and_then(|c| c.as_str());
                         McpServer {
-                            name: crate::core::redact(name),
+                            name: crate::core::clean_name(name),
                             transport: if command.is_some() { McpTransport::Stdio } else if url.is_some() { McpTransport::Http } else { McpTransport::Unknown },
                             enabled: Some(entry.get("enabled").and_then(|e| e.as_bool()).unwrap_or(true)),
                             command: command.map(basename),
@@ -284,6 +291,16 @@ mod tests {
         assert_eq!(local.command_resolvable, Some(false));
         let json = serde_json::to_string(&ext).unwrap();
         assert!(!json.contains("SECRET") && !json.contains("sk-abc"));
+    }
+
+    #[test]
+    fn active_profile_makes_effective_model_uncertain() {
+        let (_d, ctx) = ctx_with(Some("profile = \"fast\"\nmodel = \"gpt-x\"\n[profiles.fast]\nmodel = \"gpt-mini\"\n"));
+        let configs = Codex.read_configs(&ctx);
+        let m = Codex.observe_model(&ctx, &configs);
+        assert!(m.layers[0].uncertain);
+        assert_eq!(m.effective.as_deref(), Some("gpt-x"));
+        assert!(m.layers.iter().any(|l| l.kind == ModelSourceKind::UserConfig && l.value.as_deref() == Some("gpt-x")));
     }
 
     #[test]

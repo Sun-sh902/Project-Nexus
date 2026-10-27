@@ -18,7 +18,6 @@
   "label.backup": "Backup",
   "label.rollback": "Rollback",
   "label.privileges": "Privileges",
-  "label.warnings": "Warnings shown in Nexus",
   "note.packageScripts": "Package install scripts may run.",
   "backup.encrypted": "Encrypted copy of the current file before writing",
   "backup.notApplicable": "Not applicable",
@@ -26,5 +25,19 @@
   "rollback.manual": "Manual",
   "rollback.reinstallManually": "Reinstall manually",
   "rollback.none": "None",
-  "privileges.currentUser": "Current user only, no administrator rights"
+  "privileges.currentUser": "Current user only, no administrator rights",
+  "warning.agentToolsUnavailable": "The Agent will no longer load this server's tools.",
+  "warning.remoteMcpNetwork": "The Agent will connect to this origin and may send it your prompts and tool results.",
+  "warning.publisherUnverified": "The server's publisher and behaviour are not verified by Nexus.",
+  "warning.availabilityUnverified": "This model was entered or discovered locally; its availability to your account is not verified.",
+  "warning.effectiveOverridden": "A higher-priority source (environment or managed settings) will still override this value.",
+  "warning.nextSession": "Running Agent sessions pick up the model at their next start.",
+  "warning.alreadyConfigured": "The configuration already selects this model; Nexus will only verify and record it.",
+  "warning.restoreReintroducesExecutable": "The backup contains executable settings (hooks, MCP commands or helpers) that are not in the current file.",
+  "warning.replacesMalformed": "The current file is malformed and will be replaced entirely.",
+  "warning.restoreReplacesLaterChanges": "Changes made after this backup will be replaced. The current file is backed up first.",
+  "warning.packageScripts": "The package manager may run install scripts from this package.",
+  "warning.versionChosenByAgent": "The Agent's own updater chooses the version; it cannot be pinned in advance.",
+  "warning.network": "Downloads from the package registry.",
+  "warning.uninstallExternal": "This installation was not made by Nexus; it is removed with the installer that created it."
 }

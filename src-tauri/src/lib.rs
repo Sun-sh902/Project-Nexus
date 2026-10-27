@@ -20,6 +20,8 @@ mod platform;
 mod secrets;
 mod store;
 #[cfg(test)]
+mod keychain_selftest;
+#[cfg(test)]
 mod scenario_tests;
 
 #[derive(Serialize)]

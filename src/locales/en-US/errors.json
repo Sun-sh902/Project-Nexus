@@ -97,5 +97,7 @@
   "ipc.window_denied": "Not allowed from this window.",
   "ipc.invalid_input": "Invalid input.",
   "ipc.unavailable": "The Nexus backend is unavailable.",
-  "ipc.contract_mismatch": "Frontend and backend versions do not match."
+  "ipc.contract_mismatch": "Frontend and backend versions do not match.",
+  "model.routing_mismatch": "This Agent currently routes to {{route}}; Nexus will not write a model for a different Provider.",
+  "lifecycle.prefix_unknown": "The npm prefix that owns this installation could not be determined, so Nexus will not change it."
 }

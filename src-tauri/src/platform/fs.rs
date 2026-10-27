@@ -169,7 +169,14 @@ pub fn atomic_replace(path: &Path, bytes: &[u8], expected_fingerprint: Option<&s
                 return Err(NexusError::new("config.concurrent_change"));
             }
         }
-        fs::rename(&tmp, path).map_err(|_| NexusError::new("fs.write_failed"))?;
+        if existed {
+            fs::rename(&tmp, path).map_err(|_| NexusError::new("fs.write_failed"))?;
+        } else {
+            // Creation must never replace a file that appeared after planning: a hard link
+            // fails if the target exists, unlike rename.
+            fs::hard_link(&tmp, path).map_err(|e| if e.kind() == std::io::ErrorKind::AlreadyExists { NexusError::new("config.concurrent_change") } else { NexusError::new("fs.write_failed") })?;
+            let _ = fs::remove_file(&tmp);
+        }
         #[cfg(unix)]
         if let Ok(dir) = File::open(parent) {
             let _ = dir.sync_all();
@@ -285,6 +292,16 @@ mod tests {
         use std::os::unix::fs::PermissionsExt;
         fs::set_permissions(&c, fs::Permissions::from_mode(0o666)).unwrap();
         assert_eq!(check_mutable_target(&c).unwrap_err().code, "config.unsafe_permissions");
+    }
+
+    #[test]
+    fn creation_never_replaces_a_file_that_appeared_meanwhile() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("new.json");
+        atomic_replace(&path, b"{}", None).unwrap();
+        assert_eq!(atomic_replace(&path, b"{\"x\":1}", None).unwrap_err().code, "config.concurrent_change");
+        assert_eq!(fs::read(&path).unwrap(), b"{}");
+        assert_eq!(fs::read_dir(dir.path()).unwrap().count(), 1);
     }
 
     #[test]

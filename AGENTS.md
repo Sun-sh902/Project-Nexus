@@ -7,7 +7,7 @@ Project Nexus is an AI Agent Lifecycle Manager that keeps local AI agents instal
 - Agents are the product center. Nexus manages their lifecycle; it does not replace them.
 - Models and Providers are separate domains. Agent Health, structured Diagnostics, and Safe Repair are first-class domains. AI is not required for them.
 - Read [PRD](docs/PRD.md) for product authority and [ROADMAP](docs/ROADMAP.md) for the sole active phase sequence. Phase 7 is the differentiated Nexus MVP / public Beta boundary.
-- Phase 1 application shell and bilingual fixture UI have been explicitly authorized and implemented. Keep all business-domain data fixture-only. Do not begin Phase 2, add domain discovery/operations, or introduce persistence migrations without a subsequent explicit task authorizing that phase.
+- Phase 1 application shell and bilingual UI are implemented. The Phases 2–7 core backend (discovery, Health, lifecycle, Models/Providers, MCP/Skills, Diagnostics, Safe Repair, persistence) was explicitly authorized on 2026-10-27 and is implemented as a Core Backend Beta Candidate; it is not a public Beta until the Phase 7 acceptance criteria (including Windows validation) pass. Status and limits: [BACKEND_IMPLEMENTATION_PROGRESS](docs/BACKEND_IMPLEMENTATION_PROGRESS.md). Fixtures remain only for explicit browser demo mode and tests. Phase 8+ requires separate authorization.
 
 ## Architecture
 

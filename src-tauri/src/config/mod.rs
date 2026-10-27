@@ -184,7 +184,10 @@ pub fn plan_toml_edit(read: &ReadConfig, key: &str, mutate: impl FnOnce(&mut tom
     let mut doc = text.parse::<toml_edit::DocumentMut>().map_err(|_| NexusError::new("config.malformed_read_only"))?;
     let (before, after) = mutate(&mut doc)?;
     let out = doc.to_string();
-    out.parse::<toml_edit::DocumentMut>().map_err(|_| NexusError::new("config.unexpected_side_effect"))?;
+    let before_json = crate::discovery::toml_to_json(&text).unwrap_or_else(|| serde_json::json!({}));
+    let after_json = crate::discovery::toml_to_json(&out).ok_or_else(|| NexusError::new("config.unexpected_side_effect"))?;
+    let path: Vec<&str> = key.split('.').collect();
+    verify_only_changed(&before_json, &after_json, &path)?;
     ConfigEdit::new(read, out, vec![ChangeLine { key: key.to_string(), before, after }])
 }
 

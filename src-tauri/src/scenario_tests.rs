@@ -83,7 +83,9 @@ case "$1" in
     printf '#!/usr/bin/env node\n' > "{prefix}/lib/node_modules/$pkg/$entry"; chmod 755 "{prefix}/lib/node_modules/$pkg/$entry"
     ln -sf "../lib/node_modules/$pkg/$entry" "{prefix}/bin/$bin" ;;
   uninstall)
-    rm -rf "{prefix}/lib/node_modules/$3"; rm -f "{prefix}/bin/gemini" ;;
+    [ "$3" = "--prefix" ] || {{ echo "refusing uninstall without --prefix" >&2; exit 1; }}
+    pkg=$(eval echo \${{$#}})
+    rm -rf "$4/lib/node_modules/$pkg"; rm -f "$4/bin/gemini" ;;
 esac
 "#,
             prefix = prefix.display(),
@@ -202,6 +204,26 @@ fn scenario_6_model_override_is_explained_with_its_source() {
 }
 
 #[test]
+fn model_is_not_written_into_a_config_that_routes_elsewhere() {
+    let home = Home::new();
+    home.node("26.10.0");
+    home.npm_package("@openai/codex", "codex", "0.164.0", "bin/codex.js");
+    home.write(".codex/config.toml", "model_provider = \"ollama\"\nmodel = \"llama3\"\n");
+    let app = home.app(true);
+    app.create_model("builtin.openai", "gpt-x", None).unwrap();
+    let id = app.models_view().unwrap().models.into_iter().find(|m| m.identifier == "gpt-x").unwrap().id;
+    app.set_assignment(AgentId::Codex, AssignmentMode::Direct, Some(&id), None).unwrap();
+    assert_eq!(app.prepare(ActionRequest::ApplyModel { agent_id: AgentId::Codex }).unwrap_err().code, "model.routing_mismatch");
+    let mut app = home.app(true);
+    home.write(".claude/settings.json", "{}");
+    home.claude("2.1.311");
+    app.ctx.set_env("CLAUDE_CODE_USE_BEDROCK", "1");
+    app.set_assignment(AgentId::Claude, AssignmentMode::Direct, Some("builtin.anthropic.opus"), None).unwrap();
+    assert_eq!(app.prepare(ActionRequest::ApplyModel { agent_id: AgentId::Claude }).unwrap_err().code, "model.routing_mismatch");
+    assert_eq!(home.read(".claude/settings.json"), "{}");
+}
+
+#[test]
 fn scenario_7_extension_conflict_repaired_by_trusted_toggle() {
     let home = Home::new();
     home.node("26.10.0");
@@ -300,6 +322,8 @@ fn scenario_10_apply_verify_drift_reapply_and_restore() {
     assert_eq!(f.repairs[0].action, "restoreBackup");
     let plan = app.prepare(ActionRequest::RestoreBackup { backup_id: backup.clone() }).unwrap();
     assert!(plan.warnings.contains(&"warning.replacesMalformed"));
+    // Restores never send old or new file content to the renderer.
+    assert!(plan.config.as_ref().unwrap().diff.is_empty());
     let res = app.confirm(&plan.id, &plan.digest).unwrap();
     assert_eq!(res.status, "succeeded");
     assert_eq!(home.read(".claude/settings.json"), original);
@@ -334,6 +358,22 @@ fn scenario_e_trusted_install_update_uninstall_with_verification() {
     // Installing over an existing installation is refused.
     home.gemini("0.64.0");
     assert_eq!(app.prepare(ActionRequest::Install { agent_id: AgentId::Gemini, recipe_id: "gemini.npm".into() }).unwrap_err().code, "lifecycle.already_installed");
+}
+
+#[test]
+fn update_verification_survives_version_in_path_layouts() {
+    // Claude's native and Homebrew layouts embed the version in the resolved path, so the
+    // installation id changes on update. Verification must follow the stable launcher.
+    let home = Home::new();
+    home.claude("2.1.400");
+    let app = home.app(true);
+    let launcher = report(&app.overview(true).unwrap(), AgentId::Claude).snapshot.primary_installation().unwrap().executable.clone();
+    let verify = |launcher: Option<String>| crate::actions::Verify::Lifecycle {
+        agent: AgentId::Claude, op: crate::lifecycle::Op::Update, recipe: "claude.native-update", source: InstallSource::NativeInstaller,
+        version: None, installation_id: Some("inst_before_update".into()), launcher, previous_version: Some("2.1.311".into()), recovers: None,
+    };
+    assert_eq!(app.verify(&verify(Some(launcher))).outcome, "passed");
+    assert_eq!(app.verify(&verify(None)).outcome, "failed");
 }
 
 #[test]

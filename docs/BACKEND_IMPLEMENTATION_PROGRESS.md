@@ -16,8 +16,8 @@ claim anything that was not executed. Product authority remains [PRD](PRD.md); s
 | E — Models/Providers | Implemented (records, compatibility, assignment apply/verify, Keychain secrets) |
 | F — MCP + Skills | MCP read for all four; toggle/add-remote/remove-managed for Codex, Gemini, OpenCode; Skills read-only |
 | G — Diagnostics + Safe Repair | Implemented: findings, restore backup, reapply assignment, recover interrupted install, disable broken MCP |
-| H — Frontend integration | In progress (see §Continuation) |
-| I — Validation / review | Pending |
+| H — Frontend integration | Done: every page reads Rust data in the desktop app; fixtures only in explicit browser demo mode |
+| I — Validation / review | Automated suites green; real desktop app launched with live data; independent review — see §Independent review |
 
 ## Repository recovery (Gate A)
 
@@ -138,9 +138,62 @@ userinfo/link-local/private ranges); no stdio MCP creation.
   performed; only fake-npm scenario tests.
 - Windows runtime validation outstanding.
 
+## Frontend integration (Gate H)
+
+| Area | Live behaviour (desktop app) |
+| --- | --- |
+| Data boundary | `src/app/backend.ts` (typed IPC mirror) → `src/app/nexus-data.tsx` provider → `src/data/live.ts` view mapping. `src/data/demo.ts` maps the unchanged Phase 1 fixtures only when not running inside Tauri; the shell labels the mode (“This computer” vs “Demo data”). A failed scan shows an error state, never fixtures |
+| Home / Agents | Real readiness register, readiness lines from Health checks, findings as exhibits, real tools, operation journal |
+| Agent Detail | Overview (top finding + trusted repair), Model (precedence layers, assignment editor, apply plan), Extensions (MCP toggle / add remote / remove Nexus-added), Configuration (installations with update/uninstall/launch, config sources, auth evidence, capability matrix, encrypted backups with restore), Diagnostics (structured findings, repair buttons, all checks, evidence) |
+| Models | Assignment chain, catalog (built-in aliases, observed-in-config, manual), profile revisions, Providers incl. custom OpenAI-compatible endpoints and write-only Keychain secret entry |
+| Extensions / System / Settings | Real MCP + Skills inventory; real OS/tools/PATH/data dir; data mode in About |
+| Action flow | `src/components/ActionFlow.tsx`: exact plan (diff or argv, version, backup, rollback, privileges, warnings, preserved items) → “Confirm…” asks Rust to show the native dialog → verified result with per-check outcomes |
+
+UI files touched: `src/App.tsx`, `src/main.tsx`, all `src/pages/*`, `src/components/{AgentRows,AgentConfiguration,HealthEvidence,ExtensionRows,ReadinessLine,ui}.tsx`, new `src/components/ActionFlow.tsx`, `src/styles.css` (appended block of token-only rules for plan sheets, small buttons, forms; no existing rule changed), locale files (additive keys; 5 new namespaces). `src/app/readiness.ts` replaced by view-model nodes. The approved visual system (tokens, typography, layout, components, themes) is unchanged; all 40 pre-existing Playwright UI tests (bilingual, themes, narrow window, keyboard, axe) pass unmodified except for two import path updates.
+
+## Test results (2026-10-27, macOS 27.2 arm64)
+
+| Command | Result |
+| --- | --- |
+| `cargo test --locked` (src-tauri) | 126 passed, 0 failed, 3 ignored (opt-in: real-machine scan, fixture export, real Keychain self-test) |
+| `cargo test keychain_selftest -- --ignored` | Real macOS Keychain: backup key stored, reused across instances, deleted; no leftover item |
+| `cargo clippy --locked --all-targets` | 0 warnings |
+| `cargo test real_machine -- --ignored` | Read-only scan of this Mac, ~0.12 s, no secrets in output |
+| `pnpm typecheck` | pass |
+| `npx eslint src tests` | 0 problems (the repository-wide `eslint .` still reports 258 pre-existing errors confined to `design-lab/` prototypes, unchanged from baseline) |
+| `pnpm test` (vitest) | 16 passed |
+| `pnpm test:ui` (Playwright, Chrome) | 50 passed: 40 existing demo-mode UI tests + 10 live-mode tests (both locales) driven by backend-generated fixtures in `tests/fixtures/live/` |
+| `pnpm tauri build --debug --bundles app` | built; app launched; Home showed live data (3 of 4 Agents ready, OpenCode attention: two global config files) |
+
+## Independent review (Gate I)
+
+A separate reviewer agent with no implementation context reviewed commits a7481d1 + 0b75a64 read-only. Findings and dispositions:
+
+| Sev | Finding | Disposition |
+| --- | --- | --- |
+| P1 | npm update/uninstall used the first npm on PATH, so it could act on a different copy (nvm vs Homebrew Node); pnpm/bun/yarn globals were treated as npm | **Fixed**: operations on existing installs pass `--prefix` derived from the selected installation; uninstall refuses without a prefix; pnpm/bun/yarn classified Unknown (no recipe). Tests added |
+| P1 | Homebrew/native-Claude updates change the resolved-path id, so verification always failed | **Fixed**: verification follows the stable launcher path; regression test added |
+| P2 | Model written into a config routed to another provider (Codex `model_provider`, Bedrock/Vertex) | **Fixed**: `model.routing_mismatch` refusal; test added |
+| P2 | Codex `profile` ignored when reporting the effective model | **Fixed**: active profile reported as an uncertain higher layer (drift → possiblyOverridden, verification → inconclusive) |
+| P2 | Restore plan sent whole-file diff (possible secrets) to the renderer | **Fixed**: restores disclose fingerprints and warnings only; test asserts empty diff |
+| P2 | Creating a new file could replace one created meanwhile | **Fixed**: creation publishes with hard-link (no-replace) semantics; test added |
+| P2 | Written-but-unverified re-read reported as unchanged | **Fixed**: treated as verification failure and compensated; external-edit refusal reported as `partial` |
+| P2 | `node` used by npm without trust checks | **Fixed**: node/npm files and their parent dirs must be user/root-owned and not world-writable |
+| P3 | Native dialog showed only a warning count | **Fixed**: warning texts listed (from `native.json`) |
+| P3 | MCP names redacted, preventing toggles | **Fixed**: names are control-stripped, never masked |
+| P3 | URL policy missed IPv6 ULA/link-local, IPv4-mapped, CGNAT | **Fixed**; tests extended |
+| P3 | Brew recovery rewrote npm-style `pkg@v` | **Fixed**: pin rewrite only for npm; brew uses the plan-time resolved version |
+| P3 | Launch skipped trust checks | **Fixed**: launch target and resolved file must pass owner/permission checks. Launch remains a direct user action without a dialog (Security §4) |
+| P3 | JSONC: comment in empty object lost; CRLF files got LF | **Fixed** with tests. **Open**: removing an entry can drop an adjacent comment line; Gemini `mcp.excluded` array is re-rendered |
+| P3 | TOML edits lacked unrelated-change verification | **Fixed**: same `verify_only_changed` check as JSON |
+| P3 | Restore "reintroduces executable settings" check is substring-based | **Open** (conservative warning; structural comparison not yet implemented) |
+| P3 | Secret presence check reads the secret (may prompt) | **Open** |
+| P3 | Journal step writes inside the transaction callback are best-effort | **Open** |
+| P3 | Windows `npm.cmd` fails the executable check, so Windows npm recipes are inert | **Open**, consistent with Windows `unverified` status |
+
 ## Continuation point
 
-Gate H: wire React to IPC (`src/app/backend.ts`, data provider), keep `src/data/fixtures.ts` only
-for explicit demo mode (browser/non-Tauri), add plan preview / confirmation UI using existing
-components, bilingual strings for checks/findings/errors. Then Gate I: frontend typecheck/lint/
-unit/Playwright, Tauri build and native launch check, independent review.
+All gates implemented. Next steps toward a public Beta: Windows build + runtime validation (paths,
+`.cmd` shims, Credential Manager, ACL checks for mutation), online Provider validation with the
+Security §7 network controls, Skills install/enable, reviewed stdio MCP recipes, signed release
+and updater, usability sessions in both locales.

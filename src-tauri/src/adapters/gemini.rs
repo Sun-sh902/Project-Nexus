@@ -115,7 +115,7 @@ impl AgentAdapter for Gemini {
                         let transport = if http.is_some() { McpTransport::Http } else if sse.is_some() { McpTransport::Sse } else if command.is_some() { McpTransport::Stdio } else { McpTransport::Unknown };
                         let enabled = !excluded.contains(name) && allowed.as_ref().map(|a| a.contains(name)).unwrap_or(true);
                         McpServer {
-                            name: crate::core::redact(name),
+                            name: crate::core::clean_name(name),
                             transport,
                             enabled: Some(enabled),
                             command: if transport == McpTransport::Stdio { command.map(basename) } else { None },

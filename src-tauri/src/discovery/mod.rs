@@ -53,7 +53,10 @@ pub fn classify_source(ctx: &HostContext, resolved: &Path) -> InstallSource {
     let s = resolved.to_string_lossy().replace('\\', "/");
     if s.contains("/Caskroom/") || s.contains("/Cellar/") {
         InstallSource::Homebrew
-    } else if s.contains("/node_modules/") {
+    } else if s.contains("/.pnpm/") || s.contains("/pnpm/global/") || s.contains("/.bun/") || s.contains("/.yarn/") || s.contains("/yarn/global/") {
+        // Other Node package managers: Nexus has no vetted recipe, so never treat them as npm.
+        InstallSource::Unknown
+    } else if s.contains("/lib/node_modules/") || (cfg!(windows) && s.contains("/node_modules/")) {
         InstallSource::Npm
     } else if s.contains("/Microsoft/WinGet/") {
         InstallSource::WinGet
@@ -218,7 +221,7 @@ pub fn config_value(read: &ReadConfig) -> Option<serde_json::Value> {
     }
 }
 
-fn toml_to_json(text: &str) -> Option<serde_json::Value> {
+pub fn toml_to_json(text: &str) -> Option<serde_json::Value> {
     fn conv(item: &toml_edit::Item) -> serde_json::Value {
         use serde_json::Value as J;
         match item {

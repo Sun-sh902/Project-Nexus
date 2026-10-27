@@ -133,7 +133,7 @@ impl AgentAdapter for OpenCode {
                     _ => McpTransport::Unknown,
                 };
                 mcp.push(McpServer {
-                    name: crate::core::redact(&name),
+                    name: crate::core::clean_name(&name),
                     transport,
                     enabled: Some(entry.get("enabled").and_then(|e| e.as_bool()).unwrap_or(true)),
                     command: command.map(basename),

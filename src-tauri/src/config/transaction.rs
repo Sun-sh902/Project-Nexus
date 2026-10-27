@@ -20,6 +20,9 @@ pub enum Step {
 pub struct Applied {
     pub backup: Option<BackupRef>,
     pub written_fingerprint: String,
+    /// The re-read after the write matched the planned bytes. When false the file *was*
+    /// changed but is unverified, so the caller must treat it as a verification failure.
+    pub reread_ok: bool,
 }
 
 /// Applies an edit. `on_step` is called after each completed step so the caller can journal it
@@ -44,12 +47,11 @@ pub fn apply(edit: &ConfigEdit, vault: &BackupVault, on_step: &mut dyn FnMut(Ste
     };
     let written = atomic_replace(&edit.path, &edit.after, edit.before_fingerprint.as_deref())?;
     on_step(Step::Written, backup.as_ref());
-    let reread = read_bounded(&edit.path, MAX_CONFIG_BYTES).map_err(|f| NexusError::new(f.code()))?;
-    if reread.fingerprint != edit.after_fingerprint || written != edit.after_fingerprint {
-        return Err(NexusError::new("operation.verification_failed").with("stage", "reread"));
+    let reread_ok = read_bounded(&edit.path, MAX_CONFIG_BYTES).map(|r| r.fingerprint == edit.after_fingerprint).unwrap_or(false) && written == edit.after_fingerprint;
+    if reread_ok {
+        on_step(Step::Reread, backup.as_ref());
     }
-    on_step(Step::Reread, backup.as_ref());
-    Ok(Applied { backup, written_fingerprint: written })
+    Ok(Applied { backup, written_fingerprint: written, reread_ok })
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]

@@ -109,11 +109,11 @@
           "identifier": "opus",
           "profileRevision": null,
           "providerRevision": 1,
-          "appliedAt": "2026-10-27T12:32:30Z",
+          "appliedAt": "2026-10-27T12:44:23Z",
           "location": "~/.claude/settings.json",
           "fingerprint": "f43568ecd52a99f51051093fe4a6cf3d6bf9434c0f205c9757b11f6fd2531f37"
         },
-        "updatedAt": "2026-10-27T12:32:30Z"
+        "updatedAt": "2026-10-27T12:44:23Z"
       },
       "provider": {
         "id": "builtin.anthropic",

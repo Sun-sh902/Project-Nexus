@@ -146,6 +146,20 @@ Every delivery phase follows [SECURITY](SECURITY.md), [ARCHITECTURE](ARCHITECTUR
 | Typography rendering and token adjustments | Design | Phase 1 sign-off | Both OSes/locales/themes, measured contrast, screenshots and accessibility review |
 | Pricing, cloud vendor, sync encryption and marketplace business model | Product + Security | Respective post-MVP phase | User demand, cost/privacy/security evidence; no early dependency |
 
+## Implementation status (2026-10-27)
+
+Phases 2–7 core backend were authorized together and implemented on `claude/nexus-backend-mvp` as a Core Backend Beta Candidate, validated on macOS arm64 only. The phase definitions above are unchanged. Resolved for this candidate (details and evidence in [BACKEND_IMPLEMENTATION_PROGRESS](BACKEND_IMPLEMENTATION_PROGRESS.md)):
+
+| Deferred decision | Resolution for the candidate |
+| --- | --- |
+| Native trusted confirmation primitive | Rust-owned OS message dialog (tauri-plugin-dialog, no renderer permission) built from the immutable plan; plans are digest-bound, single-use, 10-minute expiry |
+| Exact config parsers and atomic-write primitives | Span-preserving JSON/JSONC editor and `toml_edit`; sibling temp file + fsync + rename with fingerprint recheck; symlink/hard-link/owner/permission refusal; encrypted exact-byte backups (AES-256-GCM, key in Keychain) |
+| Beta Provider coverage and safe credential handoff | Agent-owned login routes only (Codex→OpenAI, Claude→Anthropic, Gemini→Google, OpenCode→Anthropic/OpenAI/Google). Nexus-stored secrets are kept in Keychain but not handed to Agents; custom endpoints are not assignable |
+| Probe freshness/timeouts | `--version` probe 5 s / 4 KiB; snapshot validity 600 s; lifecycle process timeout 15 min |
+| Final per-Agent installer matrix | npm and Homebrew recipes plus Claude `claude update`; vendor script installers are never executed |
+
+Still open before a public Beta: Windows runtime validation and ACL checks, online Provider validation, Skills installation, usability study, signing/updater.
+
 ## Phase 0 review and audit record
 
 Complete-set self-review performed on 2026-10-07 from the following four perspectives. This is a design review, not an independent audit or validation of an application. Findings were corrected in their owning sections; this record does not waive a contradiction.

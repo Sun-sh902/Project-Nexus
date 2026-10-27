@@ -266,6 +266,10 @@ impl Document {
         "  ".to_string()
     }
 
+    fn newline(&self) -> &'static str {
+        if self.text.contains("\r\n") { "\r\n" } else { "\n" }
+    }
+
     fn line_indent(&self, at: usize) -> String {
         let line_start = self.text[..at].rfind('\n').map(|i| i + 1).unwrap_or(0);
         self.text[line_start..at].chars().take_while(|c| *c == ' ' || *c == '\t').collect()
@@ -288,7 +292,7 @@ impl Document {
                 }
             })
             .collect::<Vec<_>>()
-            .join("\n")
+            .join(self.newline())
     }
 
     /// Sets `path` to `value`, creating missing intermediate objects. Returns the new text.
@@ -338,15 +342,21 @@ impl Document {
                 let at = last.value.span().1;
                 let rendered = self.render(value, &indent);
                 let same_line = !self.text[*start..members[0].start].contains('\n');
-                let sep = if same_line { " ".to_string() } else { format!("\n{indent}") };
+                let sep = if same_line { " ".to_string() } else { format!("{}{indent}", self.newline()) };
                 Ok(format!("{},{sep}{key_json}: {rendered}{}", &self.text[..at], &self.text[at..]))
             }
             None => {
                 let base = self.line_indent(*start);
                 let indent = format!("{base}{}", self.indent_unit());
                 let rendered = self.render(value, &indent);
-                let inner_end = end - 1;
-                Ok(format!("{}{{\n{indent}{key_json}: {rendered}\n{base}}}{}", &self.text[..*start], &self.text[inner_end + 1..]))
+                let nl = self.newline();
+                let inner = &self.text[start + 1..end - 1];
+                if inner.trim().is_empty() {
+                    Ok(format!("{}{{{nl}{indent}{key_json}: {rendered}{nl}{base}}}{}", &self.text[..*start], &self.text[*end..]))
+                } else {
+                    // The object holds only comments: insert before them and keep them.
+                    Ok(format!("{}{{{nl}{indent}{key_json}: {rendered}{inner}}}{}", &self.text[..*start], &self.text[*end..]))
+                }
             }
         }
     }
@@ -452,6 +462,18 @@ mod tests {
         let doc = Document::parse("{\"a\": {}}", Dialect::Json).unwrap();
         let out = doc.set(&["a", "b"], &json!(1)).unwrap();
         assert_eq!(round(&out, Dialect::Json), json!({"a": {"b": 1}}));
+    }
+
+    #[test]
+    fn comments_in_empty_objects_and_crlf_are_kept() {
+        let doc = Document::parse("{ /* keep */ }", Dialect::Jsonc).unwrap();
+        let out = doc.set(&["model"], &json!("x")).unwrap();
+        assert!(out.contains("/* keep */"));
+        assert_eq!(round(&out, Dialect::Jsonc), json!({"model": "x"}));
+        let crlf = "{\r\n  \"a\": 1\r\n}\r\n";
+        let out = Document::parse(crlf, Dialect::Json).unwrap().set(&["b"], &json!({"c": 2})).unwrap();
+        assert!(!out.replace("\r\n", "").contains('\n'), "{out:?}");
+        assert_eq!(round(&out, Dialect::Json), json!({"a": 1, "b": {"c": 2}}));
     }
 
     #[test]

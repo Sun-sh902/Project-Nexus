@@ -134,7 +134,7 @@ impl AgentAdapter for Claude {
                             _ => McpTransport::Unknown,
                         };
                         McpServer {
-                            name: crate::core::redact(name),
+                            name: crate::core::clean_name(name),
                             transport,
                             enabled: None,
                             command: command.map(basename),

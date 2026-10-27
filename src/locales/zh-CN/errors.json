@@ -97,5 +97,7 @@
   "ipc.window_denied": "此窗口不允许该操作。",
   "ipc.invalid_input": "输入无效。",
   "ipc.unavailable": "Nexus 后端不可用。",
-  "ipc.contract_mismatch": "前后端版本不一致。"
+  "ipc.contract_mismatch": "前后端版本不一致。",
+  "model.routing_mismatch": "此 Agent 当前路由到 {{route}}；Nexus 不会为其他服务提供商写入模型。",
+  "lifecycle.prefix_unknown": "无法确定此安装所属的 npm 前缀，因此 Nexus 不会更改它。"
 }

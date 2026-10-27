@@ -118,6 +118,12 @@ impl std::error::Error for NexusError {}
 
 pub type NexusResult<T> = Result<T, NexusError>;
 
+/// Display-safe identifier (config key): control characters removed, length bounded, never
+/// masked, because the exact name is needed to address the entry later.
+pub fn clean_name(input: &str) -> String {
+    input.chars().filter(|c| !c.is_control()).take(128).collect()
+}
+
 /// Removes terminal control sequences and masks token-shaped substrings. Applied to every
 /// untrusted string (process output, config-derived labels) before IPC or persistence.
 pub fn redact(input: &str) -> String {

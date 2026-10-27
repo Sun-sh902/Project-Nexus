@@ -140,10 +140,12 @@ pub fn validate_mcp_url(url: &str) -> NexusResult<()> {
     if host.starts_with("169.254.") || host == "metadata.google.internal" || host.starts_with("fe80:") {
         return Err(err());
     }
-    if !loopback && (host.parse::<std::net::IpAddr>().map(|ip| match ip {
-        std::net::IpAddr::V4(v4) => v4.is_private() || v4.is_loopback() || v4.is_unspecified(),
-        std::net::IpAddr::V6(v6) => v6.is_loopback() || v6.is_unspecified(),
-    }).unwrap_or(false) || !host.contains('.'))
+    let v4_blocked = |v4: std::net::Ipv4Addr| v4.is_private() || v4.is_loopback() || v4.is_unspecified() || v4.is_link_local() || (v4.octets()[0] == 100 && (64..128).contains(&v4.octets()[1]));
+    let ip_blocked = host.parse::<std::net::IpAddr>().map(|ip| match ip {
+        std::net::IpAddr::V4(v4) => v4_blocked(v4),
+        std::net::IpAddr::V6(v6) => v6.is_loopback() || v6.is_unspecified() || (v6.segments()[0] & 0xfe00) == 0xfc00 || (v6.segments()[0] & 0xffc0) == 0xfe80 || v6.to_ipv4_mapped().map(v4_blocked).unwrap_or(false),
+    });
+    if !loopback && (*ip_blocked.as_ref().unwrap_or(&false) || (ip_blocked.is_err() && !host.contains('.')))
     {
         return Err(err());
     }
@@ -168,11 +170,15 @@ mod tests {
             "https://user:pass@mcp.example.com",
             "https://169.254.169.254/latest",
             "https://10.0.0.5/mcp",
+            "https://[fe80::1]/",
             "https://192.168.1.2",
             "file:///etc/passwd",
             "https://intranet/mcp",
             "https://example.com/\nx",
             "javascript:alert(1)",
+            "https://[fd00::1]/mcp",
+            "https://[::ffff:169.254.169.254]/",
+            "https://100.64.1.2/mcp",
         ] {
             assert!(validate_mcp_url(bad).is_err(), "{bad}");
         }

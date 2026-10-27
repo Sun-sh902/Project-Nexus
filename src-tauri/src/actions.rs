@@ -7,7 +7,7 @@
 use crate::adapters;
 use crate::app::App;
 use crate::config::transaction::{self, Compensation, Step};
-use crate::config::{line_diff, ConfigEdit};
+use crate::config::ConfigEdit;
 use crate::core::{new_id, redact, sha256_hex, Instant, NexusError, NexusResult};
 use crate::discovery::{self, discover_agent};
 use crate::domain::*;
@@ -71,7 +71,9 @@ pub enum Verify {
     McpEnabled { agent: AgentId, name: String, enabled: bool },
     McpPresent { agent: AgentId, name: String, present: bool, origin: Option<String> },
     Restore { sha256: String },
-    Lifecycle { agent: AgentId, op: Op, recipe: &'static str, source: InstallSource, version: Option<String>, installation_id: Option<String>, previous_version: Option<String>, recovers: Option<String> },
+    /// `launcher` is the stable PATH entry (e.g. `/opt/homebrew/bin/codex`); the installation id
+    /// may change on update because Homebrew/native layouts embed the version in the path.
+    Lifecycle { agent: AgentId, op: Op, recipe: &'static str, source: InstallSource, version: Option<String>, installation_id: Option<String>, launcher: Option<String>, previous_version: Option<String>, recovers: Option<String> },
 }
 
 #[derive(Clone, Debug)]
@@ -267,6 +269,15 @@ impl App {
             return Err(NexusError::new("model.incompatible").with("reason", resolved.compatibility.reason.unwrap_or("")));
         }
         let identifier = resolved.compatibility.native_identifier.clone().ok_or_else(|| NexusError::new("model.incompatible"))?;
+        let routed_elsewhere = match agent {
+            AgentId::Codex => snap.model.provider_hint.as_deref().map(|h| h != "openai").unwrap_or(false),
+            AgentId::Claude => matches!(snap.model.provider_hint.as_deref(), Some("bedrock" | "vertex")) || snap.auth.evidence.contains(&AuthEvidence::CloudRouting),
+            AgentId::Gemini => snap.auth.evidence.contains(&AuthEvidence::CloudRouting),
+            AgentId::Opencode => false,
+        };
+        if routed_elsewhere {
+            return Err(NexusError::new("model.routing_mismatch").with("route", snap.model.provider_hint.clone().unwrap_or_else(|| "cloud".into())));
+        }
         crate::models::validate_identifier(&identifier)?;
         let adapter = adapters::adapter(agent);
         let target = adapter.model_target().ok_or_else(|| NexusError::new("capability.unsupported"))?;
@@ -278,7 +289,7 @@ impl App {
         if resolved.compatibility.support == Support::Unverified {
             view.warnings.push("warning.availabilityUnverified");
         }
-        let higher = snap.model.layers.iter().take_while(|l| l.kind != ModelSourceKind::UserConfig).any(|l| l.value.is_some() || l.uncertain);
+        let higher = snap.model.layers.iter().take_while(|l| !(l.kind == ModelSourceKind::UserConfig && !l.uncertain)).any(|l| l.value.is_some() || l.uncertain);
         if higher {
             view.warnings.push("warning.effectiveOverridden");
         }
@@ -347,7 +358,9 @@ impl App {
             before_fingerprint: current.source.fingerprint.clone(),
             after_fingerprint: record.sha256.clone(),
             changes: vec![crate::config::ChangeLine { key: "(file)".into(), before: current.source.fingerprint.as_ref().map(|f| f[..12].to_string()), after: Some(record.sha256[..12].to_string()) }],
-            diff: line_diff(&before_text, &text),
+            // Whole-file content (old or new) may hold secrets that heuristic redaction misses,
+            // so restores disclose fingerprints and execution-sensitive warnings, never lines.
+            diff: Vec::new(),
             path: current.source.path.clone(),
             after: bytes,
         };
@@ -366,7 +379,11 @@ impl App {
             .ok_or_else(|| NexusError::new("lifecycle.no_recipe_for_source").with("source", format!("{:?}", inst.source)))?;
         let exe = inst.resolved.clone().unwrap_or_else(|| inst.executable.clone());
         let exe_path = expand(&self.ctx, &exe);
-        self.prepare_lifecycle(agent, recipe, op, Some((inst.id.clone(), inst.version.value.clone(), exe_path)), None)
+        let mut plan = self.prepare_lifecycle(agent, recipe, op, Some((inst.id.clone(), inst.version.value.clone(), exe_path)), None)?;
+        if let Verify::Lifecycle { launcher, .. } = &mut plan.verify {
+            *launcher = Some(inst.executable.clone());
+        }
+        Ok(plan)
     }
 
     fn prepare_lifecycle(&self, agent: AgentId, recipe: Recipe, op: Op, existing: Option<(String, Option<String>, std::path::PathBuf)>, recovers: Option<String>) -> NexusResult<Plan> {
@@ -379,7 +396,11 @@ impl App {
         if op == Op::Update && version.is_some() && version == previous {
             return Err(NexusError::new("lifecycle.up_to_date").with("version", version.unwrap_or_default()));
         }
-        let spec = lifecycle::build_spec(&self.ctx, &tools, &recipe, op, version.as_deref(), existing.as_ref().map(|e| e.2.as_path()))?;
+        let npm_prefix = match (recipe.mechanism, &existing) {
+            (lifecycle::Mechanism::Npm { .. }, Some(e)) => Some(lifecycle::npm_prefix_of(&e.2).ok_or_else(|| NexusError::new("lifecycle.prefix_unknown"))?),
+            _ => None,
+        };
+        let spec = lifecycle::build_spec(&self.ctx, &tools, &recipe, op, version.as_deref(), existing.as_ref().map(|e| e.2.as_path()), npm_prefix.as_deref())?;
         let kind = match (op, recovers.is_some()) {
             (_, true) => "recoverInstall",
             (Op::Install, _) => "install",
@@ -396,6 +417,9 @@ impl App {
         }
         if let Some(op_id) = &recovers {
             view.params.push(("operationId".into(), op_id.clone()));
+        }
+        if let Some(p) = &npm_prefix {
+            view.params.push(("prefix".into(), self.ctx.display_path(p)));
         }
         view.process = Some(ProcessPreview {
             program: self.ctx.display_path(&spec.program),
@@ -421,7 +445,7 @@ impl App {
         if op == Op::Uninstall && existing.is_some() {
             view.warnings.push("warning.uninstallExternal");
         }
-        let verify = Verify::Lifecycle { agent, op, recipe: recipe.id, source: recipe.mechanism.source(), version, installation_id: existing.as_ref().map(|e| e.0.clone()), previous_version: previous, recovers };
+        let verify = Verify::Lifecycle { agent, op, recipe: recipe.id, source: recipe.mechanism.source(), version, installation_id: existing.as_ref().map(|e| e.0.clone()), launcher: None, previous_version: previous, recovers };
         Ok(Plan { view, payload: Payload::Process(spec), verify })
     }
 
@@ -442,13 +466,14 @@ impl App {
                 let mut view = self.base_view("recoverInstall", Some(agent));
                 view.params = vec![("recipe".into(), recipe.id.into()), ("operationId".into(), operation_id.into()), ("version".into(), version.clone().unwrap_or_default()), ("reconcileOnly".into(), "true".into())];
                 view.verification = "verify.installed";
-                let verify = Verify::Lifecycle { agent, op: Op::Install, recipe: recipe.id, source: recipe.mechanism.source(), version, installation_id: None, previous_version: None, recovers: Some(operation_id.into()) };
+                let verify = Verify::Lifecycle { agent, op: Op::Install, recipe: recipe.id, source: recipe.mechanism.source(), version, installation_id: None, launcher: None, previous_version: None, recovers: Some(operation_id.into()) };
                 return Ok(Plan { view, payload: Payload::RecordOnly, verify });
             }
         }
         let mut plan = self.prepare_lifecycle(agent, recipe, Op::Install, None, Some(operation_id.into()))?;
         // Recovery reinstalls the originally confirmed version when it was recorded.
-        if let (Some(v), Payload::Process(spec)) = (&version, &mut plan.payload) {
+        let npm = matches!(adapters::adapter(agent).recipes().into_iter().find(|r| r.id == recipe_id).map(|r| r.mechanism), Some(lifecycle::Mechanism::Npm { .. }));
+        if let (Some(v), Payload::Process(spec), true) = (&version, &mut plan.payload, npm) {
             lifecycle::validate_version(v)?;
             if let Some(last) = spec.args.last_mut() {
                 if let Some((pkg, _)) = last.rsplit_once('@').filter(|(p, _)| !p.is_empty()) {
@@ -555,7 +580,7 @@ impl App {
                 if let Some(b) = &applied.backup {
                     let _ = self.store()?.set_backup_written(&b.id, &applied.written_fingerprint);
                 }
-                result.verification = self.verify(&plan.verify);
+                result.verification = if applied.reread_ok { self.verify(&plan.verify) } else { VerificationResult { outcome: "failed", checks: vec![VerificationCheck { key: "verify.configParses", outcome: "failed", params: vec![], informational: false }], verified_at: Instant::now() } };
                 if result.verification.outcome == "passed" {
                     self.record_success(&plan.verify, &op_id, Some(edit))?;
                     result.status = "succeeded";
@@ -563,7 +588,7 @@ impl App {
                     let comp = transaction::compensate(edit, &applied.written_fingerprint, &self.vault, applied.backup.as_ref());
                     let (status, label) = match comp {
                         Compensation::RolledBack => ("rolledBack", "rolledBack"),
-                        Compensation::RefusedExternalChange => ("failed", "refusedExternalChange"),
+                        Compensation::RefusedExternalChange => ("partial", "refusedExternalChange"),
                         Compensation::Failed(_) => ("rollbackFailed", "rollbackFailed"),
                     };
                     result.status = status;
@@ -611,7 +636,7 @@ impl App {
     }
 
     /// Independent post-conditions from a *fresh* read; never from the write's own return value.
-    fn verify(&self, verify: &Verify) -> VerificationResult {
+    pub(crate) fn verify(&self, verify: &Verify) -> VerificationResult {
         let now = Instant::now();
         let check = |key: &'static str, ok: bool, params: Vec<(String, String)>| VerificationCheck { key, outcome: if ok { "passed" } else { "failed" }, params, informational: false };
         let checks: Vec<VerificationCheck> = match verify {
@@ -661,17 +686,16 @@ impl App {
                 // Restored bytes must match the backup exactly; the transaction already re-read them.
                 vec![check("verify.restoredBytes", true, vec![("sha256".into(), sha256[..12].to_string())])]
             }
-            Verify::Lifecycle { agent, op, source, version, installation_id, previous_version, .. } => {
+            Verify::Lifecycle { agent, op, source, version, installation_id, launcher, previous_version, .. } => {
                 let snap = match self.fresh_snapshot(*agent) {
                     Ok(s) => s,
                     Err(_) => return VerificationResult { outcome: "inconclusive", checks: vec![], verified_at: now },
                 };
                 match op {
                     Op::Install | Op::Update => {
-                        let inst = match installation_id {
-                            Some(id) => snap.installations.iter().find(|i| &i.id == id),
-                            None => snap.installations.iter().find(|i| i.source == *source),
-                        };
+                        let by_id = installation_id.as_ref().and_then(|id| snap.installations.iter().find(|i| &i.id == id));
+                        let by_launcher = launcher.as_ref().and_then(|l| snap.installations.iter().find(|i| &i.executable == l));
+                        let inst = by_id.or(by_launcher).or_else(|| if installation_id.is_none() { snap.installations.iter().find(|i| i.source == *source) } else { None });
                         let present = inst.is_some();
                         let observed = inst.and_then(|i| i.version.value.clone());
                         let version_ok = match (version, &observed) {
@@ -685,7 +709,7 @@ impl App {
                         ]
                     }
                     Op::Uninstall => {
-                        let gone = installation_id.as_ref().map(|id| !snap.installations.iter().any(|i| &i.id == id)).unwrap_or(false);
+                        let gone = installation_id.as_ref().map(|id| !snap.installations.iter().any(|i| &i.id == id || Some(&i.executable) == launcher.as_ref())).unwrap_or(false);
                         vec![check("verify.installationRemoved", gone, vec![])]
                     }
                 }
@@ -742,7 +766,8 @@ impl App {
         let snap = self.fresh_snapshot(agent)?;
         let inst = snap.installations.iter().find(|i| i.id == installation_id).ok_or_else(|| NexusError::new("lifecycle.installation_not_found"))?;
         let path = expand(&self.ctx, &inst.executable);
-        if !path.is_absolute() || !crate::platform::fs::is_executable_file(&path) {
+        let resolved = std::fs::canonicalize(&path).unwrap_or_else(|_| path.clone());
+        if !path.is_absolute() || !crate::platform::fs::is_executable_file(&path) || !lifecycle::owner_ok(&path) || !lifecycle::owner_ok(&resolved) {
             return Err(NexusError::new("lifecycle.untrusted_executable"));
         }
         let spec = ProcessSpec {

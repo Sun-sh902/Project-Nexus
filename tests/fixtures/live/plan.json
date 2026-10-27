@@ -1,10 +1,10 @@
 {
-  "id": "plan_51ff845b205e2d12f24ec5e125c0e26c",
-  "digest": "ad08d0c2c77d9f8f2d9178f07af6871e60e836e78927d6238ae48982d3b161ef",
+  "id": "plan_3f06f5d7e7ca27c357286ee09c7ebd41",
+  "digest": "c703729cd76a2209df2d48d7128993850d54a4f3b2bb88750ddc8193514a826a",
   "kind": "setMcpEnabled",
   "agentId": "codex",
-  "createdAt": "2026-10-27T12:32:30Z",
-  "expiresAt": "2026-10-27T12:42:30Z",
+  "createdAt": "2026-10-27T12:44:23Z",
+  "expiresAt": "2026-10-27T12:54:23Z",
   "params": [
     [
       "name",

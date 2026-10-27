@@ -90,8 +90,9 @@ pub struct Toolchain {
 /// Locates package managers. npm must resolve to a file owned by the user or root and not be
 /// writable by others; Homebrew is accepted only at its documented prefixes.
 pub fn toolchain(ctx: &HostContext) -> Toolchain {
-    let npm = find_candidates(ctx, &["npm"]).into_iter().min_by_key(|c| c.path_rank.unwrap_or(usize::MAX)).filter(|c| owner_ok(&c.resolved)).map(|c| c.path);
-    let node_dir = find_candidates(ctx, &["node"]).into_iter().min_by_key(|c| c.path_rank.unwrap_or(usize::MAX)).and_then(|c| c.path.parent().map(PathBuf::from));
+    let npm = find_candidates(ctx, &["npm"]).into_iter().min_by_key(|c| c.path_rank.unwrap_or(usize::MAX)).filter(|c| owner_ok(&c.resolved) && owner_ok(&c.path)).map(|c| c.path);
+    // npm runs `#!/usr/bin/env node`, so node (first on the child PATH) gets the same scrutiny.
+    let node_dir = find_candidates(ctx, &["node"]).into_iter().min_by_key(|c| c.path_rank.unwrap_or(usize::MAX)).filter(|c| owner_ok(&c.resolved) && owner_ok(&c.path)).and_then(|c| c.path.parent().map(PathBuf::from));
     let brew = if ctx.os == Os::Macos {
         ["/opt/homebrew/bin/brew", "/usr/local/bin/brew"].iter().map(PathBuf::from).find(|p| p.is_file() && owner_ok(p))
     } else {
@@ -100,11 +101,32 @@ pub fn toolchain(ctx: &HostContext) -> Toolchain {
     Toolchain { npm, node_dir, brew }
 }
 
-fn owner_ok(p: &std::path::Path) -> bool {
-    match probe_policy_ignoring_scripts(p) {
-        Ok(()) => true,
-        Err(_) => false,
+/// File owned by the user or root and not writable by others, inside a directory that is not
+/// world-writable. Used for package managers, runtimes and launch targets.
+pub fn owner_ok(p: &std::path::Path) -> bool {
+    probe_policy_ignoring_scripts(p).is_ok() && p.parent().map(dir_ok).unwrap_or(false)
+}
+
+fn dir_ok(d: &std::path::Path) -> bool {
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::MetadataExt;
+        let Ok(meta) = std::fs::metadata(d) else { return false };
+        let uid = unsafe { libc::getuid() };
+        (meta.uid() == uid || meta.uid() == 0) && meta.mode() & 0o002 == 0
     }
+    #[cfg(not(unix))]
+    {
+        d.is_dir()
+    }
+}
+
+/// The npm global prefix that owns an installation: `<prefix>/lib/node_modules/<pkg>/…`.
+pub fn npm_prefix_of(resolved: &std::path::Path) -> Option<PathBuf> {
+    let s = resolved.to_string_lossy().replace('\\', "/");
+    let idx = s.find("/lib/node_modules/")?;
+    let prefix = PathBuf::from(&s[..idx]);
+    prefix.is_absolute().then_some(prefix)
 }
 
 fn probe_policy_ignoring_scripts(p: &std::path::Path) -> Result<(), &'static str> {
@@ -184,7 +206,7 @@ pub fn parse_resolved_version(mechanism: Mechanism, stdout: &str) -> Option<Stri
 }
 
 /// Builds the exact process for an operation. `agent_exe` is required for self-update.
-pub fn build_spec(ctx: &HostContext, tools: &Toolchain, recipe: &Recipe, op: Op, version: Option<&str>, agent_exe: Option<&std::path::Path>) -> NexusResult<ProcessSpec> {
+pub fn build_spec(ctx: &HostContext, tools: &Toolchain, recipe: &Recipe, op: Op, version: Option<&str>, agent_exe: Option<&std::path::Path>, npm_prefix: Option<&std::path::Path>) -> NexusResult<ProcessSpec> {
     if !recipe.ops.contains(&op) {
         return Err(NexusError::new("lifecycle.unsupported_operation"));
     }
@@ -192,12 +214,23 @@ pub fn build_spec(ctx: &HostContext, tools: &Toolchain, recipe: &Recipe, op: Op,
         validate_version(v)?;
     }
     let timeout = Duration::from_secs(15 * 60);
+    // Existing npm installations are always addressed through their own prefix so the action
+    // can never land on another copy managed by a different npm.
+    let prefix_args: Vec<String> = match npm_prefix {
+        Some(p) => vec!["--prefix".into(), p.to_string_lossy().to_string()],
+        None => Vec::new(),
+    };
     let (program, args, extra): (PathBuf, Vec<String>, &[(&str, &str)]) = match (recipe.mechanism, op) {
         (Mechanism::Npm { package }, Op::Install | Op::Update) => {
             let v = version.ok_or_else(|| NexusError::new("lifecycle.version_required"))?;
-            (tools.npm.clone().ok_or_else(|| NexusError::new("lifecycle.tool_missing"))?, vec!["install".into(), "--global".into(), "--no-fund".into(), "--no-audit".into(), format!("{package}@{v}")], &[])
+            (tools.npm.clone().ok_or_else(|| NexusError::new("lifecycle.tool_missing"))?, ["install", "--global", "--no-fund", "--no-audit"].iter().map(|s| s.to_string()).chain(prefix_args.clone()).chain([format!("{package}@{v}")]).collect(), &[])
         }
-        (Mechanism::Npm { package }, Op::Uninstall) => (tools.npm.clone().ok_or_else(|| NexusError::new("lifecycle.tool_missing"))?, vec!["uninstall".into(), "--global".into(), package.into()], &[]),
+        (Mechanism::Npm { package }, Op::Uninstall) => {
+            if npm_prefix.is_none() {
+                return Err(NexusError::new("lifecycle.prefix_unknown"));
+            }
+            (tools.npm.clone().ok_or_else(|| NexusError::new("lifecycle.tool_missing"))?, ["uninstall", "--global"].iter().map(|s| s.to_string()).chain(prefix_args.clone()).chain([package.to_string()]).collect(), &[])
+        }
         (Mechanism::HomebrewCask { token }, op) => (
             tools.brew.clone().ok_or_else(|| NexusError::new("lifecycle.tool_missing"))?,
             vec![match op { Op::Install => "install", Op::Update => "upgrade", Op::Uninstall => "uninstall" }.into(), "--cask".into(), token.into()],
@@ -239,11 +272,24 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let ctx = HostContext::isolated(dir.path(), dir.path());
         let tools = Toolchain { npm: Some(PathBuf::from("/usr/bin/true")), node_dir: Some(PathBuf::from("/usr/bin")), brew: None };
-        let spec = build_spec(&ctx, &tools, &NPM, Op::Install, Some("0.64.0"), None).unwrap();
+        let spec = build_spec(&ctx, &tools, &NPM, Op::Install, Some("0.64.0"), None, None).unwrap();
         assert_eq!(spec.args.last().unwrap(), "@google/gemini-cli@0.64.0");
         assert!(spec.env.iter().all(|(k, _)| k != "NPM_TOKEN"));
-        assert_eq!(build_spec(&ctx, &tools, &NPM, Op::Install, None, None).unwrap_err().code, "lifecycle.version_required");
-        assert_eq!(build_spec(&ctx, &tools, &NPM, Op::Install, Some("latest"), None).unwrap_err().code, "lifecycle.invalid_version");
+        assert_eq!(build_spec(&ctx, &tools, &NPM, Op::Install, None, None, None).unwrap_err().code, "lifecycle.version_required");
+        assert_eq!(build_spec(&ctx, &tools, &NPM, Op::Install, Some("latest"), None, None).unwrap_err().code, "lifecycle.invalid_version");
+    }
+
+    #[test]
+    fn existing_npm_installs_are_addressed_by_their_own_prefix() {
+        let dir = tempfile::tempdir().unwrap();
+        let ctx = HostContext::isolated(dir.path(), dir.path());
+        let tools = Toolchain { npm: Some(PathBuf::from("/usr/bin/true")), node_dir: Some(PathBuf::from("/usr/bin")), brew: None };
+        let prefix = npm_prefix_of(std::path::Path::new("/Users/x/.nvm/versions/node/v18/lib/node_modules/@google/gemini-cli/bundle/gemini.js")).unwrap();
+        assert_eq!(prefix, PathBuf::from("/Users/x/.nvm/versions/node/v18"));
+        let spec = build_spec(&ctx, &tools, &NPM, Op::Uninstall, None, None, Some(&prefix)).unwrap();
+        assert_eq!(spec.args, vec!["uninstall", "--global", "--prefix", "/Users/x/.nvm/versions/node/v18", "@google/gemini-cli"]);
+        assert_eq!(build_spec(&ctx, &tools, &NPM, Op::Uninstall, None, None, None).unwrap_err().code, "lifecycle.prefix_unknown");
+        assert!(npm_prefix_of(std::path::Path::new("/opt/homebrew/bin/codex")).is_none());
     }
 
     #[test]
@@ -252,8 +298,8 @@ mod tests {
         let ctx = HostContext::isolated(dir.path(), dir.path());
         let tools = Toolchain { npm: None, node_dir: None, brew: None };
         let r = Recipe { id: "x", agent: AgentId::Claude, mechanism: Mechanism::AgentSelfUpdate { args: &["update"] }, ops: &[Op::Update], evidence: "", runs_package_scripts: false };
-        assert_eq!(build_spec(&ctx, &tools, &r, Op::Install, None, None).unwrap_err().code, "lifecycle.unsupported_operation");
-        assert_eq!(build_spec(&ctx, &tools, &r, Op::Update, None, None).unwrap_err().code, "lifecycle.target_missing");
+        assert_eq!(build_spec(&ctx, &tools, &r, Op::Install, None, None, None).unwrap_err().code, "lifecycle.unsupported_operation");
+        assert_eq!(build_spec(&ctx, &tools, &r, Op::Update, None, None, None).unwrap_err().code, "lifecycle.target_missing");
     }
 
     #[test]

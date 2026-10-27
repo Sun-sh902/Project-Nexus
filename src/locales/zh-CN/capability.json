@@ -1,0 +1,12 @@
+{
+  "capability.skillsWriteDeferred": "暂不支持安装或启用 Skills；Skills 为只读。",
+  "capability.scriptInstallerManaged": "由厂商脚本安装；Nexus 从不运行安装脚本。请使用 Agent 自身的更新方式。",
+  "capability.launchMacOnly": "目前仅 macOS 支持启动。",
+  "capability.onlineDeferred": "尚未实现在线凭据与服务提供商验证。",
+  "capability.claudeMcpAgentOwned": "Claude Code 将用户 MCP 服务器保存在自身状态文件（~/.claude.json）中；Nexus 只读不改。请使用 claude mcp。",
+  "capability.wingetUnverified": "WinGet 安装尚未验证。",
+  "capability.unknownInstaller": "安装来源未知，Nexus 不会更新或移除它。",
+  "capability.nativeUninstallManual": "Claude Code 原生安装需按官方说明手动移除。",
+  "capability.opencodeAmbiguousConfig": "存在两个全局配置文件；合并前禁止编辑。",
+  "capability.unsupported": "不支持。"
+}

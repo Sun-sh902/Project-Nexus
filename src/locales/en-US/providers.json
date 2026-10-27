@@ -7,5 +7,14 @@
   "agentLogin": "Agent-owned account login",
   "secureReference": "Secure credential reference (example only)",
   "help": "Connections describe service access. A connected Provider does not establish model compatibility or Agent readiness.",
-  "noSecrets": "No credentials are accepted or stored in this preview."
+  "noSecrets": "No credentials are accepted or stored in this preview.",
+  "builtin": "Built-in · uses the Agent's own login",
+  "custom": "Custom endpoint",
+  "notTested": "Not tested",
+  "nexusSecret": "System keychain (Nexus)",
+  "environment": "Environment variable",
+  "secretStored": "Credential stored",
+  "secretMissing": "No credential stored",
+  "secretUnknown": "Keychain unavailable",
+  "noSecretsLive": "Keys go straight to the system keychain. They are never shown, logged, stored in the database or sent anywhere by routine checks."
 }

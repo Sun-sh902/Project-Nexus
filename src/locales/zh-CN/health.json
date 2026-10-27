@@ -47,5 +47,19 @@
   "notRead": "未读取",
   "deviceState": "此电脑",
   "noDeviceScan": "未扫描或读取此电脑上的任何内容。",
-  "notScanned": "未扫描"
+  "notScanned": "未扫描",
+  "liveNoRuntime": "无需单独运行时",
+  "liveVersion": "v{{version}}",
+  "liveConfigSources_one": "{{count}} 个配置文件",
+  "liveConfigSources_other": "{{count}} 个配置文件",
+  "liveModel": "{{model}}",
+  "legendNoteLive": "每个标记都来自本机依据；此处从不检查在线服务",
+  "stepOnlineHelpLive": "常规健康检查不检查服务可达性与凭据有效性。",
+  "liveScope": "来自最近一次只读检查的本机结果。",
+  "liveScopeStale": "这些依据已过期。请重新检查后再依赖它们。",
+  "liveTime": "依据时间",
+  "liveSource": "来源：本机发现",
+  "notCheckedTitleLive": "常规健康检查未覆盖",
+  "credentialValidity": "凭据有效性",
+  "credentialValidityHelp": "仅观察是否存在；验证有效性需要在线请求。"
 }

@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { Home as HomeIcon, Bot, Layers2, Puzzle, Cpu, Settings2, PanelLeftClose, PanelLeftOpen, SunMoon, Languages } from 'lucide-react';
+import { Home as HomeIcon, Bot, Layers2, Puzzle, Cpu, Settings2, PanelLeftClose, PanelLeftOpen, SunMoon, Languages, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { navigation, parseRoute } from './app/routes';
 import { usePreferences } from './app/preference-context';
 import type { Language, Theme } from './app/preferences';
 import { formatNumber, formatTimestamp } from './app/format';
-import { agents, findAgent, fixtureTime, type Readiness } from './data/fixtures';
+import type { Readiness } from './data/view';
+import { useNexus } from './app/nexus-context';
 import { NexusIdentity } from './components/NexusIdentity';
 import { ErrorState, Notice } from './components/ui';
 import { Home } from './pages/Home';
@@ -21,6 +22,8 @@ const icons = { home: HomeIcon, agents: Bot, models: Layers2, extensions: Puzzle
 export default function App() {
   const { t } = useTranslation(['common', 'navigation', 'settings']);
   const { preferences, locale, version, setLanguage, setTheme, storageFailed, nativePreferenceFailed } = usePreferences();
+  const { agents, findAgent, scannedAt, mode, refresh, refreshing, status } = useNexus();
+  const live = mode === 'live';
   const [hash, setHash] = useState(location.hash);
   const [collapsed, setCollapsed] = useState(false);
   const main = useRef<HTMLElement>(null);
@@ -57,7 +60,7 @@ export default function App() {
         <span className="nav-index mono" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span><Icon className="nav-icon" size={16} strokeWidth={1.6} aria-hidden="true" /><span className="nav-label">{t(`navigation:${key}`)}</span>{key === 'agents' && <span className="nav-count mono" aria-hidden="true">{formatNumber(agents.length, locale)}</span>}
       </a>; })}</nav>
       <div className="sidebar-footer">
-        <div className="demo-register"><p className="kicker">{t('fixtureShort')}</p><p className="demo-text">{t('fixtureNotice')}</p><p className="demo-detail">{t('fixtureDetail')}</p></div>
+        <div className="demo-register"><p className="kicker">{t(live ? 'liveShort' : 'fixtureShort')}</p><p className="demo-text">{t(live ? 'liveNotice' : 'fixtureNotice')}</p><p className="demo-detail">{t(live ? 'liveDetail' : 'fixtureDetail')}</p></div>
         <div className="sidebar-base"><span className="mono version">{t('versionLabel', { version })}</span><button className="icon-button" aria-label={t(collapsed ? 'expand' : 'collapse')} title={t(collapsed ? 'expand' : 'collapse')} aria-expanded={!collapsed} onClick={() => setCollapsed(value => !value)}>{collapsed ? <PanelLeftOpen size={15} strokeWidth={1.6} aria-hidden="true" /> : <PanelLeftClose size={15} strokeWidth={1.6} aria-hidden="true" />}</button></div>
       </div>
     </aside>
@@ -68,7 +71,8 @@ export default function App() {
             ? <><a href="#/agents">{t('navigation:agents')}</a><span className="crumb-sep" aria-hidden="true" /><span className="location-label" lang="en-US">{detailAgent.name}</span><span className="location-context">{t(agentStateContext(detailAgent.readiness))}</span></>
             : <><span className="location-label">{route.page === 'notFound' ? t('productName') : t(`navigation:${route.page}`)}</span>{route.page !== 'notFound' && <span className="location-context">{t(`navigation:${route.page}Context`)}</span>}</>}</div>
           <div className="shell-preferences">
-            <span className="fixture-clock mono">{t('fixtureClock')}<span className="note-divider" aria-hidden="true" />{formatTimestamp(fixtureTime, locale)}</span>
+            <span className="fixture-clock mono">{t(live ? 'scanClock' : 'fixtureClock')}<span className="note-divider" aria-hidden="true" />{scannedAt ? formatTimestamp(scannedAt, locale) : t(status === 'error' ? 'scanFailedShort' : 'scanning')}</span>
+            {live && <button className="icon-button" aria-label={t('rescan')} title={t('rescan')} disabled={refreshing} onClick={() => void refresh()}><RefreshCw size={14} strokeWidth={1.6} aria-hidden="true" className={refreshing ? 'is-spinning' : undefined} /></button>}
             <label className="toolbar-select" title={t('settings:appearance')}><SunMoon size={14} strokeWidth={1.6} aria-hidden="true" /><span className="sr-only">{t('settings:appearance')}</span><select id="shell-theme" value={preferences.theme} onChange={event => setTheme(event.target.value as Theme)}>{(['light', 'dark', 'system'] as const).map(theme => <option value={theme} key={theme}>{t(`settings:${theme}`)}</option>)}</select></label>
             <label className="toolbar-select" title={t('settings:language')}><Languages size={14} strokeWidth={1.6} aria-hidden="true" /><span className="sr-only">{t('settings:language')}</span><select id="shell-language" value={preferences.language} onChange={event => setLanguage(event.target.value as Language)}>{(['system', 'zh-CN', 'en-US'] as const).map(language => <option value={language} key={language}>{t(`settings:${language}`)}</option>)}</select></label>
           </div>

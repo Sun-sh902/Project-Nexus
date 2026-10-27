@@ -1,0 +1,12 @@
+{
+  "capability.skillsWriteDeferred": "Installing or enabling Skills is not available yet; Skills are read-only.",
+  "capability.scriptInstallerManaged": "Installed by the vendor's script installer; Nexus never runs install scripts. Update it with the Agent's own updater.",
+  "capability.launchMacOnly": "Launching is available on macOS only for now.",
+  "capability.onlineDeferred": "Online credential and Provider validation is not implemented.",
+  "capability.claudeMcpAgentOwned": "Claude Code keeps user MCP servers in its own state file (~/.claude.json); Nexus reads it but does not edit it. Use 'claude mcp'.",
+  "capability.wingetUnverified": "WinGet installation has not been verified yet.",
+  "capability.unknownInstaller": "The installation source is unknown, so Nexus will not update or remove it.",
+  "capability.nativeUninstallManual": "Native Claude Code installs are removed manually, following the official instructions.",
+  "capability.opencodeAmbiguousConfig": "Two global configuration files exist; edits are blocked until they are merged.",
+  "capability.unsupported": "Not supported."
+}

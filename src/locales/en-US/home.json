@@ -42,5 +42,16 @@
   "activityKicker": "Illustrative",
   "statesTitle": "How to read readiness",
   "specimenKicker": "Claude Code · v2",
-  "specimenLead": "A revision awaits review."
+  "specimenLead": "A revision awaits review.",
+  "heroKickerLive": "Agent readiness · this computer",
+  "headlineRestLive": "{{agent}}: {{finding}}.",
+  "headlineRestLiveClear": "Every installed Agent passes its local checks.",
+  "ledeLive": "Readiness comes from a read-only scan of installations, runtimes, configuration, models and extensions on this computer. Online service availability is never checked.",
+  "registerNoteLive": "Counts of local Health results — not a health score.",
+  "allClear": "Nothing needs attention",
+  "allClearHelp": "Required local checks pass for every Agent.",
+  "systemImpactLive": "Tools are marked against the Agents that require them.",
+  "activityKickerLive": "Operation journal",
+  "activityEmpty": "No operations yet.",
+  "activityNoteLive": "Only changes made through Nexus are recorded."
 }

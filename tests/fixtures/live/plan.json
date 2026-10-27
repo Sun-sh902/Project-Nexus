@@ -1,0 +1,52 @@
+{
+  "id": "plan_51ff845b205e2d12f24ec5e125c0e26c",
+  "digest": "ad08d0c2c77d9f8f2d9178f07af6871e60e836e78927d6238ae48982d3b161ef",
+  "kind": "setMcpEnabled",
+  "agentId": "codex",
+  "createdAt": "2026-10-27T12:32:30Z",
+  "expiresAt": "2026-10-27T12:42:30Z",
+  "params": [
+    [
+      "name",
+      "files"
+    ],
+    [
+      "enabled",
+      "false"
+    ]
+  ],
+  "config": {
+    "targetId": "codex.user",
+    "location": "~/.codex/config.toml",
+    "format": "toml",
+    "createsFile": false,
+    "beforeFingerprint": "dc4860263193703b4678c8145171fe903d516a5e723fca69ee816373a0640a8b",
+    "afterFingerprint": "bcb8d1bc516b5dfe1de4fb7d0336f2c72242a855ed6a93d3b768172b20e15c8b",
+    "changes": [
+      {
+        "key": "mcp_servers.files.enabled",
+        "before": "true",
+        "after": "false"
+      }
+    ],
+    "diff": [
+      {
+        "kind": "+",
+        "text": "enabled = false"
+      }
+    ]
+  },
+  "process": null,
+  "privileges": "currentUser",
+  "backup": "encrypted",
+  "rollback": "automaticIfUnchanged",
+  "verification": "verify.mcpEnabled",
+  "warnings": [
+    "warning.agentToolsUnavailable"
+  ],
+  "preserves": [
+    "preserve.unrelatedSettings",
+    "preserve.comments",
+    "preserve.credentials"
+  ]
+}

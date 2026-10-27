@@ -1,0 +1,41 @@
+{
+  "operationId": "op_c3c9dea9f5ca14fc5c4a218e68ea6372",
+  "kind": "setMcpEnabled",
+  "agentId": "codex",
+  "status": "succeeded",
+  "verification": {
+    "outcome": "passed",
+    "checks": [
+      {
+        "key": "verify.mcpEnabled",
+        "outcome": "passed",
+        "params": [
+          [
+            "name",
+            "files"
+          ]
+        ],
+        "informational": false
+      },
+      {
+        "key": "verify.mcpCount",
+        "outcome": "passed",
+        "params": [
+          [
+            "count",
+            "2"
+          ]
+        ],
+        "informational": false
+      }
+    ],
+    "verifiedAt": "2026-10-27T12:32:30Z"
+  },
+  "error": null,
+  "backupId": "bak_d57a0c038fc75c97523f3090fe527985",
+  "compensation": null,
+  "outputExcerpt": null,
+  "warnings": [
+    "warning.agentToolsUnavailable"
+  ]
+}

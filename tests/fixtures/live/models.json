@@ -1,0 +1,327 @@
+{
+  "providers": [
+    {
+      "id": "builtin.anthropic",
+      "displayName": "Anthropic",
+      "kind": "anthropic",
+      "baseUrl": "https://api.anthropic.com",
+      "authMode": "agentLogin",
+      "secretRef": null,
+      "secretPresent": null,
+      "envVar": null,
+      "revision": 1,
+      "builtin": true,
+      "connection": "notTested"
+    },
+    {
+      "id": "builtin.openai",
+      "displayName": "OpenAI",
+      "kind": "openai",
+      "baseUrl": "https://api.openai.com",
+      "authMode": "agentLogin",
+      "secretRef": null,
+      "secretPresent": null,
+      "envVar": null,
+      "revision": 1,
+      "builtin": true,
+      "connection": "notTested"
+    },
+    {
+      "id": "builtin.google",
+      "displayName": "Google",
+      "kind": "google",
+      "baseUrl": "https://generativelanguage.googleapis.com",
+      "authMode": "agentLogin",
+      "secretRef": null,
+      "secretPresent": null,
+      "envVar": null,
+      "revision": 1,
+      "builtin": true,
+      "connection": "notTested"
+    }
+  ],
+  "models": [
+    {
+      "id": "builtin.anthropic.default",
+      "providerId": "builtin.anthropic",
+      "identifier": "default",
+      "displayName": null,
+      "source": "builtin",
+      "sourceDetail": "https://code.claude.com/docs/en/model-config (alias, 2026-10-27)",
+      "capabilities": []
+    },
+    {
+      "id": "builtin.anthropic.sonnet",
+      "providerId": "builtin.anthropic",
+      "identifier": "sonnet",
+      "displayName": null,
+      "source": "builtin",
+      "sourceDetail": "https://code.claude.com/docs/en/model-config (alias, 2026-10-27)",
+      "capabilities": []
+    },
+    {
+      "id": "builtin.anthropic.opus",
+      "providerId": "builtin.anthropic",
+      "identifier": "opus",
+      "displayName": null,
+      "source": "builtin",
+      "sourceDetail": "https://code.claude.com/docs/en/model-config (alias, 2026-10-27)",
+      "capabilities": []
+    },
+    {
+      "id": "builtin.anthropic.haiku",
+      "providerId": "builtin.anthropic",
+      "identifier": "haiku",
+      "displayName": null,
+      "source": "builtin",
+      "sourceDetail": "https://code.claude.com/docs/en/model-config (alias, 2026-10-27)",
+      "capabilities": []
+    },
+    {
+      "id": "observed.builtin.openai.gpt-6.1-terra",
+      "providerId": "builtin.openai",
+      "identifier": "gpt-6.1-terra",
+      "displayName": null,
+      "source": "observed",
+      "sourceDetail": "~/.codex/config.toml",
+      "capabilities": []
+    },
+    {
+      "id": "observed.builtin.anthropic.claude-sonnet-5-5",
+      "providerId": "builtin.anthropic",
+      "identifier": "claude-sonnet-5-5",
+      "displayName": null,
+      "source": "observed",
+      "sourceDetail": "~/.config/opencode/opencode.json",
+      "capabilities": []
+    }
+  ],
+  "profiles": [],
+  "assignments": [
+    {
+      "assignment": {
+        "agentId": "claude",
+        "mode": "direct",
+        "modelId": "builtin.anthropic.opus",
+        "profileId": null,
+        "desiredRevision": null,
+        "applied": {
+          "identifier": "opus",
+          "profileRevision": null,
+          "providerRevision": 1,
+          "appliedAt": "2026-10-27T12:32:30Z",
+          "location": "~/.claude/settings.json",
+          "fingerprint": "f43568ecd52a99f51051093fe4a6cf3d6bf9434c0f205c9757b11f6fd2531f37"
+        },
+        "updatedAt": "2026-10-27T12:32:30Z"
+      },
+      "provider": {
+        "id": "builtin.anthropic",
+        "displayName": "Anthropic",
+        "kind": "anthropic",
+        "baseUrl": "https://api.anthropic.com",
+        "authMode": "agentLogin",
+        "secretRef": null,
+        "secretPresent": null,
+        "envVar": null,
+        "revision": 1,
+        "builtin": true,
+        "connection": "notTested"
+      },
+      "model": {
+        "id": "builtin.anthropic.opus",
+        "providerId": "builtin.anthropic",
+        "identifier": "opus",
+        "displayName": null,
+        "source": "builtin",
+        "sourceDetail": "https://code.claude.com/docs/en/model-config (alias, 2026-10-27)",
+        "capabilities": []
+      },
+      "profile": null,
+      "profileRevision": null,
+      "compatibility": {
+        "agentId": "claude",
+        "support": "supported",
+        "reason": null,
+        "nativeIdentifier": "opus"
+      },
+      "pending": false
+    }
+  ],
+  "matrix": [
+    [
+      "builtin.anthropic.default",
+      [
+        {
+          "agentId": "codex",
+          "support": "unsupported",
+          "reason": "compat.providerNotRoutable",
+          "nativeIdentifier": null
+        },
+        {
+          "agentId": "claude",
+          "support": "supported",
+          "reason": null,
+          "nativeIdentifier": "default"
+        },
+        {
+          "agentId": "gemini",
+          "support": "unsupported",
+          "reason": "compat.providerNotRoutable",
+          "nativeIdentifier": null
+        },
+        {
+          "agentId": "opencode",
+          "support": "supported",
+          "reason": null,
+          "nativeIdentifier": "anthropic/default"
+        }
+      ]
+    ],
+    [
+      "builtin.anthropic.sonnet",
+      [
+        {
+          "agentId": "codex",
+          "support": "unsupported",
+          "reason": "compat.providerNotRoutable",
+          "nativeIdentifier": null
+        },
+        {
+          "agentId": "claude",
+          "support": "supported",
+          "reason": null,
+          "nativeIdentifier": "sonnet"
+        },
+        {
+          "agentId": "gemini",
+          "support": "unsupported",
+          "reason": "compat.providerNotRoutable",
+          "nativeIdentifier": null
+        },
+        {
+          "agentId": "opencode",
+          "support": "supported",
+          "reason": null,
+          "nativeIdentifier": "anthropic/sonnet"
+        }
+      ]
+    ],
+    [
+      "builtin.anthropic.opus",
+      [
+        {
+          "agentId": "codex",
+          "support": "unsupported",
+          "reason": "compat.providerNotRoutable",
+          "nativeIdentifier": null
+        },
+        {
+          "agentId": "claude",
+          "support": "supported",
+          "reason": null,
+          "nativeIdentifier": "opus"
+        },
+        {
+          "agentId": "gemini",
+          "support": "unsupported",
+          "reason": "compat.providerNotRoutable",
+          "nativeIdentifier": null
+        },
+        {
+          "agentId": "opencode",
+          "support": "supported",
+          "reason": null,
+          "nativeIdentifier": "anthropic/opus"
+        }
+      ]
+    ],
+    [
+      "builtin.anthropic.haiku",
+      [
+        {
+          "agentId": "codex",
+          "support": "unsupported",
+          "reason": "compat.providerNotRoutable",
+          "nativeIdentifier": null
+        },
+        {
+          "agentId": "claude",
+          "support": "supported",
+          "reason": null,
+          "nativeIdentifier": "haiku"
+        },
+        {
+          "agentId": "gemini",
+          "support": "unsupported",
+          "reason": "compat.providerNotRoutable",
+          "nativeIdentifier": null
+        },
+        {
+          "agentId": "opencode",
+          "support": "supported",
+          "reason": null,
+          "nativeIdentifier": "anthropic/haiku"
+        }
+      ]
+    ],
+    [
+      "observed.builtin.openai.gpt-6.1-terra",
+      [
+        {
+          "agentId": "codex",
+          "support": "unverified",
+          "reason": "compat.availabilityUnverified",
+          "nativeIdentifier": "gpt-6.1-terra"
+        },
+        {
+          "agentId": "claude",
+          "support": "unsupported",
+          "reason": "compat.providerNotRoutable",
+          "nativeIdentifier": null
+        },
+        {
+          "agentId": "gemini",
+          "support": "unsupported",
+          "reason": "compat.providerNotRoutable",
+          "nativeIdentifier": null
+        },
+        {
+          "agentId": "opencode",
+          "support": "unverified",
+          "reason": "compat.availabilityUnverified",
+          "nativeIdentifier": "openai/gpt-6.1-terra"
+        }
+      ]
+    ],
+    [
+      "observed.builtin.anthropic.claude-sonnet-5-5",
+      [
+        {
+          "agentId": "codex",
+          "support": "unsupported",
+          "reason": "compat.providerNotRoutable",
+          "nativeIdentifier": null
+        },
+        {
+          "agentId": "claude",
+          "support": "unverified",
+          "reason": "compat.availabilityUnverified",
+          "nativeIdentifier": "claude-sonnet-5-5"
+        },
+        {
+          "agentId": "gemini",
+          "support": "unsupported",
+          "reason": "compat.providerNotRoutable",
+          "nativeIdentifier": null
+        },
+        {
+          "agentId": "opencode",
+          "support": "unverified",
+          "reason": "compat.availabilityUnverified",
+          "nativeIdentifier": "anthropic/claude-sonnet-5-5"
+        }
+      ]
+    ]
+  ]
+}

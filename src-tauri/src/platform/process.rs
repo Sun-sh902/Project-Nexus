@@ -89,7 +89,7 @@ pub fn run(spec: &ProcessSpec) -> NexusResult<ProcessOutcome> {
     }
     let mut child = command.spawn().map_err(|_| NexusError::new("process.spawn_failed"))?;
     let cap = spec.max_output;
-    let buffers: [Arc<Mutex<(Vec<u8>, bool)>>; 2] = [Arc::default(), Arc::default()];
+    let buffers: [SharedTail; 2] = [Arc::default(), Arc::default()];
     let (done_tx, done_rx) = mpsc::channel::<()>();
     let streams: [Option<Box<dyn Read + Send>>; 2] = [child.stdout.take().map(|s| Box::new(s) as Box<dyn Read + Send>), child.stderr.take().map(|s| Box::new(s) as Box<dyn Read + Send>)];
     let mut readers = 0;
@@ -143,7 +143,7 @@ pub fn run(spec: &ProcessSpec) -> NexusResult<ProcessOutcome> {
             break;
         }
     }
-    let take = |b: &Arc<Mutex<(Vec<u8>, bool)>>| {
+    let take = |b: &SharedTail| {
         let g = b.lock().unwrap_or_else(|p| p.into_inner());
         (g.0.clone(), g.1)
     };
@@ -156,6 +156,9 @@ pub fn run(spec: &ProcessSpec) -> NexusResult<ProcessOutcome> {
         truncated,
     })
 }
+
+/// Bounded output tail plus a "was truncated" flag, shared with a reader thread.
+type SharedTail = Arc<Mutex<(Vec<u8>, bool)>>;
 
 fn kill_tree(child: &mut std::process::Child) {
     #[cfg(unix)]

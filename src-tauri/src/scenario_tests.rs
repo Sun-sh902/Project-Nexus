@@ -98,7 +98,7 @@ esac
     }
 }
 
-fn report<'a>(o: &'a crate::app::Overview, id: AgentId) -> &'a crate::app::AgentReport {
+fn report(o: &crate::app::Overview, id: AgentId) -> &crate::app::AgentReport {
     o.agents.iter().find(|a| a.snapshot.agent_id == id).unwrap()
 }
 
@@ -464,4 +464,39 @@ fn real_machine_discovery_smoke() {
     }
     let json = serde_json::to_string(&o).unwrap();
     assert!(!json.contains("sk-") , "possible secret in overview");
+}
+
+/// Regenerates the live-mode UI fixture from a deterministic fake home:
+/// `cargo test export_live_ui_fixture -- --ignored`. Output: tests/fixtures/live/*.json.
+#[test]
+#[ignore]
+fn export_live_ui_fixture() {
+    let home = Home::new();
+    home.node("26.10.0");
+    home.fake_npm("0.65.0", false);
+    home.npm_package("@openai/codex", "codex", "0.164.0", "bin/codex.js");
+    home.write(".codex/auth.json", "{}");
+    home.write(".codex/config.toml", "model = \"gpt-6.1-terra\"\n\n[mcp_servers.files]\ncommand = \"/nonexistent/mcp-files\"\n\n[mcp_servers.docs]\nurl = \"https://docs.example.com/mcp\"\n");
+    home.write(".codex/skills/review/SKILL.md", "---\nname: review\ndescription: Reviews diffs\n---\n");
+    home.claude("2.1.311");
+    home.write(".claude/settings.json", "{\n  \"theme\": \"dark\"\n}\n");
+    home.write(".config/opencode/opencode.json", "{\"model\": \"anthropic/claude-sonnet-5-5\"}");
+    home.write(".config/opencode/opencode.jsonc", "{}");
+    home.p("bin/opencode");
+    let app = home.app(true);
+    app.set_assignment(AgentId::Claude, AssignmentMode::Direct, Some("builtin.anthropic.opus"), None).unwrap();
+    confirm(&app, ActionRequest::ApplyModel { agent_id: AgentId::Claude }).unwrap();
+    // Drift so Claude shows a reapply repair.
+    home.write(".claude/settings.json", &home.read(".claude/settings.json").replace("opus", "haiku"));
+    let overview = app.overview(true).unwrap();
+    let models = app.models_view().unwrap();
+    let plan = app.prepare(ActionRequest::SetMcpEnabled { agent_id: AgentId::Codex, name: "files".into(), enabled: false }).unwrap();
+    let result = app.confirm(&plan.id, &plan.digest).unwrap();
+    let after = app.overview(true).unwrap();
+    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/live");
+    fs::create_dir_all(&out).unwrap();
+    let scrub = |v: String| v.replace(&home.dir.path().to_string_lossy().to_string(), "/Users/example");
+    for (name, value) in [("overview", serde_json::to_string_pretty(&overview).unwrap()), ("models", serde_json::to_string_pretty(&models).unwrap()), ("plan", serde_json::to_string_pretty(&plan).unwrap()), ("result", serde_json::to_string_pretty(&result).unwrap()), ("overview-after", serde_json::to_string_pretty(&after).unwrap())] {
+        fs::write(out.join(format!("{name}.json")), scrub(value)).unwrap();
+    }
 }

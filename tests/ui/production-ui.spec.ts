@@ -1,7 +1,8 @@
 import { test, expect, type Page } from '@playwright/test';
 import { resources } from '../../src/app/resources';
 import { agents, findModel } from '../../src/data/fixtures';
-import { readinessNodes } from '../../src/app/readiness';
+import { demoAgents } from '../../src/data/demo';
+const readinessNodes = (agent: { id: string }) => demoAgents().find(view => view.id === agent.id)!.nodes;
 
 async function start(page: Page, locale: 'zh-CN' | 'en-US', route = 'home') {
   await page.addInitScript(locale => {

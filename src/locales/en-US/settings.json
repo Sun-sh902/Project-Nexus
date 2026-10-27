@@ -21,5 +21,9 @@
   "lightCaption": "Paper — warm, quiet",
   "darkCaption": "Night — composed, not inverted",
   "systemCaption": "Follows the desktop",
-  "interfaceLanguage": "Interface language"
+  "interfaceLanguage": "Interface language",
+  "aboutLive": "About Nexus",
+  "aboutHelpLive": "Agent, model, Extension and System information comes from read-only scans of this computer. Changes happen only through previewed, system-confirmed plans.",
+  "dataMode": "Data",
+  "dataModeLive": "This computer (live)"
 }

@@ -157,7 +157,10 @@ impl HostContext {
 
     /// Replaces the home prefix with `~` for display. Paths cross IPC only in this form.
     pub fn display_path(&self, path: &Path) -> String {
-        match path.strip_prefix(&self.home) {
+        // Canonicalized paths may reach the home through a symlink (e.g. /var → /private/var).
+        let canonical_home = std::fs::canonicalize(&self.home).ok();
+        let stripped = path.strip_prefix(&self.home).or_else(|e| canonical_home.as_deref().map(|h| path.strip_prefix(h)).unwrap_or(Err(e)));
+        match stripped {
             Ok(rest) if rest.as_os_str().is_empty() => "~".to_string(),
             Ok(rest) => format!("~{}{}", std::path::MAIN_SEPARATOR, rest.display()),
             Err(_) => path.display().to_string(),

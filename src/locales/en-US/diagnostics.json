@@ -14,5 +14,14 @@
   "geminiObserved": "No installation in the fixture.",
   "geminiExpected": "A supported, verified installation.",
   "evidence": "Example evidence",
-  "evidenceHelp": "Source: isolated fixture. No real logs, configuration, credentials or process output were accessed."
+  "evidenceHelp": "Source: isolated fixture. No real logs, configuration, credentials or process output were accessed.",
+  "helpLive": "Findings from the latest scan, each with its evidence and the trusted repair Nexus can offer.",
+  "noFindingsLive": "No local findings",
+  "noFindingsHelpLive": "Required local checks pass. Online services and credential validity were not checked.",
+  "evidenceHelpLive": "Source: read-only local discovery. Credentials and process output are never shown.",
+  "cause.established": "Established from local evidence",
+  "cause.possible": "Possible cause",
+  "freshness": "Observed",
+  "stale": "stale",
+  "evidenceLive": "Evidence"
 }

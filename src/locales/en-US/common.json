@@ -59,5 +59,16 @@
   "fixtureClock": "Fixture",
   "sentenceEnd": ".",
   "sectionMark": "§{{n}}",
-  "versionLabel": "v{{version}}"
+  "versionLabel": "v{{version}}",
+  "errorHelpLive": "Return to Agents to choose a discovered Agent.",
+  "scanning": "Reading this computer (read-only)…",
+  "scanFailed": "The local scan could not be completed",
+  "retryScan": "Scan again",
+  "liveShort": "This computer",
+  "liveNotice": "Read-only scan of the current user.",
+  "liveDetail": "Agents, configuration and tools are read from this Mac. Nothing changes without a confirmed plan.",
+  "scanClock": "Scanned",
+  "scanFailedShort": "scan failed",
+  "rescan": "Scan again",
+  "phaseLive": "Core backend · beta candidate"
 }

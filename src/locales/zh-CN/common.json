@@ -59,5 +59,16 @@
   "fixtureClock": "演示时刻",
   "sentenceEnd": "。",
   "sectionMark": "§{{n}}",
-  "versionLabel": "v{{version}}"
+  "versionLabel": "v{{version}}",
+  "errorHelpLive": "返回 Agent 列表，选择一个已发现的 Agent。",
+  "scanning": "正在只读检查此电脑…",
+  "scanFailed": "本机检查未能完成",
+  "retryScan": "重新检查",
+  "liveShort": "此电脑",
+  "liveNotice": "对当前用户的只读检查。",
+  "liveDetail": "Agent、配置与工具均读取自本机。未经确认的计划不会更改任何内容。",
+  "scanClock": "检查于",
+  "scanFailedShort": "检查失败",
+  "rescan": "重新检查",
+  "phaseLive": "核心后端 · Beta 候选"
 }

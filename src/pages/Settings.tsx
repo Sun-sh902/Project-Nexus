@@ -2,6 +2,7 @@ import { useId } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown } from 'lucide-react';
 import { usePreferences } from '../app/preference-context';
+import { useNexus } from '../app/nexus-context';
 import { InfoList, Notice, PageHeading, StateGlyph } from '../components/ui';
 import type { Language } from '../app/preferences';
 
@@ -22,10 +23,12 @@ function Plate({ theme }: { theme: 'light' | 'dark' }) {
 export function Settings() {
   const { t } = useTranslation(['settings', 'navigation', 'common']);
   const { preferences, setTheme, setLanguage, storageFailed, localeFailed, version } = usePreferences();
+  const { mode } = useNexus();
+  const live = mode === 'live';
   const id = useId();
   return <><PageHeading title={t('navigation:settings')} description={t('description')} kicker={t('pageKicker')} />
     <div className="settings-layout">
-      <nav className="settings-categories" aria-label={t('contents')}><p className="kicker">{t('contents')}</p>{groups.map((group, index) => <button key={group} onClick={() => document.getElementById(`${id}-${group}`)?.scrollIntoView({ block: 'start' })}><span className="mono" aria-hidden="true">{t('common:sectionMark', { n: index + 1 })}</span>{t(group)}</button>)}<p className="categories-note">{t('saved')}</p></nav>
+      <nav className="settings-categories" aria-label={t('contents')}><p className="kicker">{t('contents')}</p>{groups.map((group, index) => <button key={group} onClick={() => document.getElementById(`${id}-${group}`)?.scrollIntoView({ block: 'start' })}><span className="mono" aria-hidden="true">{t('common:sectionMark', { n: index + 1 })}</span>{t(group === 'about' && live ? 'aboutLive' : group)}</button>)}<p className="categories-note">{t('saved')}</p></nav>
       <div className="settings-content">
         <section className="settings-group" id={`${id}-appearance`} aria-labelledby={`${id}-appearance-title`}>
           <div className="group-head"><h2 id={`${id}-appearance-title`}><span className="section-index" aria-hidden="true">{t('common:sectionMark', { n: 1 })}</span>{t('appearance')}</h2><span className="kicker">{t('appliesNow')}</span></div>
@@ -47,9 +50,9 @@ export function Settings() {
           <p className="preference-feedback" role="status">{storageFailed ? t('common:storageError') : t('saved')}</p>
         </section>
         <section className="settings-group" id={`${id}-about`} aria-labelledby={`${id}-about-title`}>
-          <div className="group-head"><h2 id={`${id}-about-title`}><span className="section-index" aria-hidden="true">{t('common:sectionMark', { n: 3 })}</span>{t('about')}</h2><span className="kicker">{t('common:phase')}</span></div>
-          <p className="field-help">{t('aboutHelp')}</p>
-          <InfoList items={[{ label: t('version'), value: <span className="mono">{version}</span> }, { label: t('build'), value: t('common:phase') }]} />
+          <div className="group-head"><h2 id={`${id}-about-title`}><span className="section-index" aria-hidden="true">{t('common:sectionMark', { n: 3 })}</span>{t(live ? 'aboutLive' : 'about')}</h2><span className="kicker">{t(live ? 'common:phaseLive' : 'common:phase')}</span></div>
+          <p className="field-help">{t(live ? 'aboutHelpLive' : 'aboutHelp')}</p>
+          <InfoList items={[{ label: t('version'), value: <span className="mono">{version}</span> }, { label: t('build'), value: t(live ? 'common:phaseLive' : 'common:phase') }, ...(live ? [{ label: t('dataMode'), value: t('dataModeLive') }] : [])]} />
         </section>
       </div>
     </div>

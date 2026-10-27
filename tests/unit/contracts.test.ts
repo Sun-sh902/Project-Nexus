@@ -65,11 +65,13 @@ describe('navigation and fixture relationships', () => {
     expect(formatTimestamp('2026-10-07T00:00:00Z', 'zh-CN')).not.toBe(formatTimestamp('2026-10-07T00:00:00Z', 'en-US'));
   });
 });
-describe('Phase 1 native scope', () => {
-  it('permits only main-local application metadata/preferences without broad core/plugin grants', () => {
+describe('native scope (Phases 2–7 core backend)', () => {
+  it('grants the main window only typed Nexus commands, with no broad core/plugin grants', () => {
     const capability = JSON.parse(readFileSync('src-tauri/capabilities/main.json', 'utf8'));
     expect(capability.windows).toEqual(['main']);
-    expect(capability.permissions).toEqual(['allow-app-metadata', 'allow-apply-app-preferences']);
+    const nexus = ['overview', 'agent-history', 'models', 'create-provider', 'set-provider-secret', 'delete-provider', 'create-model', 'delete-model', 'save-profile', 'set-assignment', 'prepare-action', 'confirm-plan', 'discard-plan', 'launch-agent', 'set-locale'];
+    expect(capability.permissions).toEqual(['allow-app-metadata', 'allow-apply-app-preferences', ...nexus.map(name => `allow-nexus-${name}`)]);
+    for (const permission of capability.permissions as string[]) expect(permission).not.toMatch(/:|shell|fs-|http|dialog|process|execute|write-file|fetch/);
     expect(capability.remote).toBeUndefined();
     const config = JSON.parse(readFileSync('src-tauri/tauri.conf.json', 'utf8'));
     expect(config.app.security.capabilities).toEqual(['main']);
@@ -77,6 +79,8 @@ describe('Phase 1 native scope', () => {
     expect(config.app.security.csp).not.toContain('https:');
     expect(readdirSync('src-tauri/capabilities')).toEqual(['main.json']);
     const manifest = readFileSync('src-tauri/Cargo.toml', 'utf8');
-    expect(manifest).not.toMatch(/tauri-plugin-|sqlite|reqwest/);
+    // Only the dialog plugin (used from Rust for native confirmation) is allowed; no shell, fs or HTTP plugins.
+    expect(manifest.match(/tauri-plugin-[a-z-]+/g) ?? []).toEqual(['tauri-plugin-dialog']);
+    expect(manifest).not.toMatch(/reqwest|tauri-plugin-shell|tauri-plugin-fs|tauri-plugin-http/);
   });
 });

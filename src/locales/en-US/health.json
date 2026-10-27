@@ -47,5 +47,19 @@
   "notRead": "not read",
   "deviceState": "This computer",
   "noDeviceScan": "Nothing on this computer was scanned or read.",
-  "notScanned": "not scanned"
+  "notScanned": "not scanned",
+  "liveNoRuntime": "No separate runtime required",
+  "liveVersion": "v{{version}}",
+  "liveConfigSources_one": "{{count}} configuration file",
+  "liveConfigSources_other": "{{count}} configuration files",
+  "liveModel": "{{model}}",
+  "legendNoteLive": "Every mark comes from local evidence; online service is never checked here",
+  "stepOnlineHelpLive": "Service reachability and credential validity are not checked by routine Health.",
+  "liveScope": "Local checks from the latest read-only scan.",
+  "liveScopeStale": "This evidence is stale. Scan again before relying on it.",
+  "liveTime": "Evidence time",
+  "liveSource": "Source: local discovery on this computer",
+  "notCheckedTitleLive": "Not checked by routine Health",
+  "credentialValidity": "Credential validity",
+  "credentialValidityHelp": "Presence is observed; validity would require an online request."
 }

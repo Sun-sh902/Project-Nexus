@@ -21,5 +21,9 @@
   "lightCaption": "纸面 · 温和安静",
   "darkCaption": "夜间 · 独立配色，非反色",
   "systemCaption": "跟随桌面外观",
-  "interfaceLanguage": "界面语言"
+  "interfaceLanguage": "界面语言",
+  "aboutLive": "关于 Nexus",
+  "aboutHelpLive": "Agent、模型、扩展与系统信息来自对本机的只读检查。更改只会通过已预览并经系统确认的计划进行。",
+  "dataMode": "数据",
+  "dataModeLive": "此电脑（实时）"
 }

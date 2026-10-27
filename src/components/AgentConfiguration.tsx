@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { findModel, findProfile, findProvider, type AgentFixture } from '../data/fixtures';
+import type { AgentView } from '../data/view';
+import { useText } from '../app/nexus-context';
 
 type Op = 'match' | 'differ' | 'none' | 'separate';
 function Operator({ op }: { op: Op }) {
@@ -16,36 +17,36 @@ function Operator({ op }: { op: Op }) {
   </div>;
 }
 
-// Desired → applied → effective are three separate records. Operators only compare what the
-// fixture records: a pending revision differs; an effective model owned by the Agent is a separate source.
-export function ConfigurationSheet({ agent, help = true }: { agent: AgentFixture; help?: boolean }) {
+// Desired → applied → effective are three separate records. Operators only compare what is
+// recorded: a pending revision differs; an effective model owned by the Agent is a separate source.
+export function ConfigurationSheet({ agent, help = true }: { agent: AgentView; help?: boolean }) {
   const { t } = useTranslation(['agents', 'models', 'common']);
-  const profile = findProfile(agent.profileId);
-  const model = findModel(agent.modelId);
-  const provider = findProvider(model?.providerId);
-  const pending = profile ? agent.appliedRevision !== profile.revision : false;
-  const recordOp: Op = profile ? pending ? 'differ' : 'match' : 'none';
-  const effectiveOp: Op = agent.assignment === 'profile' && profile ? 'match' : 'separate';
+  const text = useText();
+  const hasProfile = agent.profileName !== null && agent.desiredRevision !== null;
+  const assigned = agent.assignment !== 'native';
+  const recordOp: Op = hasProfile || assigned ? agent.pending ? 'differ' : 'match' : 'none';
+  const effectiveOp: Op = assigned && !agent.pending && agent.report?.assignment?.assignment.applied?.identifier === agent.modelId ? 'match' : agent.assignment === 'profile' && hasProfile && !agent.report ? 'match' : 'separate';
+  const applied = agent.report?.assignment?.assignment.applied;
   return <div className="config-sheet">
     <div className="cs-grid">
       <div className="cs-col station station-desired">
         <p className="cs-kicker">{t('desired')}</p>
-        <p className={`cs-value ${profile ? 'mono' : 'is-empty'}`}>{profile ? t('revisionShort', { revision: profile.revision }) : t('noRecord')}</p>
-        <p className="cs-note">{profile ? <>{t(`models:${profile.nameKey}`)}<span className="note-divider" aria-hidden="true" /><span className={pending ? 'note-pending' : undefined}>{t(pending ? 'pendingReview' : 'matchesRecord')}</span></> : t(agent.assignment === 'direct' ? 'directIntent' : 'nativeIntent')}</p>
+        <p className={`cs-value ${hasProfile || assigned ? 'mono' : 'is-empty'}`}>{hasProfile ? t('revisionShort', { revision: agent.desiredRevision }) : assigned && agent.report?.assignment ? agent.report.assignment.compatibility.nativeIdentifier ?? agent.report.assignment.model.identifier : t('noRecord')}</p>
+        <p className="cs-note">{hasProfile ? <>{text(agent.profileName)}<span className="note-divider" aria-hidden="true" /><span className={agent.pending ? 'note-pending' : undefined}>{t(agent.pending ? 'pendingReview' : 'matchesRecord')}</span></> : t(agent.assignment === 'direct' ? 'directIntent' : 'nativeIntent')}</p>
         {help && <p className="cs-help">{t('desiredHelp')}</p>}
       </div>
       <Operator op={recordOp} />
       <div className="cs-col station station-applied">
         <p className="cs-kicker">{t('applied')}</p>
-        <p className={`cs-value ${profile ? 'mono' : 'is-empty'}`}>{profile ? agent.appliedRevision === null ? t('common:unknown') : t('revisionShort', { revision: agent.appliedRevision }) : t('noRecord')}</p>
-        <p className="cs-note">{t(profile ? 'recordOnly' : 'noProfileShort')}</p>
+        <p className={`cs-value ${hasProfile || applied ? 'mono' : 'is-empty'}`}>{hasProfile ? agent.appliedRevision === null ? t('common:unknown') : t('revisionShort', { revision: agent.appliedRevision }) : applied ? applied.identifier : t('noRecord')}</p>
+        <p className="cs-note">{applied ? <span className="mono">{applied.location}</span> : t(assigned ? 'notAppliedYet' : hasProfile ? 'recordOnly' : 'noProfileShort')}</p>
         {help && <p className="cs-help">{t('appliedHelp')}</p>}
       </div>
       <Operator op={effectiveOp} />
       <div className="cs-col station station-effective">
         <p className="cs-kicker">{t('effective')}</p>
-        <p className={`cs-value ${model ? 'mono' : 'is-empty'}`}>{model?.identifier ?? t('common:notConfigured')}</p>
-        <p className="cs-note station-source"><span className="sr-only">{t('source')}</span>{t(agent.assignment)}{provider && <><span className="note-divider" aria-hidden="true" /><span lang="en-US">{provider.name}</span></>}</p>
+        <p className={`cs-value ${agent.modelId ? 'mono' : 'is-empty'}`}>{agent.modelId ?? t(agent.installed && agent.report ? 'liveAgentDefault' : 'common:notConfigured')}</p>
+        <p className="cs-note station-source"><span className="sr-only">{t('source')}</span>{text(agent.modelSource)}{agent.providerName && <><span className="note-divider" aria-hidden="true" /><span lang="en-US">{agent.providerName}</span></>}</p>
         {help && <p className="cs-help">{t('effectiveHelp')}</p>}
       </div>
     </div>

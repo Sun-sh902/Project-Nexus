@@ -1,0 +1,2013 @@
+{
+  "contractVersion": 1,
+  "generatedAt": "2026-10-27T12:32:30Z",
+  "system": {
+    "observedAt": "2026-10-27T12:32:30Z",
+    "os": "macos",
+    "osVersion": {
+      "value": "27.2",
+      "status": "observed",
+      "source": "platformApi",
+      "location": null,
+      "observedAt": "2026-10-27T12:32:30Z"
+    },
+    "arch": "aarch64",
+    "shell": null,
+    "tools": [
+      {
+        "key": "node",
+        "name": "Node.js",
+        "present": true,
+        "location": "~/bin/node",
+        "version": {
+          "value": "26.10.0",
+          "status": "observed",
+          "source": "installLayout",
+          "location": "~/opt/Cellar/node/26.10.0/bin/node",
+          "observedAt": "2026-10-27T12:32:30Z"
+        },
+        "candidates": 1
+      },
+      {
+        "key": "npm",
+        "name": "npm",
+        "present": true,
+        "location": "~/bin/npm",
+        "version": {
+          "value": null,
+          "status": "notChecked",
+          "source": "versionProbe",
+          "location": "~/bin/npm",
+          "observedAt": "2026-10-27T12:32:30Z"
+        },
+        "candidates": 1
+      },
+      {
+        "key": "git",
+        "name": "Git",
+        "present": false,
+        "location": null,
+        "version": {
+          "value": null,
+          "status": "notFound",
+          "source": "fileMetadata",
+          "location": null,
+          "observedAt": "2026-10-27T12:32:30Z"
+        },
+        "candidates": 0
+      },
+      {
+        "key": "python",
+        "name": "Python",
+        "present": false,
+        "location": null,
+        "version": {
+          "value": null,
+          "status": "notFound",
+          "source": "fileMetadata",
+          "location": null,
+          "observedAt": "2026-10-27T12:32:30Z"
+        },
+        "candidates": 0
+      },
+      {
+        "key": "homebrew",
+        "name": "Homebrew",
+        "present": false,
+        "location": null,
+        "version": {
+          "value": null,
+          "status": "notFound",
+          "source": "fileMetadata",
+          "location": null,
+          "observedAt": "2026-10-27T12:32:30Z"
+        },
+        "candidates": 0
+      }
+    ],
+    "pathEntries": [
+      {
+        "location": "~/bin",
+        "exists": true,
+        "onPath": true
+      },
+      {
+        "location": "~/.npm-global/bin",
+        "exists": true,
+        "onPath": true
+      },
+      {
+        "location": "~/.local/bin",
+        "exists": true,
+        "onPath": true
+      }
+    ],
+    "dataDir": "~/nexus-data",
+    "dataDirWritable": true,
+    "guiPathNote": true
+  },
+  "agents": [
+    {
+      "snapshot": {
+        "snapshotId": "snap_c3e169c638740f18e98eef8618e3f657",
+        "agentId": "codex",
+        "name": "OpenAI Codex",
+        "vendor": "OpenAI",
+        "observedAt": "2026-10-27T12:32:30Z",
+        "platform": "supported",
+        "installations": [
+          {
+            "id": "inst_045ce6c426e64832",
+            "executable": "~/.npm-global/bin/codex",
+            "resolved": "~/.npm-global/lib/node_modules/@openai/codex/bin/codex.js",
+            "source": "npm",
+            "version": {
+              "value": "0.164.0",
+              "status": "observed",
+              "source": "packageManifest",
+              "location": "~/.npm-global/lib/node_modules/@openai/codex/package.json",
+              "observedAt": "2026-10-27T12:32:30Z"
+            },
+            "pathRank": 1,
+            "executableOk": true,
+            "nexusManaged": false,
+            "wrapper": false
+          }
+        ],
+        "primary": 0,
+        "configSources": [
+          {
+            "id": "codex.user",
+            "scope": "user",
+            "format": "toml",
+            "location": "~/.codex/config.toml",
+            "status": "observed",
+            "fingerprint": "bcb8d1bc516b5dfe1de4fb7d0336f2c72242a855ed6a93d3b768172b20e15c8b",
+            "viaSymlink": false,
+            "tolerant": false
+          },
+          {
+            "id": "codex.system",
+            "scope": "managed",
+            "format": "toml",
+            "location": "/etc/codex/config.toml",
+            "status": "notFound",
+            "fingerprint": null,
+            "viaSymlink": false,
+            "tolerant": false
+          }
+        ],
+        "model": {
+          "effective": "gpt-6.1-terra",
+          "effectiveKind": "userConfig",
+          "layers": [
+            {
+              "kind": "userConfig",
+              "location": "~/.codex/config.toml",
+              "value": "gpt-6.1-terra",
+              "effective": true,
+              "uncertain": false
+            },
+            {
+              "kind": "managedConfig",
+              "location": "/etc/codex/config.toml",
+              "value": null,
+              "effective": false,
+              "uncertain": false
+            }
+          ],
+          "providerHint": null
+        },
+        "auth": {
+          "evidence": [
+            "agentLoginPresent"
+          ],
+          "locations": [
+            "~/.codex/auth.json"
+          ]
+        },
+        "extensions": {
+          "mcp": [
+            {
+              "name": "docs",
+              "transport": "http",
+              "enabled": true,
+              "command": null,
+              "commandResolvable": null,
+              "endpointOrigin": "https://docs.example.com",
+              "envNames": [],
+              "scope": "user",
+              "location": "~/.codex/config.toml",
+              "nexusManaged": false,
+              "canToggle": true
+            },
+            {
+              "name": "files",
+              "transport": "stdio",
+              "enabled": false,
+              "command": "mcp-files",
+              "commandResolvable": false,
+              "endpointOrigin": null,
+              "envNames": [],
+              "scope": "user",
+              "location": "~/.codex/config.toml",
+              "nexusManaged": false,
+              "canToggle": true
+            }
+          ],
+          "mcpStatus": "observed",
+          "skills": [
+            {
+              "name": "review",
+              "description": "Reviews diffs",
+              "location": "~/.codex/skills/review",
+              "hasScripts": false,
+              "valid": true
+            }
+          ],
+          "skillsStatus": "observed"
+        },
+        "envOverrides": [],
+        "capabilities": [
+          {
+            "key": "discovery",
+            "support": "supported",
+            "reason": null
+          },
+          {
+            "key": "health",
+            "support": "supported",
+            "reason": null
+          },
+          {
+            "key": "model.write",
+            "support": "supported",
+            "reason": null
+          },
+          {
+            "key": "mcp.read",
+            "support": "supported",
+            "reason": null
+          },
+          {
+            "key": "mcp.toggle",
+            "support": "supported",
+            "reason": null
+          },
+          {
+            "key": "mcp.addRemote",
+            "support": "supported",
+            "reason": null
+          },
+          {
+            "key": "skills.read",
+            "support": "supported",
+            "reason": null
+          },
+          {
+            "key": "skills.write",
+            "support": "unsupported",
+            "reason": "capability.skillsWriteDeferred"
+          },
+          {
+            "key": "lifecycle.install",
+            "support": "supported",
+            "reason": null
+          },
+          {
+            "key": "lifecycle.update",
+            "support": "supported",
+            "reason": null
+          },
+          {
+            "key": "lifecycle.uninstall",
+            "support": "supported",
+            "reason": null
+          },
+          {
+            "key": "launch",
+            "support": "supported",
+            "reason": null
+          },
+          {
+            "key": "online.validation",
+            "support": "unsupported",
+            "reason": "capability.onlineDeferred"
+          }
+        ],
+        "runtimeRequirement": {
+          "tool": "node",
+          "minimum": null,
+          "evidence": "https://github.com/openai/codex"
+        }
+      },
+      "health": {
+        "agentId": "codex",
+        "readiness": "ready",
+        "checks": [
+          {
+            "id": "platform.supported",
+            "category": "platform",
+            "requirement": "required",
+            "outcome": "pass",
+            "detail": null,
+            "params": [],
+            "evidence": [],
+            "source": null,
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "install.present",
+            "category": "installation",
+            "requirement": "required",
+            "outcome": "pass",
+            "detail": null,
+            "params": [
+              [
+                "location",
+                "~/.npm-global/bin/codex"
+              ]
+            ],
+            "evidence": [
+              "~/.npm-global/bin/codex"
+            ],
+            "source": "fileMetadata",
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "install.executable",
+            "category": "installation",
+            "requirement": "required",
+            "outcome": "pass",
+            "detail": null,
+            "params": [],
+            "evidence": [
+              "~/.npm-global/lib/node_modules/@openai/codex/bin/codex.js"
+            ],
+            "source": null,
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "install.version",
+            "category": "installation",
+            "requirement": "required",
+            "outcome": "pass",
+            "detail": null,
+            "params": [
+              [
+                "version",
+                "0.164.0"
+              ]
+            ],
+            "evidence": [
+              "~/.npm-global/lib/node_modules/@openai/codex/package.json"
+            ],
+            "source": "packageManifest",
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "install.unique",
+            "category": "installation",
+            "requirement": "advisory",
+            "outcome": "pass",
+            "detail": null,
+            "params": [
+              [
+                "count",
+                "1"
+              ]
+            ],
+            "evidence": [
+              "~/.npm-global/bin/codex"
+            ],
+            "source": null,
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "runtime.prerequisite",
+            "category": "runtime",
+            "requirement": "required",
+            "outcome": "pass",
+            "detail": null,
+            "params": [
+              [
+                "tool",
+                "node"
+              ],
+              [
+                "version",
+                "26.10.0"
+              ]
+            ],
+            "evidence": [
+              "https://github.com/openai/codex"
+            ],
+            "source": null,
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "config.valid",
+            "category": "configuration",
+            "requirement": "required",
+            "outcome": "pass",
+            "detail": null,
+            "params": [],
+            "evidence": [
+              "~/.codex/config.toml"
+            ],
+            "source": "configFile",
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "auth.evidence",
+            "category": "authentication",
+            "requirement": "advisory",
+            "outcome": "pass",
+            "detail": null,
+            "params": [
+              [
+                "kinds",
+                "AgentLoginPresent"
+              ]
+            ],
+            "evidence": [
+              "~/.codex/auth.json"
+            ],
+            "source": null,
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "model.effective",
+            "category": "model",
+            "requirement": "advisory",
+            "outcome": "pass",
+            "detail": null,
+            "params": [
+              [
+                "model",
+                "gpt-6.1-terra"
+              ],
+              [
+                "source",
+                "UserConfig"
+              ]
+            ],
+            "evidence": [
+              "~/.codex/config.toml"
+            ],
+            "source": null,
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "model.compatible",
+            "category": "model",
+            "requirement": "required",
+            "outcome": "notApplicable",
+            "detail": "noAssignment",
+            "params": [],
+            "evidence": [],
+            "source": null,
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "env.overrides",
+            "category": "environment",
+            "requirement": "advisory",
+            "outcome": "pass",
+            "detail": null,
+            "params": [
+              [
+                "variables",
+                ""
+              ]
+            ],
+            "evidence": [],
+            "source": "shellProfile",
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "extensions.mcp",
+            "category": "extensions",
+            "requirement": "advisory",
+            "outcome": "pass",
+            "detail": null,
+            "params": [
+              [
+                "servers",
+                ""
+              ],
+              [
+                "count",
+                "2"
+              ]
+            ],
+            "evidence": [],
+            "source": null,
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "extensions.skills",
+            "category": "extensions",
+            "requirement": "advisory",
+            "outcome": "pass",
+            "detail": null,
+            "params": [
+              [
+                "skills",
+                ""
+              ],
+              [
+                "count",
+                "1"
+              ]
+            ],
+            "evidence": [],
+            "source": null,
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          }
+        ],
+        "coverage": {
+          "required": 6,
+          "requiredPassed": 6,
+          "advisory": 6,
+          "advisoryPassed": 6,
+          "unknown": 0,
+          "notChecked": [
+            "onlineService",
+            "credentialValidity",
+            "projectScope"
+          ]
+        },
+        "ruleSet": "nexus-readiness-1",
+        "snapshotId": "snap_c3e169c638740f18e98eef8618e3f657",
+        "evaluatedAt": "2026-10-27T12:32:30Z",
+        "validUntil": "2026-10-27T12:42:30Z",
+        "stale": false
+      },
+      "findings": [],
+      "assignment": null,
+      "lifecycle": [
+        {
+          "recipeId": "codex.npm",
+          "op": "update",
+          "package": "npm:@openai/codex",
+          "available": true,
+          "installationId": "inst_045ce6c426e64832"
+        },
+        {
+          "recipeId": "codex.npm",
+          "op": "uninstall",
+          "package": "npm:@openai/codex",
+          "available": true,
+          "installationId": "inst_045ce6c426e64832"
+        }
+      ]
+    },
+    {
+      "snapshot": {
+        "snapshotId": "snap_1be303cac5c44695252c102770f6d214",
+        "agentId": "claude",
+        "name": "Claude Code",
+        "vendor": "Anthropic",
+        "observedAt": "2026-10-27T12:32:30Z",
+        "platform": "supported",
+        "installations": [
+          {
+            "id": "inst_a9c3b52553f33310",
+            "executable": "~/.local/bin/claude",
+            "resolved": "~/.local/share/claude/versions/2.1.311",
+            "source": "nativeInstaller",
+            "version": {
+              "value": "2.1.311",
+              "status": "observed",
+              "source": "installLayout",
+              "location": "~/.local/share/claude/versions/2.1.311",
+              "observedAt": "2026-10-27T12:32:30Z"
+            },
+            "pathRank": 2,
+            "executableOk": true,
+            "nexusManaged": false,
+            "wrapper": false
+          }
+        ],
+        "primary": 0,
+        "configSources": [
+          {
+            "id": "claude.user",
+            "scope": "user",
+            "format": "json",
+            "location": "~/.claude/settings.json",
+            "status": "observed",
+            "fingerprint": "0f3625f6dfcb2d773d569991a941302b8d44b6d839cbc6abd13ed967e28f8b77",
+            "viaSymlink": false,
+            "tolerant": true
+          },
+          {
+            "id": "claude.state",
+            "scope": "agentState",
+            "format": "json",
+            "location": "~/.claude.json",
+            "status": "observed",
+            "fingerprint": "329c9bf46085b56e3f639a8dc543363e1185f20873851ed64156d54bafdd478e",
+            "viaSymlink": false,
+            "tolerant": true
+          },
+          {
+            "id": "claude.managed",
+            "scope": "managed",
+            "format": "json",
+            "location": "/Library/Application Support/ClaudeCode/managed-settings.json",
+            "status": "notFound",
+            "fingerprint": null,
+            "viaSymlink": false,
+            "tolerant": false
+          }
+        ],
+        "model": {
+          "effective": "haiku",
+          "effectiveKind": "userConfig",
+          "layers": [
+            {
+              "kind": "environment",
+              "location": "ANTHROPIC_MODEL",
+              "value": null,
+              "effective": false,
+              "uncertain": false
+            },
+            {
+              "kind": "managedConfig",
+              "location": "/Library/Application Support/ClaudeCode/managed-settings.json",
+              "value": null,
+              "effective": false,
+              "uncertain": false
+            },
+            {
+              "kind": "configEnvBlock",
+              "location": "~/.claude/settings.json (env.ANTHROPIC_MODEL)",
+              "value": null,
+              "effective": false,
+              "uncertain": false
+            },
+            {
+              "kind": "userConfig",
+              "location": "~/.claude/settings.json",
+              "value": "haiku",
+              "effective": true,
+              "uncertain": false
+            },
+            {
+              "kind": "environment",
+              "location": "ANTHROPIC_DEFAULT_MODEL",
+              "value": null,
+              "effective": false,
+              "uncertain": false
+            }
+          ],
+          "providerHint": "anthropic"
+        },
+        "auth": {
+          "evidence": [
+            "agentLoginPresent",
+            "osStoreUnverified"
+          ],
+          "locations": [
+            "~/.claude.json"
+          ]
+        },
+        "extensions": {
+          "mcp": [],
+          "mcpStatus": "observed",
+          "skills": [],
+          "skillsStatus": "notFound"
+        },
+        "envOverrides": [],
+        "capabilities": [
+          {
+            "key": "discovery",
+            "support": "supported",
+            "reason": null
+          },
+          {
+            "key": "health",
+            "support": "supported",
+            "reason": null
+          },
+          {
+            "key": "model.write",
+            "support": "supported",
+            "reason": null
+          },
+          {
+            "key": "mcp.read",
+            "support": "supported",
+            "reason": null
+          },
+          {
+            "key": "mcp.toggle",
+            "support": "unsupported",
+            "reason": "capability.claudeMcpAgentOwned"
+          },
+          {
+            "key": "mcp.addRemote",
+            "support": "unsupported",
+            "reason": "capability.claudeMcpAgentOwned"
+          },
+          {
+            "key": "skills.read",
+            "support": "supported",
+            "reason": null
+          },
+          {
+            "key": "skills.write",
+            "support": "unsupported",
+            "reason": "capability.skillsWriteDeferred"
+          },
+          {
+            "key": "lifecycle.install",
+            "support": "supported",
+            "reason": null
+          },
+          {
+            "key": "lifecycle.update",
+            "support": "supported",
+            "reason": null
+          },
+          {
+            "key": "lifecycle.uninstall",
+            "support": "unsupported",
+            "reason": "capability.nativeUninstallManual"
+          },
+          {
+            "key": "launch",
+            "support": "supported",
+            "reason": null
+          },
+          {
+            "key": "online.validation",
+            "support": "unsupported",
+            "reason": "capability.onlineDeferred"
+          }
+        ],
+        "runtimeRequirement": null
+      },
+      "health": {
+        "agentId": "claude",
+        "readiness": "attention",
+        "checks": [
+          {
+            "id": "platform.supported",
+            "category": "platform",
+            "requirement": "required",
+            "outcome": "pass",
+            "detail": null,
+            "params": [],
+            "evidence": [],
+            "source": null,
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "install.present",
+            "category": "installation",
+            "requirement": "required",
+            "outcome": "pass",
+            "detail": null,
+            "params": [
+              [
+                "location",
+                "~/.local/bin/claude"
+              ]
+            ],
+            "evidence": [
+              "~/.local/bin/claude"
+            ],
+            "source": "fileMetadata",
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "install.executable",
+            "category": "installation",
+            "requirement": "required",
+            "outcome": "pass",
+            "detail": null,
+            "params": [],
+            "evidence": [
+              "~/.local/share/claude/versions/2.1.311"
+            ],
+            "source": null,
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "install.version",
+            "category": "installation",
+            "requirement": "required",
+            "outcome": "pass",
+            "detail": null,
+            "params": [
+              [
+                "version",
+                "2.1.311"
+              ]
+            ],
+            "evidence": [
+              "~/.local/share/claude/versions/2.1.311"
+            ],
+            "source": "installLayout",
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "install.unique",
+            "category": "installation",
+            "requirement": "advisory",
+            "outcome": "pass",
+            "detail": null,
+            "params": [
+              [
+                "count",
+                "1"
+              ]
+            ],
+            "evidence": [
+              "~/.local/bin/claude"
+            ],
+            "source": null,
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "runtime.prerequisite",
+            "category": "runtime",
+            "requirement": "required",
+            "outcome": "notApplicable",
+            "detail": "noRequirement",
+            "params": [],
+            "evidence": [],
+            "source": null,
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "config.valid",
+            "category": "configuration",
+            "requirement": "required",
+            "outcome": "notApplicable",
+            "detail": "noFile",
+            "params": [],
+            "evidence": [],
+            "source": "configFile",
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "config.validTolerated",
+            "category": "configuration",
+            "requirement": "advisory",
+            "outcome": "pass",
+            "detail": null,
+            "params": [],
+            "evidence": [
+              "~/.claude/settings.json",
+              "~/.claude.json"
+            ],
+            "source": "configFile",
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "auth.evidence",
+            "category": "authentication",
+            "requirement": "advisory",
+            "outcome": "pass",
+            "detail": null,
+            "params": [
+              [
+                "kinds",
+                "AgentLoginPresent,OsStoreUnverified"
+              ]
+            ],
+            "evidence": [
+              "~/.claude.json"
+            ],
+            "source": null,
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "model.effective",
+            "category": "model",
+            "requirement": "advisory",
+            "outcome": "pass",
+            "detail": null,
+            "params": [
+              [
+                "model",
+                "haiku"
+              ],
+              [
+                "source",
+                "UserConfig"
+              ]
+            ],
+            "evidence": [
+              "~/.claude/settings.json"
+            ],
+            "source": null,
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "model.compatible",
+            "category": "model",
+            "requirement": "required",
+            "outcome": "pass",
+            "detail": null,
+            "params": [
+              [
+                "model",
+                "opus"
+              ]
+            ],
+            "evidence": [],
+            "source": null,
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "model.applied",
+            "category": "model",
+            "requirement": "advisory",
+            "outcome": "pass",
+            "detail": null,
+            "params": [
+              [
+                "model",
+                "opus"
+              ]
+            ],
+            "evidence": [],
+            "source": null,
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "model.drift",
+            "category": "model",
+            "requirement": "advisory",
+            "outcome": "fail",
+            "detail": "drift",
+            "params": [
+              [
+                "applied",
+                "opus"
+              ],
+              [
+                "current",
+                "haiku"
+              ],
+              [
+                "effective",
+                "haiku"
+              ],
+              [
+                "source",
+                "UserConfig"
+              ]
+            ],
+            "evidence": [
+              "~/.claude/settings.json"
+            ],
+            "source": null,
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "env.overrides",
+            "category": "environment",
+            "requirement": "advisory",
+            "outcome": "pass",
+            "detail": null,
+            "params": [
+              [
+                "variables",
+                ""
+              ]
+            ],
+            "evidence": [],
+            "source": "shellProfile",
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "extensions.mcp",
+            "category": "extensions",
+            "requirement": "advisory",
+            "outcome": "notApplicable",
+            "detail": "none",
+            "params": [
+              [
+                "servers",
+                ""
+              ],
+              [
+                "count",
+                "0"
+              ]
+            ],
+            "evidence": [],
+            "source": null,
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "extensions.skills",
+            "category": "extensions",
+            "requirement": "advisory",
+            "outcome": "notApplicable",
+            "detail": "none",
+            "params": [
+              [
+                "skills",
+                ""
+              ],
+              [
+                "count",
+                "0"
+              ]
+            ],
+            "evidence": [],
+            "source": null,
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          }
+        ],
+        "coverage": {
+          "required": 5,
+          "requiredPassed": 5,
+          "advisory": 7,
+          "advisoryPassed": 6,
+          "unknown": 0,
+          "notChecked": [
+            "onlineService",
+            "credentialValidity",
+            "projectScope"
+          ]
+        },
+        "ruleSet": "nexus-readiness-1",
+        "snapshotId": "snap_1be303cac5c44695252c102770f6d214",
+        "evaluatedAt": "2026-10-27T12:32:30Z",
+        "validUntil": "2026-10-27T12:42:30Z",
+        "stale": false
+      },
+      "findings": [
+        {
+          "id": "claude:assignmentDrift",
+          "code": "assignmentDrift",
+          "agentId": "claude",
+          "checkId": "model.drift",
+          "severity": "warning",
+          "cause": "established",
+          "params": [
+            [
+              "applied",
+              "opus"
+            ],
+            [
+              "current",
+              "haiku"
+            ],
+            [
+              "effective",
+              "haiku"
+            ],
+            [
+              "source",
+              "UserConfig"
+            ]
+          ],
+          "evidence": [
+            "~/.claude/settings.json"
+          ],
+          "observedAt": "2026-10-27T12:32:30Z",
+          "stale": false,
+          "repairs": [
+            {
+              "action": "applyModel",
+              "params": []
+            }
+          ],
+          "manual": null
+        }
+      ],
+      "assignment": {
+        "assignment": {
+          "agentId": "claude",
+          "mode": "direct",
+          "modelId": "builtin.anthropic.opus",
+          "profileId": null,
+          "desiredRevision": null,
+          "applied": {
+            "identifier": "opus",
+            "profileRevision": null,
+            "providerRevision": 1,
+            "appliedAt": "2026-10-27T12:32:30Z",
+            "location": "~/.claude/settings.json",
+            "fingerprint": "f43568ecd52a99f51051093fe4a6cf3d6bf9434c0f205c9757b11f6fd2531f37"
+          },
+          "updatedAt": "2026-10-27T12:32:30Z"
+        },
+        "provider": {
+          "id": "builtin.anthropic",
+          "displayName": "Anthropic",
+          "kind": "anthropic",
+          "baseUrl": "https://api.anthropic.com",
+          "authMode": "agentLogin",
+          "secretRef": null,
+          "secretPresent": null,
+          "envVar": null,
+          "revision": 1,
+          "builtin": true,
+          "connection": "notTested"
+        },
+        "model": {
+          "id": "builtin.anthropic.opus",
+          "providerId": "builtin.anthropic",
+          "identifier": "opus",
+          "displayName": null,
+          "source": "builtin",
+          "sourceDetail": "https://code.claude.com/docs/en/model-config (alias, 2026-10-27)",
+          "capabilities": []
+        },
+        "profile": null,
+        "profileRevision": null,
+        "compatibility": {
+          "agentId": "claude",
+          "support": "supported",
+          "reason": null,
+          "nativeIdentifier": "opus"
+        },
+        "pending": false
+      },
+      "lifecycle": [
+        {
+          "recipeId": "claude.native-update",
+          "op": "update",
+          "package": "self-update",
+          "available": true,
+          "installationId": "inst_a9c3b52553f33310"
+        }
+      ]
+    },
+    {
+      "snapshot": {
+        "snapshotId": "snap_6a5176074d7c097e4848b5f2e41d2912",
+        "agentId": "gemini",
+        "name": "Gemini CLI",
+        "vendor": "Google",
+        "observedAt": "2026-10-27T12:32:30Z",
+        "platform": "supported",
+        "installations": [],
+        "primary": null,
+        "configSources": [
+          {
+            "id": "gemini.user",
+            "scope": "user",
+            "format": "jsonc",
+            "location": "~/.gemini/settings.json",
+            "status": "notFound",
+            "fingerprint": null,
+            "viaSymlink": false,
+            "tolerant": false
+          },
+          {
+            "id": "gemini.system",
+            "scope": "managed",
+            "format": "jsonc",
+            "location": "/Library/Application Support/GeminiCli/settings.json",
+            "status": "notFound",
+            "fingerprint": null,
+            "viaSymlink": false,
+            "tolerant": false
+          },
+          {
+            "id": "gemini.systemDefaults",
+            "scope": "managed",
+            "format": "jsonc",
+            "location": "/Library/Application Support/GeminiCli/system-defaults.json",
+            "status": "notFound",
+            "fingerprint": null,
+            "viaSymlink": false,
+            "tolerant": false
+          }
+        ],
+        "model": {
+          "effective": null,
+          "effectiveKind": "agentDefault",
+          "layers": [
+            {
+              "kind": "environment",
+              "location": "GEMINI_MODEL",
+              "value": null,
+              "effective": false,
+              "uncertain": false
+            },
+            {
+              "kind": "managedConfig",
+              "location": "/Library/Application Support/GeminiCli/settings.json",
+              "value": null,
+              "effective": false,
+              "uncertain": false
+            },
+            {
+              "kind": "userConfig",
+              "location": "~/.gemini/settings.json",
+              "value": null,
+              "effective": false,
+              "uncertain": false
+            },
+            {
+              "kind": "managedConfig",
+              "location": "/Library/Application Support/GeminiCli/system-defaults.json",
+              "value": null,
+              "effective": false,
+              "uncertain": false
+            }
+          ],
+          "providerHint": "google"
+        },
+        "auth": {
+          "evidence": [],
+          "locations": []
+        },
+        "extensions": {
+          "mcp": [],
+          "mcpStatus": "notFound",
+          "skills": [],
+          "skillsStatus": "notFound"
+        },
+        "envOverrides": [],
+        "capabilities": [
+          {
+            "key": "discovery",
+            "support": "supported",
+            "reason": null
+          },
+          {
+            "key": "health",
+            "support": "supported",
+            "reason": null
+          },
+          {
+            "key": "model.write",
+            "support": "supported",
+            "reason": null
+          },
+          {
+            "key": "mcp.read",
+            "support": "supported",
+            "reason": null
+          },
+          {
+            "key": "mcp.toggle",
+            "support": "supported",
+            "reason": null
+          },
+          {
+            "key": "mcp.addRemote",
+            "support": "supported",
+            "reason": null
+          },
+          {
+            "key": "skills.read",
+            "support": "supported",
+            "reason": null
+          },
+          {
+            "key": "skills.write",
+            "support": "unsupported",
+            "reason": "capability.skillsWriteDeferred"
+          },
+          {
+            "key": "lifecycle.install",
+            "support": "supported",
+            "reason": null
+          },
+          {
+            "key": "lifecycle.update",
+            "support": "unsupported",
+            "reason": "capability.unknownInstaller"
+          },
+          {
+            "key": "lifecycle.uninstall",
+            "support": "unsupported",
+            "reason": "capability.unknownInstaller"
+          },
+          {
+            "key": "launch",
+            "support": "supported",
+            "reason": null
+          },
+          {
+            "key": "online.validation",
+            "support": "unsupported",
+            "reason": "capability.onlineDeferred"
+          }
+        ],
+        "runtimeRequirement": {
+          "tool": "node",
+          "minimum": "20.0.0",
+          "evidence": "https://geminicli.com/docs/get-started/installation/"
+        }
+      },
+      "health": {
+        "agentId": "gemini",
+        "readiness": "blocked",
+        "checks": [
+          {
+            "id": "platform.supported",
+            "category": "platform",
+            "requirement": "required",
+            "outcome": "pass",
+            "detail": null,
+            "params": [],
+            "evidence": [],
+            "source": null,
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "install.present",
+            "category": "installation",
+            "requirement": "required",
+            "outcome": "fail",
+            "detail": null,
+            "params": [],
+            "evidence": [],
+            "source": "fileMetadata",
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "install.executable",
+            "category": "installation",
+            "requirement": "required",
+            "outcome": "notApplicable",
+            "detail": "requiresInstall",
+            "params": [],
+            "evidence": [],
+            "source": null,
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "install.version",
+            "category": "installation",
+            "requirement": "required",
+            "outcome": "notApplicable",
+            "detail": "requiresInstall",
+            "params": [],
+            "evidence": [],
+            "source": null,
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "install.unique",
+            "category": "installation",
+            "requirement": "advisory",
+            "outcome": "notApplicable",
+            "detail": null,
+            "params": [
+              [
+                "count",
+                "0"
+              ]
+            ],
+            "evidence": [],
+            "source": null,
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "runtime.prerequisite",
+            "category": "runtime",
+            "requirement": "required",
+            "outcome": "notApplicable",
+            "detail": "requiresInstall",
+            "params": [],
+            "evidence": [],
+            "source": null,
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "config.valid",
+            "category": "configuration",
+            "requirement": "required",
+            "outcome": "notApplicable",
+            "detail": "noFile",
+            "params": [],
+            "evidence": [],
+            "source": "configFile",
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "auth.evidence",
+            "category": "authentication",
+            "requirement": "advisory",
+            "outcome": "notApplicable",
+            "detail": "requiresInstall",
+            "params": [
+              [
+                "kinds",
+                ""
+              ]
+            ],
+            "evidence": [],
+            "source": null,
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "model.effective",
+            "category": "model",
+            "requirement": "advisory",
+            "outcome": "pass",
+            "detail": "agentDefault",
+            "params": [
+              [
+                "source",
+                "AgentDefault"
+              ]
+            ],
+            "evidence": [],
+            "source": null,
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "model.compatible",
+            "category": "model",
+            "requirement": "required",
+            "outcome": "notApplicable",
+            "detail": "noAssignment",
+            "params": [],
+            "evidence": [],
+            "source": null,
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "env.overrides",
+            "category": "environment",
+            "requirement": "advisory",
+            "outcome": "pass",
+            "detail": null,
+            "params": [
+              [
+                "variables",
+                ""
+              ]
+            ],
+            "evidence": [],
+            "source": "shellProfile",
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "extensions.mcp",
+            "category": "extensions",
+            "requirement": "advisory",
+            "outcome": "notApplicable",
+            "detail": "none",
+            "params": [
+              [
+                "servers",
+                ""
+              ],
+              [
+                "count",
+                "0"
+              ]
+            ],
+            "evidence": [],
+            "source": null,
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "extensions.skills",
+            "category": "extensions",
+            "requirement": "advisory",
+            "outcome": "notApplicable",
+            "detail": "none",
+            "params": [
+              [
+                "skills",
+                ""
+              ],
+              [
+                "count",
+                "0"
+              ]
+            ],
+            "evidence": [],
+            "source": null,
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          }
+        ],
+        "coverage": {
+          "required": 2,
+          "requiredPassed": 1,
+          "advisory": 2,
+          "advisoryPassed": 2,
+          "unknown": 0,
+          "notChecked": [
+            "onlineService",
+            "credentialValidity",
+            "projectScope"
+          ]
+        },
+        "ruleSet": "nexus-readiness-1",
+        "snapshotId": "snap_6a5176074d7c097e4848b5f2e41d2912",
+        "evaluatedAt": "2026-10-27T12:32:30Z",
+        "validUntil": "2026-10-27T12:42:30Z",
+        "stale": false
+      },
+      "findings": [
+        {
+          "id": "gemini:notInstalled",
+          "code": "notInstalled",
+          "agentId": "gemini",
+          "checkId": "install.present",
+          "severity": "blocking",
+          "cause": "established",
+          "params": [],
+          "evidence": [],
+          "observedAt": "2026-10-27T12:32:30Z",
+          "stale": false,
+          "repairs": [
+            {
+              "action": "install",
+              "params": []
+            }
+          ],
+          "manual": null
+        }
+      ],
+      "assignment": null,
+      "lifecycle": [
+        {
+          "recipeId": "gemini.npm",
+          "op": "install",
+          "package": "npm:@google/gemini-cli",
+          "available": true,
+          "installationId": null
+        },
+        {
+          "recipeId": "gemini.brew",
+          "op": "install",
+          "package": "brew:gemini-cli",
+          "available": true,
+          "installationId": null
+        }
+      ]
+    },
+    {
+      "snapshot": {
+        "snapshotId": "snap_77f378bcd346f1205283ec3e94ef1c74",
+        "agentId": "opencode",
+        "name": "OpenCode",
+        "vendor": "OpenCode",
+        "observedAt": "2026-10-27T12:32:30Z",
+        "platform": "supported",
+        "installations": [],
+        "primary": null,
+        "configSources": [
+          {
+            "id": "opencode.global.json",
+            "scope": "user",
+            "format": "jsonc",
+            "location": "~/.config/opencode/opencode.json",
+            "status": "observed",
+            "fingerprint": "046154a05ccb276f9037075d4fcf9385dead4f7633bad7c7b396840afe295444",
+            "viaSymlink": false,
+            "tolerant": false
+          },
+          {
+            "id": "opencode.global.jsonc",
+            "scope": "user",
+            "format": "jsonc",
+            "location": "~/.config/opencode/opencode.jsonc",
+            "status": "observed",
+            "fingerprint": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+            "viaSymlink": false,
+            "tolerant": false
+          }
+        ],
+        "model": {
+          "effective": "anthropic/claude-sonnet-5-5",
+          "effectiveKind": "userConfig",
+          "layers": [
+            {
+              "kind": "userConfig",
+              "location": "~/.config/opencode/opencode.jsonc",
+              "value": null,
+              "effective": false,
+              "uncertain": false
+            },
+            {
+              "kind": "userConfig",
+              "location": "~/.config/opencode/opencode.json",
+              "value": "anthropic/claude-sonnet-5-5",
+              "effective": true,
+              "uncertain": false
+            }
+          ],
+          "providerHint": "anthropic"
+        },
+        "auth": {
+          "evidence": [],
+          "locations": []
+        },
+        "extensions": {
+          "mcp": [],
+          "mcpStatus": "observed",
+          "skills": [],
+          "skillsStatus": "notFound"
+        },
+        "envOverrides": [],
+        "capabilities": [
+          {
+            "key": "discovery",
+            "support": "supported",
+            "reason": null
+          },
+          {
+            "key": "health",
+            "support": "supported",
+            "reason": null
+          },
+          {
+            "key": "model.write",
+            "support": "unsupported",
+            "reason": "capability.opencodeAmbiguousConfig"
+          },
+          {
+            "key": "mcp.read",
+            "support": "supported",
+            "reason": null
+          },
+          {
+            "key": "mcp.toggle",
+            "support": "unsupported",
+            "reason": "capability.opencodeAmbiguousConfig"
+          },
+          {
+            "key": "mcp.addRemote",
+            "support": "unsupported",
+            "reason": "capability.opencodeAmbiguousConfig"
+          },
+          {
+            "key": "skills.read",
+            "support": "supported",
+            "reason": null
+          },
+          {
+            "key": "skills.write",
+            "support": "unsupported",
+            "reason": "capability.skillsWriteDeferred"
+          },
+          {
+            "key": "lifecycle.install",
+            "support": "supported",
+            "reason": null
+          },
+          {
+            "key": "lifecycle.update",
+            "support": "unsupported",
+            "reason": "capability.scriptInstallerManaged"
+          },
+          {
+            "key": "lifecycle.uninstall",
+            "support": "unsupported",
+            "reason": "capability.scriptInstallerManaged"
+          },
+          {
+            "key": "launch",
+            "support": "supported",
+            "reason": null
+          },
+          {
+            "key": "online.validation",
+            "support": "unsupported",
+            "reason": "capability.onlineDeferred"
+          }
+        ],
+        "runtimeRequirement": null
+      },
+      "health": {
+        "agentId": "opencode",
+        "readiness": "blocked",
+        "checks": [
+          {
+            "id": "platform.supported",
+            "category": "platform",
+            "requirement": "required",
+            "outcome": "pass",
+            "detail": null,
+            "params": [],
+            "evidence": [],
+            "source": null,
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "install.present",
+            "category": "installation",
+            "requirement": "required",
+            "outcome": "fail",
+            "detail": null,
+            "params": [],
+            "evidence": [],
+            "source": "fileMetadata",
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "install.executable",
+            "category": "installation",
+            "requirement": "required",
+            "outcome": "notApplicable",
+            "detail": "requiresInstall",
+            "params": [],
+            "evidence": [],
+            "source": null,
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "install.version",
+            "category": "installation",
+            "requirement": "required",
+            "outcome": "notApplicable",
+            "detail": "requiresInstall",
+            "params": [],
+            "evidence": [],
+            "source": null,
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "install.unique",
+            "category": "installation",
+            "requirement": "advisory",
+            "outcome": "notApplicable",
+            "detail": null,
+            "params": [
+              [
+                "count",
+                "0"
+              ]
+            ],
+            "evidence": [],
+            "source": null,
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "runtime.prerequisite",
+            "category": "runtime",
+            "requirement": "required",
+            "outcome": "notApplicable",
+            "detail": "noRequirement",
+            "params": [],
+            "evidence": [],
+            "source": null,
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "config.valid",
+            "category": "configuration",
+            "requirement": "required",
+            "outcome": "pass",
+            "detail": null,
+            "params": [],
+            "evidence": [
+              "~/.config/opencode/opencode.json",
+              "~/.config/opencode/opencode.jsonc"
+            ],
+            "source": "configFile",
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "config.unambiguous",
+            "category": "configuration",
+            "requirement": "advisory",
+            "outcome": "fail",
+            "detail": null,
+            "params": [],
+            "evidence": [
+              "~/.config/opencode/opencode.json",
+              "~/.config/opencode/opencode.jsonc"
+            ],
+            "source": null,
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "auth.evidence",
+            "category": "authentication",
+            "requirement": "advisory",
+            "outcome": "notApplicable",
+            "detail": "requiresInstall",
+            "params": [
+              [
+                "kinds",
+                ""
+              ]
+            ],
+            "evidence": [],
+            "source": null,
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "model.effective",
+            "category": "model",
+            "requirement": "advisory",
+            "outcome": "pass",
+            "detail": null,
+            "params": [
+              [
+                "model",
+                "anthropic/claude-sonnet-5-5"
+              ],
+              [
+                "source",
+                "UserConfig"
+              ]
+            ],
+            "evidence": [
+              "~/.config/opencode/opencode.json"
+            ],
+            "source": null,
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "model.compatible",
+            "category": "model",
+            "requirement": "required",
+            "outcome": "notApplicable",
+            "detail": "noAssignment",
+            "params": [],
+            "evidence": [],
+            "source": null,
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "env.overrides",
+            "category": "environment",
+            "requirement": "advisory",
+            "outcome": "pass",
+            "detail": null,
+            "params": [
+              [
+                "variables",
+                ""
+              ]
+            ],
+            "evidence": [],
+            "source": "shellProfile",
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "extensions.mcp",
+            "category": "extensions",
+            "requirement": "advisory",
+            "outcome": "notApplicable",
+            "detail": "none",
+            "params": [
+              [
+                "servers",
+                ""
+              ],
+              [
+                "count",
+                "0"
+              ]
+            ],
+            "evidence": [],
+            "source": null,
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          },
+          {
+            "id": "extensions.skills",
+            "category": "extensions",
+            "requirement": "advisory",
+            "outcome": "notApplicable",
+            "detail": "none",
+            "params": [
+              [
+                "skills",
+                ""
+              ],
+              [
+                "count",
+                "0"
+              ]
+            ],
+            "evidence": [],
+            "source": null,
+            "evaluatedAt": "2026-10-27T12:32:30Z"
+          }
+        ],
+        "coverage": {
+          "required": 3,
+          "requiredPassed": 2,
+          "advisory": 3,
+          "advisoryPassed": 2,
+          "unknown": 0,
+          "notChecked": [
+            "onlineService",
+            "credentialValidity",
+            "projectScope"
+          ]
+        },
+        "ruleSet": "nexus-readiness-1",
+        "snapshotId": "snap_77f378bcd346f1205283ec3e94ef1c74",
+        "evaluatedAt": "2026-10-27T12:32:30Z",
+        "validUntil": "2026-10-27T12:42:30Z",
+        "stale": false
+      },
+      "findings": [
+        {
+          "id": "opencode:notInstalled",
+          "code": "notInstalled",
+          "agentId": "opencode",
+          "checkId": "install.present",
+          "severity": "blocking",
+          "cause": "established",
+          "params": [],
+          "evidence": [],
+          "observedAt": "2026-10-27T12:32:30Z",
+          "stale": false,
+          "repairs": [
+            {
+              "action": "install",
+              "params": []
+            }
+          ],
+          "manual": null
+        },
+        {
+          "id": "opencode:configAmbiguous",
+          "code": "configAmbiguous",
+          "agentId": "opencode",
+          "checkId": "config.unambiguous",
+          "severity": "warning",
+          "cause": "established",
+          "params": [],
+          "evidence": [
+            "~/.config/opencode/opencode.json",
+            "~/.config/opencode/opencode.jsonc"
+          ],
+          "observedAt": "2026-10-27T12:32:30Z",
+          "stale": false,
+          "repairs": [],
+          "manual": "manual.mergeConfig"
+        }
+      ],
+      "assignment": null,
+      "lifecycle": [
+        {
+          "recipeId": "opencode.npm",
+          "op": "install",
+          "package": "npm:opencode-ai",
+          "available": true,
+          "installationId": null
+        }
+      ]
+    }
+  ],
+  "recentOperations": [
+    {
+      "id": "op_c3c9dea9f5ca14fc5c4a218e68ea6372",
+      "action": "setMcpEnabled",
+      "agentId": "codex",
+      "status": "succeeded",
+      "startedAt": "2026-10-27T12:32:30Z",
+      "finishedAt": "2026-10-27T12:32:30Z",
+      "errorCode": null,
+      "summary": {
+        "kind": "setMcpEnabled",
+        "location": "~/.codex/config.toml",
+        "params": {
+          "enabled": "false",
+          "name": "files"
+        },
+        "recipe": null,
+        "version": null
+      },
+      "steps": [
+        "prechecked",
+        "backedup",
+        "written",
+        "reread"
+      ]
+    },
+    {
+      "id": "op_2d22876691a04401729db17e799c586a",
+      "action": "applyModel",
+      "agentId": "claude",
+      "status": "succeeded",
+      "startedAt": "2026-10-27T12:32:30Z",
+      "finishedAt": "2026-10-27T12:32:30Z",
+      "errorCode": null,
+      "summary": {
+        "kind": "applyModel",
+        "location": "~/.claude/settings.json",
+        "params": {
+          "model": "opus",
+          "provider": "Anthropic"
+        },
+        "recipe": null,
+        "version": null
+      },
+      "steps": [
+        "prechecked",
+        "backedup",
+        "written",
+        "reread"
+      ]
+    }
+  ]
+}

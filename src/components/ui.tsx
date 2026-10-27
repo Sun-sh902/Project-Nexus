@@ -1,8 +1,8 @@
 import { CheckCircle2, CircleX, TriangleAlert, Info, ArrowRight, Inbox } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useId, type ReactNode, type KeyboardEvent } from 'react';
-import type { Readiness, AgentId } from '../data/fixtures';
-import { findAgent } from '../data/fixtures';
+import type { Readiness, AgentId } from '../data/view';
+import { useNexus } from '../app/nexus-context';
 
 // Readiness glyphs share the Nexus signal dot. Each state has its own shape so
 // meaning survives without color: disc, half disc, diamond, dashed ring, slashed ring.
@@ -48,14 +48,23 @@ export function LoadingState() {
 }
 export function ErrorState() {
   const { t } = useTranslation('common');
-  return <div className="error-state"><Notice tone="error"><strong>{t('errorTitle')}</strong><p>{t('errorHelp')}</p></Notice><a className="button" href="#/agents">{t('backAgents')}</a></div>;
+  const { mode } = useNexus();
+  return <div className="error-state"><Notice tone="error"><strong>{t('errorTitle')}</strong><p>{t(mode === 'live' ? 'errorHelpLive' : 'errorHelp')}</p></Notice><a className="button" href="#/agents">{t('backAgents')}</a></div>;
+}
+export function DataState() {
+  const { t } = useTranslation(['common', 'errors']);
+  const { status, error, refresh, refreshing } = useNexus();
+  if (status === 'loading') return <div role="status" aria-live="polite" className="loading-state"><p>{t('scanning')}</p><div className="skeleton" /><div className="skeleton" /></div>;
+  if (status === 'error') return <div className="error-state"><Notice tone="error"><strong>{t('scanFailed')}</strong><p>{t(`errors:${error?.code ?? 'ipc.unavailable'}`, error?.params)}</p></Notice><button className="button" disabled={refreshing} onClick={() => void refresh()}>{t('retryScan')}</button></div>;
+  return null;
 }
 export function InfoList({ items }: { items: { label: string; value: ReactNode }[] }) {
   return <dl className="info-list">{items.map(item => <div className="info-row" key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}</dl>;
 }
 export function AgentLinks({ ids }: { ids: readonly AgentId[] }) {
   const { t } = useTranslation('common');
-  return <span className="agent-links">{ids.length === 0 ? t('none') : ids.map(id => <a href={`#/agents/${id}`} key={id} lang="en-US">{findAgent(id)?.name}</a>)}</span>;
+  const { findAgent } = useNexus();
+  return <span className="agent-links">{ids.length === 0 ? t('none') : ids.map(id => <a href={`#/agents/${id}`} key={id} lang="en-US">{findAgent(id)?.name ?? id}</a>)}</span>;
 }
 export function DetailLink({ agentId, name, attention = false, compact = false, primary = false, label }: { agentId: string; name: string; attention?: boolean; compact?: boolean; primary?: boolean; label?: string }) {
   const { t } = useTranslation('common');

@@ -14,5 +14,14 @@
   "geminiObserved": "演示数据中未安装。",
   "geminiExpected": "受支持且已验证的安装。",
   "evidence": "演示依据",
-  "evidenceHelp": "来源：隔离演示数据。未访问真实日志、配置、凭据或进程输出。"
+  "evidenceHelp": "来源：隔离演示数据。未访问真实日志、配置、凭据或进程输出。",
+  "helpLive": "来自最近一次检查的发现，各附依据以及 Nexus 可提供的受信任修复。",
+  "noFindingsLive": "没有本机发现",
+  "noFindingsHelpLive": "必需的本机检查均通过。在线服务与凭据有效性未检查。",
+  "evidenceHelpLive": "来源：只读本机发现。从不显示凭据与进程输出。",
+  "cause.established": "由本机依据确认",
+  "cause.possible": "可能原因",
+  "freshness": "观察时间",
+  "stale": "已过期",
+  "evidenceLive": "依据"
 }

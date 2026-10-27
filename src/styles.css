@@ -655,6 +655,36 @@ button, a, select, summary { transition: background-color 110ms ease, border-col
   .activity-list li { flex-wrap: wrap; gap: 2px 12px; }
   .next-step .button { width: 100%; }
 }
+/* Live backend integration: plan previews, verified results and inline forms. Same tokens,
+   same sheet/notice/button primitives; nothing here introduces a new visual language. */
+.button:disabled { opacity: .55; cursor: not-allowed; }
+.button-small { min-height: 26px; padding: 0 10px; font-size: 12px; }
+.row-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.form-stack { display: grid; gap: 18px; }
+.form-stack .search-field { width: 320px; }
+.plan-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.action-panel { display: grid; gap: 14px; margin-top: 18px; }
+.action-panel:empty { display: none; }
+.detail-actions { grid-column: 1 / -1; }
+.plan-sheet .info-list { margin-top: 2px; }
+.plan-changes { margin-top: 14px; border-top: 1px solid var(--border-subtle); }
+.plan-changes li { display: grid; grid-template-columns: minmax(0,1.2fr) minmax(0,1fr) auto minmax(0,1fr); gap: 10px; align-items: baseline; padding: 8px 0; border-bottom: 1px solid var(--border-subtle); }
+.plan-diff { margin-top: 12px; padding: 10px 12px; max-height: 240px; overflow: auto; white-space: pre-wrap; background: var(--sunken); border: 1px solid var(--border-subtle); border-radius: 3px; color: var(--ink-2); font-size: 12px; line-height: 18px; }
+.plan-preserves { margin-top: 14px; color: var(--ink-2); font-size: 12.5px; line-height: 18px; }
+.plan-preserves .field-label { display: inline; margin-right: 8px; }
+.finding > .plan-actions { margin: 0; padding: 4px 22px 22px; }
+.check-unknown .check-result { color: var(--unknown-ink); }
+.layer-list li.is-effective strong { color: var(--brand); }
+.layer-list .chip { margin-left: 8px; }
+.install-list li { grid-template-columns: minmax(0,1fr) auto; align-items: center; }
+.install-list .row-actions { margin-top: 0; justify-content: flex-end; }
+.secret-form { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
+.secret-form .search-field { width: 180px; height: 28px; }
+.add-mcp { margin-top: 18px; }
+.extensions-area > .notice:first-child { margin-top: 0; }
+.is-spinning { animation: nexus-spin 900ms linear infinite; }
+@keyframes nexus-spin { to { transform: rotate(360deg); } }
+@media (max-width: 760px) { .plan-changes li { grid-template-columns: minmax(0,1fr); } .form-stack .search-field { width: 100%; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }
 @media (forced-colors: active) {
   .status, .notice, .chip, .state-glyph, .seal, .node-mark { forced-color-adjust: auto; }

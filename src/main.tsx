@@ -5,6 +5,7 @@ import { initializeI18n } from './app/i18n';
 import { readAppMetadata, type AppMetadata } from './app/native';
 import { readPreferences, resolveLocale } from './app/preferences';
 import { PreferenceProvider } from './app/PreferenceProvider';
+import { NexusDataProvider } from './app/nexus-data';
 import { LoadingState } from './components/ui';
 import './styles.css';
 
@@ -17,4 +18,4 @@ let localeFailed = false;
 try { metadata = await readAppMetadata(); }
 catch { metadata = { contractVersion: 1, version: __APP_VERSION__, preferredLocale: null }; localeFailed = true; }
 await initializeI18n(resolveLocale(value.language, metadata.preferredLocale ?? undefined));
-root.render(<StrictMode><PreferenceProvider metadata={metadata} initialLocaleFailed={localeFailed}><App /></PreferenceProvider></StrictMode>);
+root.render(<StrictMode><PreferenceProvider metadata={metadata} initialLocaleFailed={localeFailed}><NexusDataProvider><App /></NexusDataProvider></PreferenceProvider></StrictMode>);

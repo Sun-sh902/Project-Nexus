@@ -42,5 +42,16 @@
   "activityKicker": "示例",
   "statesTitle": "如何理解就绪状态",
   "specimenKicker": "Claude Code · v2",
-  "specimenLead": "一个版本等待确认。"
+  "specimenLead": "一个版本等待确认。",
+  "heroKickerLive": "Agent 就绪状态 · 此电脑",
+  "headlineRestLive": "{{agent}}：{{finding}}。",
+  "headlineRestLiveClear": "所有已安装的 Agent 均通过本机检查。",
+  "ledeLive": "就绪状态来自对本机安装、运行时、配置、模型与扩展的只读检查。从不检查在线服务可用性。",
+  "registerNoteLive": "本机健康检查结果计数 — 不是健康评分。",
+  "allClear": "暂无需关注的事项",
+  "allClearHelp": "每个 Agent 的必需本机检查均通过。",
+  "systemImpactLive": "工具按依赖它们的 Agent 标记。",
+  "activityKickerLive": "操作日志",
+  "activityEmpty": "暂无操作。",
+  "activityNoteLive": "仅记录通过 Nexus 完成的更改。"
 }

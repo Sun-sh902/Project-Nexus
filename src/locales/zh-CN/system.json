@@ -1,0 +1,22 @@
+{
+  "description": "从对 Agent 的影响了解基础工具。",
+  "environment": "演示环境",
+  "notDetected": "以下值均为演示数据，未扫描此电脑。",
+  "os": "操作系统",
+  "arch": "架构",
+  "tool": "工具",
+  "version": "演示版本",
+  "affected": "受影响的 Agent",
+  "runtimeReady": "演示中可用",
+  "evidenceMissing": "缺少依据",
+  "optional": "仅影响可选能力",
+  "packageManager": "包管理器",
+  "fixtureHost": "演示主机",
+  "toolCount": "工具数",
+  "toolsTitle": "基础工具",
+  "matrixHelp": "标记表示依赖该工具的 Agent。",
+  "affectedMark": "受影响",
+  "notAffected": "不受影响",
+  "status": "状态",
+  "pageKicker": "运行环境 · 演示数据"
+}

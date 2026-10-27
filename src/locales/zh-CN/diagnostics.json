@@ -1,0 +1,18 @@
+{
+  "help": "结构化示例，非日志查看器或实时诊断。",
+  "noFindings": "此示例没有本地问题",
+  "noFindingsHelp": "演示中的必需检查通过。此结论不代表你实际的 Agent 或在线服务状态。",
+  "impact": "对使用的影响",
+  "observed": "观察结果",
+  "expected": "预期结果",
+  "cause": "原因确定性",
+  "established": "演示数据中已确认",
+  "claudeImpact": "现有原生配置仍可使用，新的配置方案尚未应用。",
+  "geminiImpact": "满足安装要求前，Agent 无法工作。",
+  "claudeObserved": "已应用版本 1，预期版本 2。",
+  "claudeExpected": "确认并明确接受受支持的配置方案版本。",
+  "geminiObserved": "演示数据中未安装。",
+  "geminiExpected": "受支持且已验证的安装。",
+  "evidence": "演示依据",
+  "evidenceHelp": "来源：隔离演示数据。未访问真实日志、配置、凭据或进程输出。"
+}

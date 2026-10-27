@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "main",
+  "description": "Bundled main window can read application/locale metadata and apply enum-bound Nexus UI preferences only.",
+  "windows": ["main"],
+  "permissions": ["allow-app-metadata", "allow-apply-app-preferences"]
+}

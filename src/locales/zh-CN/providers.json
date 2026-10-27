@@ -1,0 +1,11 @@
+{
+  "connected": "已连接",
+  "notConfigured": "未配置",
+  "status": "连接状态",
+  "authentication": "认证方式",
+  "destination": "目标端点",
+  "agentLogin": "Agent 自有账户登录",
+  "secureReference": "安全凭据引用（仅示例）",
+  "help": "连接描述服务访问方式。服务提供商已连接，并不意味着模型兼容或 Agent 已就绪。",
+  "noSecrets": "此预览不接收或存储任何凭据。"
+}

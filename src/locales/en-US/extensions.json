@@ -1,0 +1,23 @@
+{
+  "description": "Agent Extensions, with explicit scope and permissions.",
+  "mcp": "MCP",
+  "skills": "Skills",
+  "tabs": "Extension types",
+  "mcpHelp": "Model Context Protocol connects tools and context to Agents. These examples never start a server.",
+  "skillsHelp": "Skills provide reusable instructions. Previewing these examples never runs bundled code.",
+  "compatible": "Compatible Agents (example)",
+  "scope": "Scope",
+  "permissions": "Permission summary",
+  "filesystemName": "Project files",
+  "reviewName": "Code review",
+  "docsName": "Documentation lookup",
+  "legacyName": "Legacy transport example",
+  "filesystemPermission": "Read access to a selected project; no access granted by this preview.",
+  "reviewPermission": "Instructions only in this example; publisher and bundled code remain unverified.",
+  "docsPermission": "Outbound service access declared; authorization is not checked.",
+  "legacyPermission": "This example transport is unsupported for the selected Agent.",
+  "installedLabel": "Example inventory",
+  "name": "Extension",
+  "availability": "Status",
+  "pageKicker": "Extensions · demo data"
+}

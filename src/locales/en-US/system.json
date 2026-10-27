@@ -1,0 +1,22 @@
+{
+  "description": "Supporting tools, explained through their Agent impact.",
+  "environment": "Example environment",
+  "notDetected": "These values are fixtures, not a scan of this computer.",
+  "os": "Operating system",
+  "arch": "Architecture",
+  "tool": "Tool",
+  "version": "Example version",
+  "affected": "Affected Agents",
+  "runtimeReady": "Available in example",
+  "evidenceMissing": "Evidence missing",
+  "optional": "Optional capability only",
+  "packageManager": "Package manager",
+  "fixtureHost": "Demonstration host",
+  "toolCount": "Tools",
+  "toolsTitle": "Supporting tools",
+  "matrixHelp": "Marks show which Agents depend on each tool.",
+  "affectedMark": "Affected",
+  "notAffected": "Not affected",
+  "status": "Status",
+  "pageKicker": "Environment · demo data"
+}

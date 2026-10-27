@@ -1,0 +1,11 @@
+{
+  "connected": "Connected",
+  "notConfigured": "Not configured",
+  "status": "Connection",
+  "authentication": "Authentication method",
+  "destination": "Destination",
+  "agentLogin": "Agent-owned account login",
+  "secureReference": "Secure credential reference (example only)",
+  "help": "Connections describe service access. A connected Provider does not establish model compatibility or Agent readiness.",
+  "noSecrets": "No credentials are accepted or stored in this preview."
+}

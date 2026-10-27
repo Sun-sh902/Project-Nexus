@@ -1,0 +1,23 @@
+{
+  "description": "Agent 扩展，作用域与权限清晰可见。",
+  "mcp": "MCP",
+  "skills": "Skills",
+  "tabs": "扩展类型",
+  "mcpHelp": "MCP（模型上下文协议）将工具与上下文连接到 Agent。以下示例不会启动服务。",
+  "skillsHelp": "Skills（技能）提供可复用指令。预览这些示例不会执行附带代码。",
+  "compatible": "兼容 Agent（示例）",
+  "scope": "作用域",
+  "permissions": "权限摘要",
+  "filesystemName": "项目文件",
+  "reviewName": "代码审查",
+  "docsName": "文档查阅",
+  "legacyName": "旧版传输示例",
+  "filesystemPermission": "读取所选项目；此预览不会授予访问权限。",
+  "reviewPermission": "此示例仅含指令，发布者与附带代码仍未经验证。",
+  "docsPermission": "声明需要访问外部服务，授权尚未检查。",
+  "legacyPermission": "所选 Agent 不支持此示例传输方式。",
+  "installedLabel": "演示清单",
+  "name": "扩展",
+  "availability": "状态",
+  "pageKicker": "扩展 · 演示数据"
+}

@@ -1,0 +1,52 @@
+[
+  {
+    "file": "source-han.woff2",
+    "url": "https://raw.githubusercontent.com/adobe-fonts/source-han-sans/a4f7cf94edfb9d7ffbdfc4841de276358bd7e0f2/Variable/WOFF2/TTF/Subset/SourceHanSansCN-VF.ttf.woff2",
+    "sha256": "f971e3bff46f76b49e1d5510556c2297c618ec4b491a295a4e741cdd38257799",
+    "bytes": 7711988,
+    "revision": "a4f7cf94edfb9d7ffbdfc4841de276358bd7e0f2"
+  },
+  {
+    "file": "plex-mono.woff2",
+    "url": "https://raw.githubusercontent.com/IBM/plex/763c36ef9117782905ae010056dfbe8fd2653a25/packages/plex-mono/fonts/complete/woff2/IBMPlexMono-Regular.woff2",
+    "sha256": "ba204497f16b6d334cee9d1e963a831b73e3a56e1d6300a8489d18df7214b350",
+    "bytes": 49248,
+    "revision": "763c36ef9117782905ae010056dfbe8fd2653a25"
+  },
+  {
+    "file": "plex-sans.woff2",
+    "url": "https://raw.githubusercontent.com/IBM/plex/71f558992315a12ca1f06a2215d57962a1992162/packages/plex-sans-variable/fonts/complete/woff2/IBM%20Plex%20Sans%20Var-Roman.woff2",
+    "sha256": "e978248b6b56da9e372975322a98dd9a51135d1b375e32ed6d5ca69f3aab792d",
+    "bytes": 230368,
+    "revision": "71f558992315a12ca1f06a2215d57962a1992162",
+    "license": "plex-sans.txt",
+    "retrieved": "2026-10-27"
+  },
+  {
+    "file": "source-han-serif.woff2",
+    "url": "https://raw.githubusercontent.com/adobe-fonts/source-han-serif/7889f11bf31170b5d092a083b357c8c8130f89e0/Variable/WOFF2/OTF/Subset/SourceHanSerifCN-VF.otf.woff2",
+    "sha256": "808cb3203bb9cdd6b166a8a656a0c7608a7dc2a31c41c2cd0374550cae445471",
+    "bytes": 10421244,
+    "revision": "7889f11bf31170b5d092a083b357c8c8130f89e0",
+    "license": "han-serif.txt",
+    "retrieved": "2026-10-27"
+  },
+  {
+    "file": "source-serif.woff2",
+    "url": "https://raw.githubusercontent.com/adobe-fonts/source-serif/80d3f8894c09c937bebfa9011247d2e1c79fd6f4/WOFF2/VAR/SourceSerif4Variable-Roman.ttf.woff2",
+    "sha256": "940a76eda1388de39d38c8e7a79bf6ea058a387faee0a9f33c8d25c6ba05e1be",
+    "bytes": 429100,
+    "revision": "80d3f8894c09c937bebfa9011247d2e1c79fd6f4",
+    "license": "source-serif.txt",
+    "retrieved": "2026-10-27"
+  },
+  {
+    "file": "source-serif-italic.woff2",
+    "url": "https://raw.githubusercontent.com/adobe-fonts/source-serif/80d3f8894c09c937bebfa9011247d2e1c79fd6f4/WOFF2/VAR/SourceSerif4Variable-Italic.ttf.woff2",
+    "sha256": "9d28b5749a1ad096a295cb607c521bd1af4cd9979b6f37332daf70143149fb44",
+    "bytes": 346688,
+    "revision": "80d3f8894c09c937bebfa9011247d2e1c79fd6f4",
+    "license": "source-serif.txt",
+    "retrieved": "2026-10-27"
+  }
+]

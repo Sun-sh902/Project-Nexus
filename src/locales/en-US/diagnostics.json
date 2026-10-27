@@ -1,0 +1,18 @@
+{
+  "help": "Structured examples, not a log viewer or a live diagnosis.",
+  "noFindings": "No local findings in this example",
+  "noFindingsHelp": "Required fixture checks pass. This is not a claim about your actual Agent or online service.",
+  "impact": "User impact",
+  "observed": "Observed",
+  "expected": "Expected",
+  "cause": "Cause certainty",
+  "established": "Established in fixture",
+  "claudeImpact": "Existing native setup remains usable; the new profile has not been applied.",
+  "geminiImpact": "The Agent cannot work until the installation requirement is satisfied.",
+  "claudeObserved": "Applied revision 1; requested revision 2.",
+  "claudeExpected": "Review and explicitly accept a supported profile revision.",
+  "geminiObserved": "No installation in the fixture.",
+  "geminiExpected": "A supported, verified installation.",
+  "evidence": "Example evidence",
+  "evidenceHelp": "Source: isolated fixture. No real logs, configuration, credentials or process output were accessed."
+}

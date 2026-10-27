@@ -1,0 +1,15 @@
+{
+  "home": "Home",
+  "agents": "Agents",
+  "models": "Models",
+  "extensions": "Extensions",
+  "system": "System",
+  "settings": "Settings",
+  "label": "Main navigation",
+  "homeContext": "Agent readiness at a glance",
+  "agentsContext": "Lifecycle and readiness",
+  "modelsContext": "Providers, models and profiles",
+  "extensionsContext": "MCP and Skills",
+  "systemContext": "Supporting tools",
+  "settingsContext": "This device only"
+}

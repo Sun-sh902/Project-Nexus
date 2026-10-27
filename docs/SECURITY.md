@@ -80,6 +80,8 @@ OfficialScriptInstaller is a reserved mechanism, disabled by default. Enabling i
 
 Package managers may execute lifecycle scripts and resolve dependencies. A recipe must document whether scripts run, which trusted identity/version is installed, how resolution is frozen, and how the installed result is verified. If the manager cannot honor the confirmed artifact/version, stop and replan. Do not claim Nexus can universally roll back package-manager side effects.
 
+**Recorded exception (2026-10-27):** the owner approved publishing `v0.2.0-beta.1` as a GitHub *pre-release* with an ad-hoc-signed, non-notarized Apple Silicon DMG, disclosed as such in the release notes and README. This exception covers that pre-release only; it does not satisfy the signing/notarization gate for a public Beta or any later release, and there is no auto-updater.
+
 Application updater and Manifest publisher use separate keys. Establish release signing, key custody, revocation/rotation, incident response, anti-downgrade, platform notarization/signing validation, and interrupted-update recovery before public distribution. A signed Manifest cannot update Nexus or rotate its own trust root. Compromised-root recovery requires a separately trusted application release or explicit out-of-band recovery procedure.
 
 ## 6. Configuration integrity and backups

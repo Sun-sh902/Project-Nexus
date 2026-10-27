@@ -57,3 +57,9 @@ Browser preview (`pnpm dev`) has no native backend and shows the clearly labeled
 - [Canonical roadmap and Phase 0 review](docs/ROADMAP.md)
 
 The PRD owns product scope; the roadmap owns sequencing. The differentiated public Beta boundary is Phase 7, including Agent Health, structured Diagnostics, and useful Safe Repair. Every later phase requires separate authorization.
+
+## License
+
+Project Nexus is licensed under the [Apache License 2.0](LICENSE). Bundled fonts in `public/fonts/` are distributed under the SIL Open Font License 1.1; see the license and source files next to each font. Project Nexus is an independent project and is not affiliated with OpenAI, Anthropic, Google or the OpenCode project; Agent names identify the tools Nexus manages.
+
+Security issues: please use GitHub private vulnerability reporting on this repository rather than public issues.
